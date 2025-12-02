@@ -1,0 +1,32 @@
+# --- Python & System ---
+__pycache__/
+*.py[cod]
+*$py.class
+.DS_Store
+.vscode/
+.idea/
+
+# --- Environment ---
+venv_SAMAug/
+env/
+.env
+
+# --- Datasets & Outputs ---
+# Ignoriamo i dati pesanti, carichiamo solo il codice
+datasets/
+dataset/
+src/aumentation/out
+src/augmentation/__pycache__
+results/
+generated/
+
+# --- Model Checkpoints ---
+# Non caricare pesi su GitHub (limite 100MB)
+checkpoints/
+model_pth/
+*.pth
+*.pt
+*.onnx
+
+# --- Logs ---
+*.log

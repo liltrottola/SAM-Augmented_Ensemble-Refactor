@@ -1,0 +1,46 @@
+experiment:
+  name: augmentation_experiment
+  description: Experiment to evaluate data augmentation techniques on model performance
+  version: 1.0
+
+paths:
+  # Path base dove si trovano i dataset (ex dataset_path = "../datasets/")
+  dataset_root: "../../datasets/"
+
+  # Dove salvare l'output (ex saving_path)
+  output_root: "./out/"
+  
+  # Path dei checkpoint (ex checkpoints_root)
+  checkpoints_root: "../../../SAM-Augmented_Ensembles-pvt/checkpoints"
+
+datasets:
+  # List of datasets to use for training and testing
+  folders:
+    - "ProvaSmall/"
+    #- "TrainDataset/"
+    #- "small_ds/"
+    #- "small_ds_2/"
+    #- "TestDataset/CVC-300/"
+    #- "TestDataset/CVC-ClinicDB/"
+    #- "TestDataset/CVC-ColonDB/"
+    #- "TestDataset/Kvasir/"
+    #- "TestDataset/ETIS-LaribPolypDB/"
+
+augmentation:
+  #List of method names exactly as defined in lib.py
+  methods:
+    # - "SAMAug"
+    #- "ourSAMAug"
+    #- "RG_segPrior"
+    - "SV_segPrior"
+    - "RG_logits"
+    - "PCA_segPrior"
+
+sam:
+  # Choose [1], [2], or [1, 2]
+  versions: [2]
+  checkpoints:
+    v1: "sam_vit_h_4b8939.pth"
+    v2: "sam2_hiera_large.pt"
+
+
