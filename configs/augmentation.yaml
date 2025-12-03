@@ -5,13 +5,13 @@ experiment:
 
 paths:
   # Path base dove si trovano i dataset (ex dataset_path = "../datasets/")
-  dataset_root: "../../datasets/"
+  dataset_root: "../data/datasets/"
 
   # Dove salvare l'output (ex saving_path)
-  output_root: "./out/"
+  output_root: "../data/augmented/"
   
   # Path dei checkpoint (ex checkpoints_root)
-  checkpoints_root: "../../../SAM-Augmented_Ensembles-pvt/checkpoints"
+  checkpoints_root: "../../SAM-Augmented_Ensembles-pvt/checkpoints"
 
 datasets:
   # List of datasets to use for training and testing
@@ -30,8 +30,8 @@ augmentation:
   #List of method names exactly as defined in lib.py
   methods:
     # - "SAMAug"
-    #- "ourSAMAug"
-    #- "RG_segPrior"
+    - "ourSAMAug"
+    - "RG_segPrior"
     - "SV_segPrior"
     - "RG_logits"
     - "PCA_segPrior"
