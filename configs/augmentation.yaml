@@ -11,7 +11,7 @@ paths:
   output_root: "../data/augmented/"
   
   # Path dei checkpoint (ex checkpoints_root)
-  checkpoints_root: "../../SAM-Augmented_Ensembles-pvt/checkpoints"
+  checkpoints_root: "../checkpoints_sam/"
 
 datasets:
   # List of datasets to use for training and testing

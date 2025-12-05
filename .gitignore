@@ -7,7 +7,7 @@ __pycache__/
 .idea/
 
 # --- Environment ---
-venv_SAMAug/
+venv_newSAMAug/
 env/
 .env
 
@@ -23,7 +23,8 @@ generated/
 # --- Model Checkpoints ---
 # Non caricare pesi su GitHub (limite 100MB)
 checkpoints/
-model_pth/
+checkpoints_sam/
+segment-anything-2/
 *.pth
 *.pt
 *.onnx

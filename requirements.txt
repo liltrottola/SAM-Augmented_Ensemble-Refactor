@@ -1,0 +1,26 @@
+# --- Core Data & Math ---
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.10.0
+scikit-learn>=1.5.0
+
+# --- Image Processing ---
+scikit-image>=0.25.0
+Pillow>=10.0.0
+opencv-python>=4.8.0      # Necessario per cv2 (usato negli script di test originali)
+
+# --- Visualization & Logging ---
+matplotlib>=3.10.0
+tqdm>=4.66.0
+
+# --- Deep Learning Utilities ---
+timm>=0.9.0               # CRUCIALE: serve per pvt_v2.py (backbone dei modelli)
+thop                      # Usato in utils.py per calcolare FLOPs/Params
+PyYAML>=6.0               # Per gestire i file di configurazione
+
+# --- SAM 1 Support ---
+segment-anything==1.0
+
+# --- System/Utils ---
+requests
+fsspec
