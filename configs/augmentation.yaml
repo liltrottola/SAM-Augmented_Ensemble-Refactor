@@ -5,13 +5,13 @@ experiment:
 
 paths:
   # Path base dove si trovano i dataset (ex dataset_path = "../datasets/")
-  dataset_root: "../data/datasets/"
+  dataset_root: "data/datasets/"
 
   # Dove salvare l'output (ex saving_path)
-  output_root: "../data/augmented/"
+  output_root: "data/augmented/"
   
   # Path dei checkpoint (ex checkpoints_root)
-  checkpoints_root: "../checkpoints_sam/"
+  checkpoints_root: "src/models/SAM/checkpoints_sam"
 
 datasets:
   # List of datasets to use for training and testing

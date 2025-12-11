@@ -19,6 +19,8 @@ src/aumentation/out
 src/augmentation/__pycache__
 results/
 generated/
+PolypPVT/
+HSNet_aux/
 
 # --- Model Checkpoints ---
 # Non caricare pesi su GitHub (limite 100MB)
