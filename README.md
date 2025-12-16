@@ -87,6 +87,8 @@ python scripts/run_augmentation.py --config configs/augmentation.yaml
 
 **Configuration:** Edit the [`configs/hsnet_vanilla.yaml`](configs/hsnet_vanilla.yaml) file to specify training parameters.
 
+**Pretrained weights:** Download the HSNet pretrained model from Google Drive ([insert link here](https://drive.google.com/drive/folders/1Eu8v9vMRvt-dyCH0XSV2i77lAd62nPXV)) and place it in `./src/models/HSNet/pretrained_pth` as in the original HSNet repository: https://github.com/baiboat/HSNet .
+
 **Execution:**
 
 ⚠️ **TEMPORARY NOTE:** For now, training must be started **from inside the HSNet model folder** due to relative paths that have not yet been updated. All relative directories will be modified later to allow launching directly from the project home.
