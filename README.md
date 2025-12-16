@@ -2,6 +2,10 @@
 
 ⚠️ **PROJECT UNDER REFACTORING** ⚠️
 
+## 📂 Original Project
+
+https://github.com/LorisNanni/Exploring-SAM-Augmented-Ensembles
+
 This repository contains a framework for augmenting medical image datasets using Segment Anything Model (SAM/SAM2) and training segmentation models (HSNet, PolypPVT).
 
 **The project is currently being restructured** to improve modularity, readability, and code maintainability. The final structure and some components may be subject to changes.
@@ -116,10 +120,6 @@ Methods implemented in [`src/augmentation/methods.py`](src/augmentation/methods.
 
 - SAM checkpoints are automatically downloaded to `checkpoints_sam/`
 - Dataset structure must follow the format: `{dataset}/images/` and `{dataset}/masks/`
-
-## 📂 Original Project
-
-https://github.com/LorisNanni/Exploring-SAM-Augmented-Ensembles
 
 ---
 
