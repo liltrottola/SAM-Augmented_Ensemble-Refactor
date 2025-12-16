@@ -6,13 +6,13 @@ experiment:
 # all paths are relatives to the home directory of the project SAM-Augmented_Ensemble-refactor
 paths:
   # Path base dove si trovano i dataset (ex dataset_path = "../datasets/")
-  dataset_root: "data/datasets/"
+  dataset_root: "datasets/"
 
   # Dove salvare l'output (ex saving_path)
-  output_root: "data/augmented/"
+  output_root: "src/augmentation/out/"
   
   # Path dei checkpoint (ex checkpoints_root)
-  checkpoints_root: "src/models/SAM/checkpoints_sam"
+  checkpoints_root: "checkpoints_sam"
 
 datasets:
   # List of datasets to use for training and testing
@@ -30,7 +30,7 @@ datasets:
 augmentation:
   #List of method names exactly as defined in lib.py
   methods:
-    # - "SAMAug"
+    - "SAMAug"
     - "ourSAMAug"
     - "RG_segPrior"
     - "SV_segPrior"

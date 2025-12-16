@@ -4,8 +4,8 @@ experiment:
 
 #all paths are relative to the location of Train.py file in src/models/HSNet/
 paths:
-  train_data: "../../../data/datasets/TrainDataset"
-  test_data: "../../../data/datasets/TestDataset"
+  train_data: "../../../datasets/TrainDataset"
+  test_data: "../../../datasets/TestDataset"
   save_dir: "./model_pth/"
   log_file: "train_log_hsnet_vanilla.log"
 

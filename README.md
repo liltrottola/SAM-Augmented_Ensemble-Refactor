@@ -12,21 +12,29 @@ This repository contains a framework for augmenting medical image datasets using
 ├── configs/                    # YAML configuration files
 │   ├── augmentation.yaml      # Configuration for augmentation
 │   └── hsnet_vanilla.yaml     # Configuration for HSNet training
-├── data/                      # Directory for datasets and output
-│   ├── datasets/             # Original datasets
-│   └── augmented/            # Augmented datasets (output)
+├── datasets/                  # Original datasets
 ├── scripts/                   # Executable scripts
 │   └── run_augmentation.py   # Main script for augmentation
 ├── src/                      # Modular source code
 │   ├── augmentation/         # Augmentation modules
 │   │   ├── methods.py       # Augmentation methods
-│   │   └── sam_loader.py    # SAM model loading
+│   │   ├── sam_loader.py    # SAM model loading
+│   │   └── out/             # Augmentation output directory
 │   └── models/              # Segmentation models
-│       ├── HSNet/
-│       ├── PolypPVT/
-│       └── SAM/
+│       ├── HSNet/           # HSNet model
+│       │   ├── Train.py     # Training script
+│       │   ├── Test.py      # Testing script
+│       │   ├── lib/         # Model libraries
+│       │   ├── utils/       # Utilities
+│       │   ├── model_pth/   # Model weights directory
+│       │   └── pretrained_pth/  # Pretrained weights
+│       ├── HSNet_aux/       # HSNet auxiliary models
+│       ├── PolypPVT/        # PolypPVT model
+│       └── SAM/             # SAM model
+├── checkpoints_sam/          # SAM checkpoints (downloaded automatically)
 ├── segment-anything-2/       # SAM2 repository (cloned automatically)
-└── requirements.txt          # Python dependencies
+├── requirements.txt          # Python dependencies
+└── setup.sh                  # Automatic setup script
 ```
 
 ## 🚀 Initial Setup
@@ -67,7 +75,7 @@ source venv_newSAMAug/bin/activate
 python scripts/run_augmentation.py --config configs/augmentation.yaml
 ```
 
-**Output:** Augmented datasets are saved in `data/augmented/sam{1,2}/{method}/`
+**Output:** Augmented datasets are saved in `src/augmentation/out/sam{1,2}/{method}/`
 
 ### Model Training
 
@@ -90,7 +98,7 @@ Methods implemented in [`src/augmentation/methods.py`](src/augmentation/methods.
 
 - `ourSAMAug` - Custom SAM augmentation
 - `RG_segPrior` - Random Gaussian with segmentation prior
-- `SV_segPrior` - Salt & Vinegar with segmentation prior
+- `SV_segPrior` - HSV Color Space with Segmentation Prior (H-Channel Encoding)
 - `RG_logits` - Random Gaussian based on logits
 - `PCA_segPrior` - PCA with segmentation prior
 
@@ -107,7 +115,6 @@ Methods implemented in [`src/augmentation/methods.py`](src/augmentation/methods.
 ## 📝 Notes
 
 - SAM checkpoints are automatically downloaded to `checkpoints_sam/`
-- Make sure you have a CUDA GPU available for training and SAM inference
 - Dataset structure must follow the format: `{dataset}/images/` and `{dataset}/masks/`
 
 ## 📂 Original Project
@@ -116,4 +123,4 @@ https://github.com/LorisNanni/Exploring-SAM-Augmented-Ensembles
 
 ---
 
-*Last updated: December 15, 2025*
+*Last updated: December 16, 2025*

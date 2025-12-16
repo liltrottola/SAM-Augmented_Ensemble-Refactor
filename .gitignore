@@ -13,9 +13,9 @@ env/
 
 # --- Datasets & Outputs ---
 # Ignoriamo i dati pesanti, carichiamo solo il codice
-data/
+datasets/
 old_code/
-src/aumentation/out
+src/augmentation/out/
 src/augmentation/__pycache__
 results/
 generated/
