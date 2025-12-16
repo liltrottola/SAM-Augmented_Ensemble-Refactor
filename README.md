@@ -1,119 +1,119 @@
 # SAM-Augmented Ensemble (Refactoring)
 
-⚠️ **PROGETTO IN FASE DI REFACTORING** ⚠️
+⚠️ **PROJECT UNDER REFACTORING** ⚠️
 
-Questo repository contiene un framework per l'augmentazione di dataset di immagini mediche utilizzando Segment Anything Model (SAM/SAM2) e il training di modelli di segmentazione (HSNet, PolypPVT).
+This repository contains a framework for augmenting medical image datasets using Segment Anything Model (SAM/SAM2) and training segmentation models (HSNet, PolypPVT).
 
-**Il progetto è attualmente in fase di ristrutturazione** per migliorare modularità, leggibilità e manutenibilità del codice. La struttura finale e alcuni componenti potrebbero subire modifiche.
+**The project is currently being restructured** to improve modularity, readability, and code maintainability. The final structure and some components may be subject to changes.
 
-## 📋 Struttura del Progetto
+## 📋 Project Structure
 
 ```
-├── configs/                    # File di configurazione YAML
-│   ├── augmentation.yaml      # Configurazione per l'augmentazione
-│   └── hsnet_vanilla.yaml     # Configurazione per il training HSNet
-├── data/                      # Directory per dataset e output
-│   ├── datasets/             # Dataset originali
-│   └── augmented/            # Dataset augmentati (output)
-├── scripts/                   # Script eseguibili
-│   └── run_augmentation.py   # Script principale per l'augmentazione
-├── src/                      # Codice sorgente modulare
-│   ├── augmentation/         # Moduli per l'augmentazione
-│   │   ├── methods.py       # Metodi di augmentazione
-│   │   └── sam_loader.py    # Caricamento modelli SAM
-│   └── models/              # Modelli di segmentazione
+├── configs/                    # YAML configuration files
+│   ├── augmentation.yaml      # Configuration for augmentation
+│   └── hsnet_vanilla.yaml     # Configuration for HSNet training
+├── data/                      # Directory for datasets and output
+│   ├── datasets/             # Original datasets
+│   └── augmented/            # Augmented datasets (output)
+├── scripts/                   # Executable scripts
+│   └── run_augmentation.py   # Main script for augmentation
+├── src/                      # Modular source code
+│   ├── augmentation/         # Augmentation modules
+│   │   ├── methods.py       # Augmentation methods
+│   │   └── sam_loader.py    # SAM model loading
+│   └── models/              # Segmentation models
 │       ├── HSNet/
 │       ├── PolypPVT/
 │       └── SAM/
-├── segment-anything-2/       # Repository SAM2 (clonato automaticamente)
-└── requirements.txt          # Dipendenze Python
+├── segment-anything-2/       # SAM2 repository (cloned automatically)
+└── requirements.txt          # Python dependencies
 ```
 
-## 🚀 Setup Iniziale
+## 🚀 Initial Setup
 
-### 1. Installazione
+### 1. Installation
 
-Eseguire lo script di setup automatico che:
-- Crea l'ambiente virtuale Python 3.11
-- Clona il repository SAM2
-- Installa tutte le dipendenze
-- Scarica i checkpoint di SAM1 e SAM2
+Run the automatic setup script which:
+- Creates the Python 3.11 virtual environment
+- Clones the SAM2 repository
+- Installs all dependencies
+- Downloads SAM1 and SAM2 checkpoints
 
 ```bash
 bash setup.sh
 ```
 
-### 2. Attivazione Ambiente
+### 2. Environment Activation
 
 ```bash
 source venv_newSAMAug/bin/activate
 ```
 
-## 📊 Utilizzo
+## 📊 Usage
 
-### Augmentazione Dataset
+### Dataset Augmentation
 
-**Script da avviare:** [`scripts/run_augmentation.py`](scripts/run_augmentation.py)
+**Script to run:** [`scripts/run_augmentation.py`](scripts/run_augmentation.py)
 
-**Configurazione:** Modifica il file [`configs/augmentation.yaml`](configs/augmentation.yaml) per specificare:
-- Dataset da processare (`datasets.folders`)
-- Metodi di augmentazione (`augmentation.methods`)
-- Versioni di SAM da utilizzare (`sam.versions`)
-- Percorsi dei checkpoint (`paths.checkpoints_root`)
+**Configuration:** Edit the [`configs/augmentation.yaml`](configs/augmentation.yaml) file to specify:
+- Datasets to process (`datasets.folders`)
+- Augmentation methods (`augmentation.methods`)
+- SAM versions to use (`sam.versions`)
+- Checkpoint paths (`paths.checkpoints_root`)
 
-**Esecuzione:**
+**Execution:**
 
 ```bash
 python scripts/run_augmentation.py --config configs/augmentation.yaml
 ```
 
-**Output:** I dataset augmentati vengono salvati in `data/augmented/sam{1,2}/{metodo}/`
+**Output:** Augmented datasets are saved in `data/augmented/sam{1,2}/{method}/`
 
-### Training Modelli
+### Model Training
 
-**Script da avviare:** [`src/models/HSNet/Train.py`](src/models/HSNet/Train.py)
+**Script to run:** [`src/models/HSNet/Train.py`](src/models/HSNet/Train.py)
 
-**Configurazione:** Modifica il file [`configs/hsnet_vanilla.yaml`](configs/hsnet_vanilla.yaml) per specificare parametri di training.
+**Configuration:** Edit the [`configs/hsnet_vanilla.yaml`](configs/hsnet_vanilla.yaml) file to specify training parameters.
 
-**Esecuzione:**
+**Execution:**
 
-⚠️ **NOTA TEMPORANEA:** Per il momento, il training deve essere avviato **dall'interno della cartella del modello HSNet** a causa dei path relativi non ancora aggiornati. Successivamente verranno modificate tutte le directory relative per poterlo avviare direttamente dalla home del progetto.
+⚠️ **TEMPORARY NOTE:** For now, training must be started **from inside the HSNet model folder** due to relative paths that have not yet been updated. All relative directories will be modified later to allow launching directly from the project home.
 
 ```bash
 cd src/models/HSNet
 python Train.py --config ../../../configs/hsnet_vanilla.yaml
 ```
 
-## 🔧 Metodi di Augmentazione Disponibili
+## 🔧 Available Augmentation Methods
 
-I metodi implementati in [`src/augmentation/methods.py`](src/augmentation/methods.py):
+Methods implemented in [`src/augmentation/methods.py`](src/augmentation/methods.py):
 
-- `ourSAMAug` - Augmentazione SAM personalizzata
-- `RG_segPrior` - Random Gaussian con prior di segmentazione
-- `SV_segPrior` - Salt & Vinegar con prior di segmentazione
-- `RG_logits` - Random Gaussian basato su logits
-- `PCA_segPrior` - PCA con prior di segmentazione
+- `ourSAMAug` - Custom SAM augmentation
+- `RG_segPrior` - Random Gaussian with segmentation prior
+- `SV_segPrior` - Salt & Vinegar with segmentation prior
+- `RG_logits` - Random Gaussian based on logits
+- `PCA_segPrior` - PCA with segmentation prior
 
-## 📦 Dipendenze Principali
+## 📦 Main Dependencies
 
 - **Python 3.11**
-- **PyTorch** (installato con SAM2)
+- **PyTorch** (installed with SAM2)
 - **segment-anything** (SAM v1)
 - **segment-anything-2** (SAM v2)
-- **timm** - Per backbone dei modelli
-- **opencv-python, scikit-image** - Elaborazione immagini
-- **PyYAML** - Gestione configurazioni
+- **timm** - For model backbones
+- **opencv-python, scikit-image** - Image processing
+- **PyYAML** - Configuration management
 
-## 📝 Note
+## 📝 Notes
 
-- I checkpoint SAM vengono scaricati automaticamente in `checkpoints_sam/`
-- Assicurarsi di avere GPU CUDA disponibile per il training e l'inferenza SAM
-- La struttura dei dataset deve seguire il formato: `{dataset}/images/` e `{dataset}/masks/`
+- SAM checkpoints are automatically downloaded to `checkpoints_sam/`
+- Make sure you have a CUDA GPU available for training and SAM inference
+- Dataset structure must follow the format: `{dataset}/images/` and `{dataset}/masks/`
 
-## 📂 Progetto Originale
+## 📂 Original Project
 
 https://github.com/LorisNanni/Exploring-SAM-Augmented-Ensembles
 
 ---
 
-*Ultimo aggiornamento: 15 Dicembre 2025*
+*Last updated: December 15, 2025*
