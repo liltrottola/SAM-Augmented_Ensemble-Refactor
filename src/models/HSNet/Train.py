@@ -1,3 +1,4 @@
+import random
 import torch
 from torch.autograd import Variable
 import os
@@ -11,6 +12,24 @@ import numpy as np
 import logging
 
 import matplotlib.pyplot as plt
+
+import yaml
+
+# -------- blocco per configurazioni da file yaml -----------
+def load_config(config_path):
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    return config
+
+class Config(object):
+    def __init__(self, d):
+        for k , v in d.items():
+            if isinstance(v, dict):
+                setattr(self, k, Config(v))
+            else:
+                setattr(self, k, v)
+# ------------------------------------------------------------
+
 
 def structure_loss(pred, mask):
     weit = 1 + 5 * torch.abs(F.avg_pool2d(mask, kernel_size=31, stride=1, padding=15) - mask)
@@ -60,21 +79,35 @@ def test(model, path, dataset):
     return DSC / num1
 
 
-
-def train(train_loader, model, optimizer, epoch, test_path):
+#modificato def train(train_loader, model, optimizer, epoch, test_path):
+def train(train_loader, model, optimizer, epoch, opt, debug=False):
     model.train()
-    global best
+    # global best (mai usata)
+
+    #logica originale HARDCODED ----- tengo fissi questi valori----
     size_rates = [0.75, 1, 1.25]
+    clip_margin = 0.5
+    #------------------------------------------------------------
+
     loss_P2_record = AvgMeter()
     for i, pack in enumerate(train_loader, start=1):
+        #----DEBUG BLOCK ----
+        if debug and i > 5:
+            print("DEBUG MODE: breaking after 5 iterations")
+            break
+        #--------------------
+
         for rate in size_rates:
             optimizer.zero_grad()
             # ---- data prepare ----
             images, gts = pack
             images = Variable(images).cuda()
             gts = Variable(gts).cuda()
+
             # ---- rescale ----
-            trainsize = int(round(opt.trainsize * rate / 32) * 32)
+            #uso dati da file yaml
+            trainsize = int(round(opt.training.trainsize * rate / 32) * 32)
+
             if rate != 1:
                 images = F.upsample(images, size=(trainsize, trainsize), mode='bilinear', align_corners=True)
                 gts = F.upsample(gts, size=(trainsize, trainsize), mode='bilinear', align_corners=True)
@@ -89,19 +122,21 @@ def train(train_loader, model, optimizer, epoch, test_path):
             loss = loss_P1 + loss_P2 + loss_P3 + loss_P4
             # ---- backward ----
             loss.backward()
-            clip_gradient(optimizer, opt.clip)
+            clip_gradient(optimizer, clip_margin)
             optimizer.step()
             # ---- recording loss ----
             if rate == 1:
-                loss_P2_record.update(loss_P4.data, opt.batchsize)
+                #NOTE: qui era loss_P2_record.update(loss_P2.data, opt.batchsize)
+                loss_P2_record.update(loss_P4.data, opt.training.batchsize)
         # ---- train visualization ----
         if i % 20 == 0 or i == total_step:
+            #NOTE: qui era opt.epoch
             print('{} Epoch [{:03d}/{:03d}], Step [{:04d}/{:04d}], '
-                  ' lateral-5: {:0.4f}] lr'.
-                  format(datetime.now(), epoch, opt.epoch, i, total_step,
-                         loss_P2_record.show()), optimizer.param_groups[0]['lr'])
+                  ' lateral-5: {:0.4f}] lr'.format(
+                      datetime.now(), epoch, opt.training.epochs, i, total_step,
+                      loss_P2_record.show()), optimizer.param_groups[0]['lr'])
     # save model
-    save_path = (opt.train_save)
+    save_path = opt.paths.save_dir
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     #mean_dice = 0
@@ -111,7 +146,8 @@ def train(train_loader, model, optimizer, epoch, test_path):
     #    logging.info('epoch: {}, dataset: {}, dice: {}'.format(epoch, dataset, dataset_dice))
     #    print(dataset, ': ', dataset_dice)
     #print('Mean Performance: ', mean_dice/len(['CVC-300', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB']))
-    torch.save(model.state_dict(), os.path.join(save_path , opt.name_save))
+    filename = f"{opt.experiment.name}.pth"
+    torch.save(model.state_dict(), os.path.join(save_path, filename))
 
 
 def plot_train(dict_plot=None, name = None):
@@ -133,84 +169,75 @@ if __name__ == '__main__':
     #dict_plot = {'CVC-300':[], 'CVC-ClinicDB':[], 'Kvasir':[], 'CVC-ColonDB':[], 'ETIS-LaribPolypDB':[], 'test':[]}
     #name = ['CVC-300', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'test']
     ##################model_name#############################
-    model_name = 'HSNet_baseline_DA3'
-    ###############################################
+
+    # --- GESTIONE ARGOMENTI ---
     parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=str, default='../../../configs/hsnet_vanilla.yaml', help='Path al file di configurazione')
+    parser.add_argument("--debug", action="store_true", help="attiva modalità per debug")
+    args = parser.parse_args()
 
-    parser.add_argument('--epoch', type=int,
-                        default=100, help='epoch number')
+    # 1. Carica Configurazione
+    if not os.path.exists(args.config):
+        print(f"ERRORE: FILE CONFIGURAZIONE NON TROVATO: {args.config}")
+        exit(1)
 
-    parser.add_argument('--lr', type=float,
-                        default=5*1e-5, help='learning rate')
+    cfg_data = load_config(args.config)
+    opt = Config(cfg_data) # Converte il dizionario in oggetto navigabile
 
-    parser.add_argument('--optimizer', type=str,
-                        default='AdamW', help='choosing optimizer AdamW or SGD')
-
-    parser.add_argument('--augmentation',
-                        default=3, help='choose to do random flip rotation')
-
-    parser.add_argument('--batchsize', type=int,
-                        default=8, help='training batch size')
-
-    parser.add_argument('--trainsize', type=int,
-                        default=352, help='training dataset size')
-
-    parser.add_argument('--clip', type=float,
-                        default=0.5, help='gradient clipping margin')
-
-    parser.add_argument('--decay_rate', type=float,
-                        default=0.1, help='decay rate of learning rate')
-
-    parser.add_argument('--decay_epoch', type=int,
-                        default=50, help='every n epochs decay learning rate')
-
-    parser.add_argument('--train_path', type=str,
-                        default='./dataset/TrainDataset/',
-                        help='path to train dataset')
-
-    parser.add_argument('--test_path', type=str,
-                        default='./dataset/TestDataset/',
-                        help='path to testing Kvasir dataset')
-
-    parser.add_argument('--train_save', type=str,
-                        default='./model_pth/'+model_name+'/')
-    
-    parser.add_argument('--name_save', type=str,
-                        default='HSNet.pth')
-
-    opt = parser.parse_args()
-    logging.basicConfig(filename='train_log.log',
+    #setup logging
+    logging.basicConfig(filename=opt.paths.log_file,
                         format='[%(asctime)s-%(filename)s-%(levelname)s:%(message)s]',
                         level=logging.INFO, filemode='a', datefmt='%Y-%m-%d %I:%M:%S %p')
+
+    #seed per riproducibilità (non presente in HSNet originale)
+    if hasattr(opt.experiment, 'seed'):
+        seed = opt.experiment.seed
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        print(f"Seed impostato a: {seed}")
 
     # ---- build models ----
     # torch.cuda.set_device(0)  # set your gpu device
     model = HSNet().cuda()
-
     params = model.parameters()
 
-    if opt.optimizer == 'AdamW':
-        optimizer = torch.optim.AdamW(params, opt.lr, weight_decay=1e-4)
+    if opt.training.optimizer.type == 'AdamW':
+        optimizer = torch.optim.AdamW(params, opt.training.optimizer.lr, weight_decay=opt.training.optimizer.weight_decay)
     else:
-        optimizer = torch.optim.SGD(params, opt.lr, weight_decay=1e-4, momentum=0.9)
+        optimizer = torch.optim.SGD(params, opt.training.optimizer.lr, weight_decay=1e-4, momentum=0.9)
 
-    print(optimizer)
+    print(f"Optimizer configurato: {opt.training.optimizer.type}, LR: {opt.training.optimizer.lr}")
 
-    image_root = '{}/images/'.format(opt.train_path)
-    gt_root = '{}/masks/'.format(opt.train_path)
+    #setup dataloader
+    image_root = '{}/images/'.format(opt.paths.train_data)
+    gt_root = '{}/masks/'.format(opt.paths.train_data)
 
-    train_loader = get_loader(image_root, gt_root, batchsize=opt.batchsize, trainsize=opt.trainsize,
-                              augmentation=opt.augmentation)
+    train_loader = get_loader(image_root, gt_root, 
+                              batchsize=opt.training.batchsize, 
+                              trainsize=opt.training.trainsize,
+                              augmentation=opt.training.augmentation)
     total_step = len(train_loader)
 
+    print(f"Dataset caricato. Batch per epoca: {total_step}")
     print("#" * 20, "Start Training", "#" * 20)
+
+
+    # In modalità debug, facciamo finta che ci sia 1 sola epoca per non perdere tempo
+    if args.debug:
+        print("!!! ATTENZIONE: MODALITÀ DEBUG ATTIVA !!!")
+        opt.training.epochs = 1
 
     #for epoch in range(1, opt.epoch):
     #     adjust_lr(optimizer, opt.lr, epoch, 0.1, 200)
     #     train(train_loader, model, optimizer, epoch, opt.test_path)
-    for epoch in range(1, opt.epoch):
+    for epoch in range(1, opt.training.epochs + 1):
+        # --- SCHEDULER MANUALE ORIGINALE ---
         if epoch in [15, 30]:
             adjust_lr(optimizer, 0.5)
-        train(train_loader, model, optimizer, epoch, opt.test_path)
+
+        train(train_loader, model, optimizer, epoch, opt, debug=args.debug)
     # plot the eval.png in the training stage
     # plot_train(dict_plot, name)

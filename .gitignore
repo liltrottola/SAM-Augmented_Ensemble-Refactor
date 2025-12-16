@@ -21,6 +21,7 @@ results/
 generated/
 PolypPVT/
 HSNet_aux/
+src/models/HSNet/model_pth
 
 # --- Model Checkpoints ---
 # Non caricare pesi su GitHub (limite 100MB)

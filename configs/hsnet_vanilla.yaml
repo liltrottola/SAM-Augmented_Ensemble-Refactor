@@ -1,0 +1,26 @@
+experiment:
+  name: "HSNet_Baseline_DA3"
+  seed: 37
+
+#all paths are relative to the location of Train.py file in src/models/HSNet/
+paths:
+  train_data: "../../../data/datasets/TrainDataset"
+  test_data: "../../../data/datasets/TestDataset"
+  save_dir: "./model_pth/"
+  log_file: "train_log_hsnet_vanilla.log"
+
+training:
+  epochs: 100
+  batchsize: 8
+  trainsize: 352 # Originale hardcoded image size for training
+  decay_rate: 0.01
+  decay_epochs: 50
+  augmentation: 3 # 3 = "DA3"
+
+  optimizer:
+    type: "AdamW"
+    lr: 0.00005 # Learning rate (5e-5)
+    weight_decay: 0.0001 # Valore originale hardcoded (1e-4)
+
+
+

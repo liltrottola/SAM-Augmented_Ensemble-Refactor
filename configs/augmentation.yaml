@@ -3,6 +3,7 @@ experiment:
   description: Experiment to evaluate data augmentation techniques on model performance
   version: 1.0
 
+# all paths are relatives to the home directory of the project SAM-Augmented_Ensemble-refactor
 paths:
   # Path base dove si trovano i dataset (ex dataset_path = "../datasets/")
   dataset_root: "data/datasets/"
