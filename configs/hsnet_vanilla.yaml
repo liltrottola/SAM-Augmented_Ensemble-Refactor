@@ -4,15 +4,23 @@ experiment:
 
 #all paths are relative to the location of Train.py file in src/models/HSNet/
 paths:
-  train_data: "../../../datasets/TrainDataset"
-  test_data: "../../../datasets/TestDataset"
-  save_dir: "./model_pth/"
+  datasets_root: "../../../datasets/"
+
+  #------ TRAINING --------
+  save_dir: "../../../output/models/"
   log_file: "train_log_hsnet_vanilla.log"
+
+  #------TESTING ------
+  prediction_dir: "../../../output/predictions/"
 
 training:
   epochs: 100
   batchsize: 8
-  trainsize: 352 # Originale hardcoded image size for training
+  trainsize: 352 # Original hardcoded image size for training
+
+  size_rates: [0.75, 1.0, 1.25] # Multi-scale training (0.75x, 1.0x, 1.25x)
+  clip_margin: 0.5 # Margin for gradient clipping
+
   decay_rate: 0.01
   decay_epochs: 50
   augmentation: 3 # 3 = "DA3"
@@ -22,5 +30,22 @@ training:
     lr: 0.00005 # Learning rate (5e-5)
     weight_decay: 0.0001 # Valore originale hardcoded (1e-4)
 
+  lr_schedule:
+    milestones: [15, 30] # Epochs at which to decay the learning rate
+    decay_factor: 0.5 # Factor by which to decay the learning rate at each milestone
 
+testing:
+  test_checkpoint: "HSNet_Baseline_DA3.pth"
+  testsize: 352
 
+datasets:
+  train: 
+    - "TrainDataset"  #use only one folder for training divided in images and masks
+  test:
+    - "ProvaSmall"
+    -  "TestDataset"
+    #- "CVC-300"
+    #- "CVC-ClinicDB"
+    #- "CVC-ColonDB"
+    #- "Kvasir"
+    #- "ETIS-LaribPolypDB"

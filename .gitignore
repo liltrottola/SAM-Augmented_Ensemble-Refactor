@@ -15,19 +15,20 @@ env/
 # Ignoriamo i dati pesanti, carichiamo solo il codice
 datasets/
 old_code/
-src/augmentation/out/
+output/
 src/augmentation/__pycache__
 results/
 generated/
 PolypPVT/
 HSNet_aux/
-src/models/HSNet/model_pth
+help/
+REFACTOR_PLAN.md
 
 # --- Model Checkpoints ---
 # Non caricare pesi su GitHub (limite 100MB)
 checkpoints/
-checkpoints_sam/
 segment-anything-2/
+checkpoints_sam/
 *.pth
 *.pt
 *.onnx

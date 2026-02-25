@@ -13,7 +13,7 @@ try:
 except ImportError:
     print("WARNING: SAM1 library not found.")
     
-def load_sam_model(version, checkpoint_path, device='cuda'):
+def load_sam_model(version, checkpoint_path, sam_config, device='cuda'):
     """
     Load the SAM model based on the specified version and checkpoint path.
 
@@ -26,7 +26,9 @@ def load_sam_model(version, checkpoint_path, device='cuda'):
              raise FileNotFoundError(f"Checkpoint non trovato: {checkpoint_path}")
     
     if version == 2:
-        model_cfg = "sam2_hiera_l.yaml" 
+        #model_cfg = "sam2_hiera_l.yaml" 
+        model_cfg = sam_config['model_cfg']
+
         print(f"Loading SAM2 from {checkpoint_path}...")
         sam_model = build_sam2(model_cfg, checkpoint_path, device=device, apply_postprocessing=False)
         return SAM2AutomaticMaskGenerator(sam_model)
@@ -39,9 +41,9 @@ def load_sam_model(version, checkpoint_path, device='cuda'):
         sam_model.to(device=device)
         return SamAutomaticMaskGenerator(
             sam_model, 
-            crop_nms_thresh=0.5, 
-            box_nms_thresh=0.5, 
-            pred_iou_thresh=0.5
+            crop_nms_thresh=sam_config['thresholds']['crop_nms'], 
+            box_nms_thresh=sam_config['thresholds']['box_nms'], 
+            pred_iou_thresh=sam_config['thresholds']['pred_iou']
         )
     else:
         raise ValueError("(x) Error: insert a valid SAM version (1,2)")

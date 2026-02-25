@@ -78,15 +78,13 @@ def test(model, path, dataset):
 
     return DSC / num1
 
-
-#modificato def train(train_loader, model, optimizer, epoch, test_path):
 def train(train_loader, model, optimizer, epoch, opt, debug=False):
     model.train()
     # global best (mai usata)
 
-    #logica originale HARDCODED ----- tengo fissi questi valori----
-    size_rates = [0.75, 1, 1.25]
-    clip_margin = 0.5
+    #original logic 
+    size_rates = opt.training.size_rates
+    clip_margin = opt.training.clip_margin
     #------------------------------------------------------------
 
     loss_P2_record = AvgMeter()
@@ -164,17 +162,14 @@ def plot_train(dict_plot=None, name = None):
     plt.savefig('eval.png')
     # plt.show()
 
-
-if __name__ == '__main__':
-    #dict_plot = {'CVC-300':[], 'CVC-ClinicDB':[], 'Kvasir':[], 'CVC-ColonDB':[], 'ETIS-LaribPolypDB':[], 'test':[]}
-    #name = ['CVC-300', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'test']
-    ##################model_name#############################
-
+def main():
     # --- GESTIONE ARGOMENTI ---
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default='../../../configs/hsnet_vanilla.yaml', help='Path al file di configurazione')
+    
     parser.add_argument("--debug", action="store_true", help="attiva modalità per debug")
+    parser.add_argument("--config", type=str, default="../../../configs/hsnet_vanilla.yaml", help="path to config file")
     args = parser.parse_args()
+    
 
     # 1. Carica Configurazione
     if not os.path.exists(args.config):
@@ -212,8 +207,11 @@ if __name__ == '__main__':
     print(f"Optimizer configurato: {opt.training.optimizer.type}, LR: {opt.training.optimizer.lr}")
 
     #setup dataloader
-    image_root = '{}/images/'.format(opt.paths.train_data)
-    gt_root = '{}/masks/'.format(opt.paths.train_data)
+
+    #image_root = '{}/images/'.format(opt.paths.train_data)
+    #gt_root = '{}/masks/'.format(opt.paths.train_data)
+    image_root = '{}/{}/images/'.format(opt.paths.datasets_root, opt.datasets.train[0])
+    gt_root = '{}/{}/masks/'.format(opt.paths.datasets_root, opt.datasets.train[0])
 
     train_loader = get_loader(image_root, gt_root, 
                               batchsize=opt.training.batchsize, 
@@ -235,9 +233,16 @@ if __name__ == '__main__':
     #     train(train_loader, model, optimizer, epoch, opt.test_path)
     for epoch in range(1, opt.training.epochs + 1):
         # --- SCHEDULER MANUALE ORIGINALE ---
-        if epoch in [15, 30]:
-            adjust_lr(optimizer, 0.5)
+        if epoch in opt.training.lr_schedule.milestones:
+            adjust_lr(optimizer, opt.training.lr_schedule.decay_factor)
 
         train(train_loader, model, optimizer, epoch, opt, debug=args.debug)
     # plot the eval.png in the training stage
     # plot_train(dict_plot, name)
+
+if __name__ == '__main__':
+
+    # Set working directory to the script's location for consistent relative paths
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    main()
+   

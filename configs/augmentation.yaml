@@ -9,7 +9,7 @@ paths:
   dataset_root: "datasets/"
 
   # Dove salvare l'output (ex saving_path)
-  output_root: "src/augmentation/out/"
+  output_root: "output/augmentation/"
   
   # Path dei checkpoint (ex checkpoints_root)
   checkpoints_root: "checkpoints_sam"
@@ -40,8 +40,18 @@ augmentation:
 sam:
   # Choose [1], [2], or [1, 2]
   versions: [2]
+  model_cfg: "sam2_hiera_l.yaml" # Choose the checkpoint file for the SAM model (ex: "sam_vit_h_4b8939.pth" or "sam2_hiera_large.pt")
+  
+  thresholds:
+    crop_nms: 0.5
+    box_nms: 0.5
+    pred_iou: 0.5
+  
   checkpoints:
     v1: "sam_vit_h_4b8939.pth"
     v2: "sam2_hiera_large.pt"
 
-
+image_processing:
+  # Parameters for image processing and augmentation
+  resize_threshold: 2000 
+  resize_dim: [1920, 1280] # Resize dimensions for images larger than the threshold
