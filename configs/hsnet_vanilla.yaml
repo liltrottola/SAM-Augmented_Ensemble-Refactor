@@ -7,7 +7,7 @@ paths:
   datasets_root: "../../../datasets/"
 
   #------ TRAINING --------
-  save_dir: "../../../output/models/"
+  models_dir: "../../../output/models/"
   log_file: "train_log_hsnet_vanilla.log"
 
   #------TESTING ------
@@ -42,8 +42,8 @@ datasets:
   train: 
     - "TrainDataset"  #use only one folder for training divided in images and masks
   test:
-    - "ProvaSmall"
-    -  "TestDataset"
+    #- "ProvaSmall"
+    - "TestDataset"
     #- "CVC-300"
     #- "CVC-ClinicDB"
     #- "CVC-ColonDB"

@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 import os, argparse
-from scipy import misc
+#from scipy import misc
 import yaml
 from lib.pvt import HSNet
 from utils.dataloader import test_dataset
@@ -45,80 +45,46 @@ def main():
     cfg_data = load_config(args.config)
     opt = Config(cfg_data)
 
-    # Override con argomenti da linea di comando
-    if args.model_pth is not None:
-        opt.model_pth = args.model_pth
-    if args.test_dataset is not None:
-        opt.test_dataset = args.test_dataset
-    if args.save_path is not None:
-        opt.save_path = args.save_path  
-
-    
-    
+    # Override with command line arguments if provided
+    model_pth = args.model_pth if args.model_pth is not None else os.path.join(opt.paths.models_dir, opt.testing.test_checkpoint)
+    test_datasets = [args.test_dataset] if args.test_dataset is not None else opt.datasets.test
+    save_path = args.save_path if args.save_path is not None else opt.paths.prediction_dir
+    testsize = opt.testing.testsize
 
 
-
-if __name__ == '__main__':
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    
-    '''
-    parser = argparse.ArgumentParser()
-
-    
-    parser.add_argument('--single', type=str)
-    parser.add_argument('--testsize', type=int, default=352, help='testing size')
-    parser.add_argument('--model_pth', type=str, default='./model_pth/HSNet.pth')
-    parser.add_argument('--save_path', type=str, default="./generated")
-    parser.add_argument('--test_dataset', type=str, default="../polyp_dataset/TestDataset")
-
-    parser.add_argument('--config', type=str, default='../../../configs/hsnet_vanilla.yaml', help='path to config file')
-    
-    args = parser.parse_args()
-
-    if not os.path.exists(args.config):
-        print(f"ERRORE: FILE CONFIGURAZIONE NON TROVATO: {args.config}")
-        exit(1)
-
-    config = load_config(args.config)
-    opt = Config(config)
-
+    #4 load model
     model = HSNet()
-    model.load_state_dict(torch.load(opt.model_pth))
+    model.load_state_dict(torch.load(model_pth))
     model.cuda()
-    model.eval()
+    model.eval()    
 
-    dataset_list=['CVC-300', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB']
+    #5 test loop
+    for _data_name in test_datasets:
+        data_path = os.path.join(opt.paths.datasets_root, _data_name)
+        save_dir = os.path.join(save_path, _data_name)
+        os.makedirs(save_dir, exist_ok=True)
 
-    if opt.single=="true":
-        dataset_list=[""]
-
-
-    for _data_name in dataset_list:
-
-        ##### put data_path here #####
-        data_path = opt.test_dataset + "/"+ _data_name
-
-
-        if not os.path.exists(opt.save_path+"/"+_data_name):
-            os.makedirs(opt.save_path+"/"+_data_name)
-            
         image_root = os.path.join(data_path, "images/")
         gt_root = os.path.join(data_path, "masks/")
-
         num1 = len(os.listdir(gt_root))
-        test_loader = test_dataset(image_root, gt_root, 352)
+        test_loader = test_dataset(image_root, gt_root, testsize)
+
         for i in range(num1):
             image, gt, name = test_loader.load_data()
             gt = np.asarray(gt, np.float32)
             gt /= (gt.max() + 1e-8)
             image = image.cuda()
             P1,P2,P3,P4 = model(image)
-            res = F.upsample(P1+P2+P3+P4, size=gt.shape, mode='bilinear', align_corners=False)
+            #original code: res = F.upsample(..) now deprecated, replaced with interpolate
+            res = F.interpolate(P1+P2+P3+P4, size=gt.shape, mode='bilinear', align_corners=False)
             res = res.sigmoid().data.cpu().numpy().squeeze()
-            #res = (res - res.min()) / (res.max() - res.min() + 1e-8)
 
             to_pil = transforms.ToPILImage()
             pil_img = to_pil(res)
-            pil_img.save(opt.save_path+"/"+_data_name+"/"+name)
+            pil_img.save(os.path.join(save_dir, name))
         print(_data_name, 'Finish!')
-'''
+
+
+if __name__ == '__main__':
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    main()

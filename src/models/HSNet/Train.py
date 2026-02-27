@@ -88,6 +88,8 @@ def train(train_loader, model, optimizer, epoch, opt, debug=False):
     #------------------------------------------------------------
 
     loss_P2_record = AvgMeter()
+    total_step = len(train_loader)
+    
     for i, pack in enumerate(train_loader, start=1):
         #----DEBUG BLOCK ----
         if debug and i > 5:
@@ -134,9 +136,9 @@ def train(train_loader, model, optimizer, epoch, opt, debug=False):
                       datetime.now(), epoch, opt.training.epochs, i, total_step,
                       loss_P2_record.show()), optimizer.param_groups[0]['lr'])
     # save model
-    save_path = opt.paths.save_dir
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
+    save_path = opt.paths.models_dir
+    os.makedirs(save_path, exist_ok=True)
+    
     #mean_dice = 0
     #for dataset in ['CVC-300', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB']:
     #    dataset_dice = test(model, test_path, dataset)

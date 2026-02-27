@@ -15,22 +15,25 @@ This repository contains a framework for augmenting medical image datasets using
 ```
 ├── configs/                    # YAML configuration files
 │   ├── augmentation.yaml      # Configuration for augmentation
-│   └── hsnet_vanilla.yaml     # Configuration for HSNet training
+│   └── hsnet_vanilla.yaml     # Configuration for HSNet training/testing
 ├── datasets/                  # Original datasets
+├── output/                    # Generated outputs (gitignored)
+│   ├── augmentation/          # Augmented datasets
+│   ├── models/                # Saved model checkpoints
+│   ├── predictions/           # Inference outputs
+│   └── ensemble/              # Ensemble outputs
 ├── scripts/                   # Executable scripts
 │   └── run_augmentation.py   # Main script for augmentation
 ├── src/                      # Modular source code
 │   ├── augmentation/         # Augmentation modules
 │   │   ├── methods.py       # Augmentation methods
-│   │   ├── sam_loader.py    # SAM model loading
-│   │   └── out/             # Augmentation output directory
+│   │   └── sam_loader.py    # SAM model loading
 │   └── models/              # Segmentation models
 │       ├── HSNet/           # HSNet model
 │       │   ├── Train.py     # Training script
-│       │   ├── Test.py      # Testing script
+│       │   ├── Test.py      # Testing/inference script
 │       │   ├── lib/         # Model libraries
 │       │   ├── utils/       # Utilities
-│       │   ├── model_pth/   # Model weights directory
 │       │   └── pretrained_pth/  # Pretrained weights
 │       ├── HSNet_aux/       # HSNet auxiliary models
 │       ├── PolypPVT/        # PolypPVT model
@@ -79,7 +82,7 @@ source venv_newSAMAug/bin/activate
 python scripts/run_augmentation.py --config configs/augmentation.yaml
 ```
 
-**Output:** Augmented datasets are saved in `src/augmentation/out/sam{1,2}/{method}/`
+**Output:** Augmented datasets are saved in `output/augmentation/`
 
 ### Model Training
 
@@ -91,12 +94,31 @@ python scripts/run_augmentation.py --config configs/augmentation.yaml
 
 **Execution:**
 
-⚠️ **TEMPORARY NOTE:** For now, training must be started **from inside the HSNet model folder** due to relative paths that have not yet been updated. All relative directories will be modified later to allow launching directly from the project home.
+```bash
+python src/models/HSNet/Train.py
+# or with explicit config:
+python src/models/HSNet/Train.py --config configs/hsnet_vanilla.yaml
+# debug mode (1 epoch, 5 batches):
+python src/models/HSNet/Train.py --debug
+```
+
+**Output:** Model checkpoints are saved in `output/models/`
+
+### Model Inference
+
+**Script to run:** [`src/models/HSNet/Test.py`](src/models/HSNet/Test.py)
+
+**Configuration:** Edit the `testing` and `datasets.test` sections in [`configs/hsnet_vanilla.yaml`](configs/hsnet_vanilla.yaml).
+
+**Execution:**
 
 ```bash
-cd src/models/HSNet
-python Train.py --config ../../../configs/hsnet_vanilla.yaml
+python src/models/HSNet/Test.py
+# or with explicit overrides:
+python src/models/HSNet/Test.py --model_pth output/models/HSNet_Baseline_DA3.pth --test_dataset TestDataset
 ```
+
+**Output:** Predictions are saved in `output/predictions/{dataset_name}/`
 
 ## 🔧 Available Augmentation Methods
 
@@ -122,7 +144,8 @@ Methods implemented in [`src/augmentation/methods.py`](src/augmentation/methods.
 
 - SAM checkpoints are automatically downloaded to `checkpoints_sam/`
 - Dataset structure must follow the format: `{dataset}/images/` and `{dataset}/masks/`
+- All generated outputs (models, predictions, augmented data) are saved in `output/` and are gitignored
 
 ---
 
-*Last updated: December 16, 2025*
+*Last updated: 27 February 2026*
