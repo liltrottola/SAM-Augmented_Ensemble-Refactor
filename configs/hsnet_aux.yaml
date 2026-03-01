@@ -1,0 +1,49 @@
+experiment:
+  name: "HSNet_Aux_DA3"
+  seed: 37
+
+# all paths are relative to the location of Train.py in src/models/HSNet_aux/
+paths:
+  datasets_root: "../../../datasets/"
+  aux_root: "../../../output/augmentation/sam2/ourSAMAug/"  # SAM-augmented images from run_augmentation.py
+
+  # ------ TRAINING --------
+  models_dir: "../../../output/models/"
+  log_file: "train_log_hsnet_aux.log"
+
+  # ------ TESTING ------
+  prediction_dir: "../../../output/predictions/"
+
+training:
+  epochs: 40
+  batchsize: 8
+  trainsize: 352
+
+  size_rates: [0.75, 1.0, 1.25]
+  clip_margin: 0.5
+
+  augmentation: false
+
+  optimizer:
+    type: "Adam"
+    lr: 0.00005
+    weight_decay: 0
+
+  lr_schedule:
+    milestones: [20]
+    gamma: 0.2   # MultiStepLR gamma (multiplicative factor)
+
+testing:
+  test_checkpoint: "HSNet_Aux_DA3.pth"
+  testsize: 352
+
+datasets:
+  train:
+    - "TrainDataset"
+  test:
+    - "TestDataset"
+    #- "CVC-300"
+    #- "CVC-ClinicDB"
+    #- "CVC-ColonDB"
+    #- "Kvasir"
+    #- "ETIS-LaribPolypDB"

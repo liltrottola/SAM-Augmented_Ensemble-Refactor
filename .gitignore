@@ -17,12 +17,11 @@ datasets/
 old_code/
 output/
 src/augmentation/__pycache__
-results/
-generated/
 PolypPVT/
-HSNet_aux/
 help/
-REFACTOR_PLAN.md
+
+src/models/HSNet_aux/config_train.sh
+src/models/HSNet_aux/Test.py
 
 # --- Model Checkpoints ---
 # Non caricare pesi su GitHub (limite 100MB)
