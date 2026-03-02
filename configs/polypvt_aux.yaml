@@ -41,9 +41,9 @@ datasets:
   train:
     - "TrainDataset"
   test:
-    - "TestDataset"
-    #- "CVC-300"
-    #- "CVC-ClinicDB"
-    #- "CVC-ColonDB"
-    #- "Kvasir"
-    #- "ETIS-LaribPolypDB"
+    - "TestDatasets/TestDataset"
+    #- "TestDatasets/CVC-300"
+    #- "TestDatasets/CVC-ClinicDB"
+    #- "TestDatasets/CVC-ColonDB"
+    #- "TestDatasets/Kvasir"
+    #- "TestDatasets/ETIS-LaribPolypDB"

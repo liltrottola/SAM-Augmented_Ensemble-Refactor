@@ -15,7 +15,10 @@ This repository contains a framework for augmenting medical image datasets using
 ```
 ├── configs/                    # YAML configuration files
 │   ├── augmentation.yaml      # Configuration for augmentation
-│   └── hsnet_vanilla.yaml     # Configuration for HSNet training/testing
+│   ├── hsnet_vanilla.yaml     # HSNet (no SAM augmentation)
+│   ├── hsnet_aux.yaml         # HSNet (with SAM augmentation)
+│   ├── polypvt_vanilla.yaml   # PolypPVT (no random flip/rotation)
+│   └── polypvt_aux.yaml       # PolypPVT (with DA3 augmentation)
 ├── datasets/                  # Original datasets
 ├── output/                    # Generated outputs (gitignored)
 │   ├── augmentation/          # Augmented datasets
@@ -35,7 +38,12 @@ This repository contains a framework for augmenting medical image datasets using
 │       │   ├── lib/         # Model libraries
 │       │   ├── utils/       # Utilities
 │       │   └── pretrained_pth/  # Pretrained weights
-│       ├── HSNet_aux/       # HSNet auxiliary models
+│       ├── HSNet_aux/       # HSNet with SAM-augmented images
+│       │   ├── Train.py     # Training script
+│       │   ├── Test.py      # Testing/inference script (computes Dice)
+│       │   ├── lib/         # Model libraries
+│       │   ├── dataloader.py
+│       │   └── pretrained_pth/
 │       ├── PolypPVT/        # PolypPVT model
 │       └── SAM/             # SAM model
 ├── checkpoints_sam/          # SAM checkpoints (downloaded automatically)
@@ -84,7 +92,7 @@ python scripts/run_augmentation.py --config configs/augmentation.yaml
 
 **Output:** Augmented datasets are saved in `output/augmentation/`
 
-### Model Training
+### HSNet Training
 
 **Script to run:** [`src/models/HSNet/Train.py`](src/models/HSNet/Train.py)
 
@@ -104,7 +112,25 @@ python src/models/HSNet/Train.py --debug
 
 **Output:** Model checkpoints are saved in `output/models/`
 
-### Model Inference
+### HSNet Aux Training (SAM-augmented)
+
+**Script to run:** [`src/models/HSNet_aux/Train.py`](src/models/HSNet_aux/Train.py)
+
+**Configuration:** Edit [`configs/hsnet_aux.yaml`](configs/hsnet_aux.yaml). Set `paths.aux_root` to the folder containing SAM-augmented images.
+
+**Execution:**
+
+```bash
+python src/models/HSNet_aux/Train.py
+# or with explicit config:
+python src/models/HSNet_aux/Train.py --config configs/hsnet_aux.yaml
+# debug mode (5 batches):
+python src/models/HSNet_aux/Train.py --debug
+```
+
+**Output:** Model checkpoints are saved in `output/models/`
+
+### HSNet Inference
 
 **Script to run:** [`src/models/HSNet/Test.py`](src/models/HSNet/Test.py)
 
@@ -119,6 +145,22 @@ python src/models/HSNet/Test.py --model_pth output/models/HSNet_Baseline_DA3.pth
 ```
 
 **Output:** Predictions are saved in `output/predictions/{dataset_name}/`
+
+### HSNet Aux Inference
+
+**Script to run:** [`src/models/HSNet_aux/Test.py`](src/models/HSNet_aux/Test.py)
+
+**Configuration:** Edit the `testing` and `datasets.test` sections in [`configs/hsnet_aux.yaml`](configs/hsnet_aux.yaml).
+
+**Execution:**
+
+```bash
+python src/models/HSNet_aux/Test.py
+# or with explicit overrides:
+python src/models/HSNet_aux/Test.py --model_pth output/models/HSNet_Aux_DA3.pth
+```
+
+**Output:** Per-dataset Dice scores printed to console. Predictions saved in `output/predictions/{dataset_name}/`
 
 ## 🔧 Available Augmentation Methods
 
@@ -148,4 +190,4 @@ Methods implemented in [`src/augmentation/methods.py`](src/augmentation/methods.
 
 ---
 
-*Last updated: 27 February 2026*
+*Last updated: 2 March 2026*

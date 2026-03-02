@@ -37,13 +37,14 @@ testing:
   test_checkpoint: "HSNet_Aux_DA3.pth"
   testsize: 352
 
+#for each dataset, specify the corresponding path in paths.datasets_root
 datasets:
   train:
     - "TrainDataset"
   test:
-    - "TestDataset"
-    #- "CVC-300"
-    #- "CVC-ClinicDB"
-    #- "CVC-ColonDB"
-    #- "Kvasir"
-    #- "ETIS-LaribPolypDB"
+    - "TestDatasets/TestDataset"
+    #- "TestDatasets/CVC-300"
+    #- "TestDatasets/CVC-ClinicDB"
+    #- "TestDatasets/CVC-ColonDB"
+    #- "TestDatasets/Kvasir"
+    #- "TestDatasets/ETIS-LaribPolypDB"

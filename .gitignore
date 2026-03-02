@@ -21,7 +21,6 @@ PolypPVT/
 help/
 
 src/models/HSNet_aux/config_train.sh
-src/models/HSNet_aux/Test.py
 
 # --- Model Checkpoints ---
 # Non caricare pesi su GitHub (limite 100MB)
