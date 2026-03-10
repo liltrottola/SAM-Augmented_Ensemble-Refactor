@@ -61,7 +61,7 @@ def test(model, path, dataset):
 
         res, res1, res2, res3  = model(image)
         # eval Dice
-        res = F.upsample(res + res1 + res2 + res3 , size=gt.shape, mode='bilinear', align_corners=False)
+        res = F.interpolate(res + res1 + res2 + res3 , size=gt.shape, mode='bilinear', align_corners=False)
         res = res.sigmoid().data.cpu().numpy().squeeze()
         #res = (res - res.min()) / (res.max() - res.min() + 1e-8)
         input = res
@@ -109,8 +109,8 @@ def train(train_loader, model, optimizer, epoch, opt, debug=False):
             trainsize = int(round(opt.training.trainsize * rate / 32) * 32)
 
             if rate != 1:
-                images = F.upsample(images, size=(trainsize, trainsize), mode='bilinear', align_corners=True)
-                gts = F.upsample(gts, size=(trainsize, trainsize), mode='bilinear', align_corners=True)
+                images = F.interpolate(images, size=(trainsize, trainsize), mode='bilinear', align_corners=True)
+                gts = F.interpolate(gts, size=(trainsize, trainsize), mode='bilinear', align_corners=True)
             # ---- forward ----
             P1, P2, P3, P4= model(images)
 

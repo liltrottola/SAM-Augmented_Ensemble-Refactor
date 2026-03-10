@@ -2,7 +2,7 @@ import torch
 import os
 import argparse
 from lib.pvt import HSNet_with_aux
-from dataloader import test_dataset_with_aux # ,get_loader_with_aux
+from utils.dataloader import test_dataset_with_aux # ,get_loader_with_aux
 import numpy as np
 # import random
 import torch.nn.functional as F
