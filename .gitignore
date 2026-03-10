@@ -10,6 +10,8 @@ __pycache__/
 venv_newSAMAug/
 env/
 .env
+*.slurm
+
 
 # --- Datasets & Outputs ---
 # Ignoriamo i dati pesanti, carichiamo solo il codice
@@ -19,6 +21,8 @@ output/
 src/augmentation/__pycache__
 PolypPVT/
 help/
+logs/
+
 
 src/models/HSNet_aux/config_train.sh
 
