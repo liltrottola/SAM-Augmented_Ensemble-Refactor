@@ -19,7 +19,6 @@ datasets/
 old_code/
 output/
 src/augmentation/__pycache__
-PolypPVT/
 help/
 logs/
 
