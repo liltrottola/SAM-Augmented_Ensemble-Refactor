@@ -21,11 +21,11 @@ datasets:
     #- "TrainDataset/"
     #- "small_ds/"
     #- "small_ds_2/"
-    #- "TestDataset/CVC-300/"
-    #- "TestDataset/CVC-ClinicDB/"
-    #- "TestDataset/CVC-ColonDB/"
-    #- "TestDataset/Kvasir/"
-    #- "TestDataset/ETIS-LaribPolypDB/"
+    #- "TestDatasets/CVC-300/"
+    #- "TestDatasets/CVC-ClinicDB/"
+    #- "TestDatasets/CVC-ColonDB/"
+    #- "TestDatasets/Kvasir/"
+    #- "TestDatasets/ETIS-LaribPolypDB/"
 
 augmentation:
   #List of method names exactly as defined in lib.py

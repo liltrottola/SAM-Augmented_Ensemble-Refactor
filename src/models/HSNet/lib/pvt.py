@@ -131,7 +131,7 @@ class SAM(nn.Module):
         self.conv_extend = nn.Conv2d(self.num_s, num_in, kernel_size=1, bias=False)
 
     def forward(self, x, edge):
-        edge = F.upsample(edge, (x.size()[-2], x.size()[-1]))
+        edge = F.interpolate(edge, (x.size()[-2], x.size()[-1]))
 
         n, c, h, w = x.size()
         edge = torch.nn.functional.softmax(edge, dim=1)[:, 1, :, :].unsqueeze(1)

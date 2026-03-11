@@ -101,9 +101,9 @@ def train(train_loader, model, optimizer, epoch, opt, debug=False):
             # If the size rate is not 1 (original size), rescale the images and ground truths
             # This is done to create training data at different scales
             if rate != 1:
-                images = F.upsample(images, size=(trainsize, trainsize), mode='bilinear', align_corners=True)
-                gts = F.upsample(gts, size=(trainsize, trainsize), mode='bilinear', align_corners=True)
-                aux = F.upsample(aux, size=(trainsize, trainsize), mode='bilinear', align_corners=True)
+                images = F.interpolate(images, size=(trainsize, trainsize), mode='bilinear', align_corners=True)
+                gts = F.interpolate(gts, size=(trainsize, trainsize), mode='bilinear', align_corners=True)
+                aux = F.interpolate(aux, size=(trainsize, trainsize), mode='bilinear', align_corners=True)
             
             # ---- Forward pass ----
             # Zero out the gradients from the previous iteration
@@ -337,8 +337,8 @@ def test(model, dataset):
         # Perform a forward pass with the main image through the model, obtaining multiple levels of output
         res, res1, res2, res3, _, _, _, _ = model(image)
         
-        # Combine the outputs and upsample the result to match the shape of the ground truth mask
-        res = F.upsample(res + res1 + res2 + res3, size=gt.shape, mode='bilinear', align_corners=False)
+        # Combine the outputs and interpolate the result to match the shape of the ground truth mask
+        res = F.interpolate(res + res1 + res2 + res3, size=gt.shape, mode='bilinear', align_corners=False)
         
         # Apply the sigmoid function to convert the model outputs to probabilities, and move the result back to the CPU
         res = res.sigmoid().data.cpu().numpy().squeeze()
@@ -348,7 +348,7 @@ def test(model, dataset):
         
         # Do the same forward pass and processing for the auxiliary image
         aux_res, aux_res1, aux_res2, aux_res3, _, _, _, _ = model(aux)
-        aux_res = F.upsample(aux_res + aux_res1 + aux_res2 + aux_res3, size=gt.shape, mode='bilinear', align_corners=False)
+        aux_res = F.interpolate(aux_res + aux_res1 + aux_res2 + aux_res3, size=gt.shape, mode='bilinear', align_corners=False)
         aux_res = aux_res.sigmoid().data.cpu().numpy().squeeze()
         #aux_res = (aux_res - aux_res.min()) / (aux_res.max() - aux_res.min() + 1e-8)
         
