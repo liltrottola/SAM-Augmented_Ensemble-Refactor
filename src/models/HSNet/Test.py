@@ -58,6 +58,7 @@ def main():
     model.cuda()
     model.eval()    
 
+    scores = []
     #5 test loop
     for _data_name in test_datasets:
         data_path = os.path.join(opt.paths.datasets_root, _data_name)
@@ -68,6 +69,8 @@ def main():
         gt_root = os.path.join(data_path, "masks/")
         num1 = len(os.listdir(gt_root))
         test_loader = test_dataset(image_root, gt_root, testsize)
+
+        DSC = 0.0 #to accumulate dice scores
 
         for i in range(num1):
             image, gt, name = test_loader.load_data()
@@ -82,8 +85,25 @@ def main():
             to_pil = transforms.ToPILImage()
             pil_img = to_pil(res)
             pil_img.save(os.path.join(save_dir, name))
-        print(_data_name, 'Finish!')
 
+            target = np.array(gt)
+            N = gt.shape
+            smooth = 1
+            input_flat = np.reshape(res, (-1))
+            target_flat = np.reshape(target, (-1))
+            intersection = (input_flat * target_flat)
+            dice = (2 * intersection.sum() + smooth) / (res.sum() + target.sum() + smooth)
+            dice = '{:.4f}'.format(dice)
+            dice = float(dice)
+            DSC = DSC + dice
+
+        score = DSC / num1
+        scores.append(score)
+
+        print(_data_name, 'Finish!')
+        print(_data_name, score)
+    
+    print('Average DSC across datasets:', sum(scores)/len(scores))
 
 if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
