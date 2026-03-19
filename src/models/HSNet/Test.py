@@ -51,6 +51,8 @@ def main():
     save_path = args.save_path if args.save_path is not None else opt.paths.prediction_dir
     testsize = opt.testing.testsize
 
+    model_name = os.path.splitext(os.path.basename(model_pth))[0]
+    opt.model_name = model_name
 
     #4 load model
     model = HSNet()
@@ -62,7 +64,7 @@ def main():
     #5 test loop
     for _data_name in test_datasets:
         data_path = os.path.join(opt.paths.datasets_root, _data_name)
-        save_dir = os.path.join(save_path, _data_name)
+        save_dir = os.path.join(save_path, model_name, _data_name)
         os.makedirs(save_dir, exist_ok=True)
 
         image_root = os.path.join(data_path, "images/")

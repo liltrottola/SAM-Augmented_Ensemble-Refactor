@@ -89,7 +89,9 @@ def test(model, opt, dataset):
         to_pil = transforms.ToPILImage()
         pil_img = to_pil(input)
 
-        save_dir = os.path.join(opt.paths.prediction_dir, dataset)
+        save_root = os.path.join(opt.paths.prediction_dir, opt.model_name)
+        save_dir = os.path.join(save_root, dataset)
+        
         os.makedirs(save_dir, exist_ok=True)
 
         pil_img.save(os.path.join(save_dir, name))
@@ -125,6 +127,8 @@ def main():
     if args.save_path:    opt.paths.prediction_dir = args.save_path
     test_datasets = [args.test_dataset] if args.test_dataset else opt.datasets.test
 
+    model_name = os.path.splitext(os.path.basename(model_pth))[0]
+    opt.model_name = model_name
 
     model = HSNet_with_aux().cuda()
     model.load_state_dict(torch.load(model_pth))
