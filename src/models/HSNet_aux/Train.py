@@ -260,6 +260,11 @@ def main():
     total_step = len(train_loader)
     print(f"Dataset loaded. Batches per epoch: {total_step}")
     
+    # In modalità debug, facciamo finta che ci sia 1 sola epoca per non perdere tempo
+    if args.debug:
+        print("!!! ATTENZIONE: MODALITÀ DEBUG ATTIVA !!!")
+        opt.training.epochs = 1
+        
     # Begin the training process, iterating through each epoch.
     for epoch in range(1, opt.training.epochs+1):
          # Call the training function to train the model for the current epoch.

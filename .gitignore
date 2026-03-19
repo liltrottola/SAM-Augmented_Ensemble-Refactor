@@ -10,7 +10,6 @@ __pycache__/
 venv_newSAMAug/
 env/
 .env
-*.slurm
 
 
 # --- Datasets & Outputs ---
