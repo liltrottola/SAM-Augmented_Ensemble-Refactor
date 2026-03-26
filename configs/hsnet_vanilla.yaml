@@ -43,9 +43,9 @@ datasets:
     - "TrainDataset"  #use only one folder for training divided in images and masks
   test:
     #- "ProvaSmall"
-    - "TestDatasets/TestDataset"
-    #- "TestDatasets/CVC-300"
-    #- "TestDatasets/CVC-ClinicDB"
-    #- "TestDatasets/CVC-ColonDB"
-    #- "TestDatasets/Kvasir"
-    #- "TestDatasets/ETIS-LaribPolypDB"
+    #- "TestDatasets/TestDataset"
+    - "TestDatasets/CVC-300"
+    - "TestDatasets/CVC-ClinicDB"
+    - "TestDatasets/CVC-ColonDB"
+    - "TestDatasets/Kvasir"
+    - "TestDatasets/ETIS-LaribPolypDB"
