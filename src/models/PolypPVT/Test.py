@@ -26,7 +26,7 @@ class Config(object):
 def main():
      #1 parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default='../../../configs/polypvt_aux.yaml', help='path to config file')
+    parser.add_argument('--config', type=str, default='../../../configs/polypvt_vanilla.yaml', help='path to config file')
     
     #2 ovveride for launcher
     parser.add_argument('--model_pth', type=str, default=None, help='Override model pth')

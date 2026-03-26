@@ -1,0 +1,58 @@
+models:
+  - name: hsnet
+    has_aux: false
+    folder: "HSNet"
+    train_script: "Train.py"
+    test_script: "Test.py"
+
+  - name: hsnet_aux
+    has_aux: true
+    folder: "HSNet_aux"
+    train_script: "Train.py"
+    test_script: "Test.py"
+
+  - name: polypvt
+    has_aux: true
+    folder: "PolypPVT"
+    train_script: "Train.py"
+    test_script: "Test.py"
+
+  - name: polypvt_vanilla
+    has_aux: false
+    folder: "PolypPVT"
+    train_script: "Train.py"
+    test_script: "Test.py"
+
+# training section
+training:
+  runs: 5
+  seeds: [37, 42, 123, 456, 789]
+
+  # Choose [1], [2], or [1, 2]
+  sam_versions: [1, 2]
+
+  #List of method names
+  aug_methods:
+    - "SAMAug"
+    - "ourSAMAug"
+    - "RG_segPrior"
+    - "SV_segPrior"
+    - "RG_logits"
+    - "PCA_segPrior"
+
+#inference/testing section
+testing:
+  runs: 5
+
+  # Choose [1], [2], or [1, 2]
+  sam_versions: [1, 2]
+
+  #List of method names
+  aug_methods:
+    - "SAMAug"
+    - "ourSAMAug"
+    - "RG_segPrior"
+    - "SV_segPrior"
+    - "RG_logits"
+    - "PCA_segPrior"
+

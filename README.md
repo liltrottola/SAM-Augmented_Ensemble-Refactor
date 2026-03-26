@@ -2,6 +2,10 @@
 
 ⚠️ **PROJECT UNDER REFACTORING** ⚠️
 
+Runner scripts (`run_training.py`, `run_inference.py`, `run_ensemble.py`) are implemented but not yet validated on the cluster.
+
+PolypPVT integration is still in progress.
+
 ## 📂 Original Project
 
 https://github.com/LorisNanni/Exploring-SAM-Augmented-Ensembles
@@ -17,8 +21,9 @@ This repository contains a framework for augmenting medical image datasets using
 │   ├── augmentation.yaml      # Configuration for augmentation
 │   ├── hsnet_vanilla.yaml     # HSNet (no SAM augmentation)
 │   ├── hsnet_aux.yaml         # HSNet (with SAM augmentation)
-│   ├── polypvt_vanilla.yaml   # PolypPVT (no random flip/rotation)
-│   └── polypvt_aux.yaml       # PolypPVT (with DA3 augmentation)
+│   ├── polypvt_vanilla.yaml   # PolypPVT (no random flip/rotation) ⚠️ in progress
+│   ├── polypvt_aux.yaml       # PolypPVT (with SAM augmentation) ⚠️ in progress
+│   └── sweep.yaml             # Experiment sweep (training + inference)
 ├── datasets/                  # Original datasets
 ├── output/                    # Generated outputs (gitignored)
 │   ├── augmentation/          # Augmented datasets
@@ -26,11 +31,17 @@ This repository contains a framework for augmenting medical image datasets using
 │   ├── predictions/           # Inference outputs
 │   └── ensemble/              # Ensemble outputs
 ├── scripts/                   # Executable scripts
-│   └── run_augmentation.py   # Main script for augmentation
+│   ├── run_augmentation.py    # SAM augmentation runner
+│   ├── run_training.py        # Training sweep runner ⚠️ not yet validated
+│   ├── run_inference.py       # Inference sweep runner ⚠️ not yet validated
+│   └── run_ensemble.py        # Ensemble evaluation ⚠️ not yet validated
+├── slurm/                     # SLURM job submission scripts
 ├── src/                      # Modular source code
 │   ├── augmentation/         # Augmentation modules
 │   │   ├── methods.py       # Augmentation methods
 │   │   └── sam_loader.py    # SAM model loading
+│   ├── ensemble/             # Ensemble module
+│   │   └── ensemble.py      # Mean rule ensemble + Dice evaluation
 │   └── models/              # Segmentation models
 │       ├── HSNet/           # HSNet model
 │       │   ├── Train.py     # Training script
@@ -42,10 +53,9 @@ This repository contains a framework for augmenting medical image datasets using
 │       │   ├── Train.py     # Training script
 │       │   ├── Test.py      # Testing/inference script (computes Dice)
 │       │   ├── lib/         # Model libraries
-│       │   ├── dataloader.py
+│       │   ├── utils/dataloader.py
 │       │   └── pretrained_pth/
-│       ├── PolypPVT/        # PolypPVT model
-│       └── SAM/             # SAM model
+│       └── PolypPVT/        # PolypPVT model ⚠️ in progress
 ├── checkpoints_sam/          # SAM checkpoints (downloaded automatically)
 ├── segment-anything-2/       # SAM2 repository (cloned automatically)
 ├── requirements.txt          # Python dependencies
@@ -116,7 +126,7 @@ python src/models/HSNet/Train.py --debug
 
 **Script to run:** [`src/models/HSNet_aux/Train.py`](src/models/HSNet_aux/Train.py)
 
-**Configuration:** Edit [`configs/hsnet_aux.yaml`](configs/hsnet_aux.yaml). Set `paths.aux_root` to the folder containing SAM-augmented images.
+**Configuration:** Edit [`configs/hsnet_aux.yaml`](configs/hsnet_aux.yaml). Set `paths.aux_root_base` to the folder containing SAM-augmented images.
 
 **Execution:**
 
@@ -162,10 +172,78 @@ python src/models/HSNet_aux/Test.py --model_pth output/models/HSNet_Aux_DA3.pth
 
 **Output:** Per-dataset Dice scores printed to console. Predictions saved in `output/predictions/{dataset_name}/`
 
+### 🔄 Training Sweep Runner ⚠️ not yet cluster-validated
+
+**Script to run:** [`scripts/run_training.py`](scripts/run_training.py)
+
+**Configuration:** Edit [`configs/sweep.yaml`](configs/sweep.yaml) to select models, methods, SAM versions and number of runs.
+
+**Execution:**
+
+```bash
+# Run all models, all combinations
+python scripts/run_training.py --sweep configs/sweep.yaml
+
+# Filter to one model only
+python scripts/run_training.py --sweep configs/sweep.yaml --model hsnet_aux
+
+# SLURM array job (one run per job)
+python scripts/run_training.py --sweep configs/sweep.yaml --model hsnet_aux --run_id $SLURM_ARRAY_TASK_ID
+```
+
+**Output:** Checkpoints saved as `output/models/sam{v}_{method}_{model_name}_run{id}.pth`
+
+### 🔄 Inference Sweep Runner ⚠️ not yet cluster-validated
+
+**Script to run:** [`scripts/run_inference.py`](scripts/run_inference.py)
+
+**Configuration:** Uses the `testing` section of [`configs/sweep.yaml`](configs/sweep.yaml) — independent from `training`, so inference can target a different subset.
+
+**Execution:**
+
+```bash
+python scripts/run_inference.py --sweep configs/sweep.yaml
+python scripts/run_inference.py --sweep configs/sweep.yaml --model hsnet_aux
+python scripts/run_inference.py --sweep configs/sweep.yaml --model hsnet_aux --run_id 3
+```
+
+**Output:** Predictions saved in `output/predictions/{model_name}/{dataset}/`
+
+### 🔄 Ensemble Evaluation ⚠️ not yet cluster-validated
+
+**Script to run:** [`scripts/run_ensemble.py`](scripts/run_ensemble.py)
+
+**Execution:**
+
+```bash
+python scripts/run_ensemble.py \
+    --models_outputs output/predictions/ \
+    --test_masks datasets/TestDatasets/TestDataset/ \
+    --out_folder output/ensemble/
+```
+
+Loads all model prediction subfolders under `--models_outputs`, averages predictions pixel-wise (mean rule after sigmoid, threshold 0.5), prints per-dataset Dice and overall mean.
+
+### ⚙️ Sweep Configuration (`configs/sweep.yaml`)
+
+`sweep.yaml` is the central configuration point for running experiments. It has two independent sections — `training` and `testing`.
+
+Key fields:
+- `models` — which models to run, their folder, scripts, and whether they use SAM augmentation (`has_aux: true/false`)
+- `training.seeds` — one seed per run for reproducibility across the 5 runs
+- `training.sam_versions` / `testing.sam_versions` — `[1]`, `[2]`, or `[1, 2]`
+- `training.aug_methods` / `testing.aug_methods` — comment/uncomment to select methods
+
+If `has_aux: true` → runner loops over `sam_versions × aug_methods × runs`.
+If `has_aux: false` → runner loops over `runs` only.
+
+For SLURM: submit with `--array=1-5` and pass `$SLURM_ARRAY_TASK_ID` as `--run_id`. Each array job runs all method combinations for that run ID in parallel with the others.
+
 ## 🔧 Available Augmentation Methods
 
 Methods implemented in [`src/augmentation/methods.py`](src/augmentation/methods.py):
 
+- `SAMAug` - SAM segmentation prior added to G and B channels
 - `ourSAMAug` - Custom SAM augmentation
 - `RG_segPrior` - Random Gaussian with segmentation prior
 - `SV_segPrior` - HSV Color Space with Segmentation Prior (H-Channel Encoding)
@@ -187,7 +265,9 @@ Methods implemented in [`src/augmentation/methods.py`](src/augmentation/methods.
 - SAM checkpoints are automatically downloaded to `checkpoints_sam/`
 - Dataset structure must follow the format: `{dataset}/images/` and `{dataset}/masks/`
 - All generated outputs (models, predictions, augmented data) are saved in `output/` and are gitignored
+- PolypPVT integration is in progress — `Train.py` and `Test.py` exist but runner compatibility is pending
+- Runner scripts have not yet been validated on the cluster
 
 ---
 
-*Last updated: 2 March 2026*
+*Last updated: 26 March 2026*

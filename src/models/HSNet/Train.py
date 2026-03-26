@@ -146,7 +146,7 @@ def train(train_loader, model, optimizer, epoch, opt, debug=False):
     #    logging.info('epoch: {}, dataset: {}, dice: {}'.format(epoch, dataset, dataset_dice))
     #    print(dataset, ': ', dataset_dice)
     #print('Mean Performance: ', mean_dice/len(['CVC-300', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB']))
-    filename = f"{opt.experiment.name}.pth"
+    filename = f"{opt.model_name}.pth"
     torch.save(model.state_dict(), os.path.join(save_path, filename))
 
 
@@ -170,6 +170,8 @@ def main():
     
     parser.add_argument("--debug", action="store_true", help="attiva modalità per debug")
     parser.add_argument("--config", type=str, default="../../../configs/hsnet_vanilla.yaml", help="path to config file")
+    parser.add_argument("--model_name", type=str, default=None, help="Model save name override")
+    parser.add_argument('--seed', type=int, default=None, help='Seed number for random number generation to ensure consistent results across runs.')
     args = parser.parse_args()
     
 
@@ -181,6 +183,11 @@ def main():
     cfg_data = load_config(args.config)
     opt = Config(cfg_data) # Converte il dizionario in oggetto navigabile
 
+    model_name = args.model_name if args.model_name is not None else opt.experiment.name
+    opt.model_name = model_name # Aggiorna opt con il nome del modello (utile per salvataggio e logging)
+    if args.seed is not None:
+        opt.experiment.seed = args.seed # Aggiorna opt con il seed se fornito da CLI
+        
     #setup logging
     logging.basicConfig(filename=opt.paths.log_file,
                         format='[%(asctime)s-%(filename)s-%(levelname)s:%(message)s]',

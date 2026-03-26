@@ -11,9 +11,6 @@ fi
 echo "ACTIVATING VENV NOW"
 source venv_newSAMAug/bin/activate
 
-
-
-
 echo "CLONING SAM2 REPO"
 if [ ! -d "segment-anything-2" ]; then
     git clone https://github.com/facebookresearch/segment-anything-2.git

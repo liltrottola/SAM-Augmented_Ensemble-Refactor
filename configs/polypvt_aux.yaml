@@ -1,11 +1,13 @@
 experiment:
   name: "PolypPVT_Aux_DA3"
   seed: 10
+  sam_version: 2
+  method: "ourSAMAug"
 
 # all paths are relative to the location of Train.py in src/models/PolypPVT/
 paths:
   datasets_root: "../../../datasets/"
-  aux_root: "../../../output/augmentation/sam2/ourSAMAug/"  # subfolders must match datasets.train names
+  aux_root_base: "../../../output/augmentation/"  # subfolders must match datasets.train names
 
   # ------ TRAINING --------
   models_dir: "../../../output/models/"
@@ -22,7 +24,7 @@ training:
   size_rates: [0.75, 1.0, 1.25]
   clip_margin: 0.5
 
-  augmentation: "da3"
+  augmentation: false
 
   optimizer:
     type: "AdamW"

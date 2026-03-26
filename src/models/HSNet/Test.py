@@ -46,7 +46,11 @@ def main():
     opt = Config(cfg_data)
 
     # Override with command line arguments if provided
-    model_pth = args.model_pth if args.model_pth is not None else os.path.join(opt.paths.models_dir, opt.testing.test_checkpoint)
+    if args.model_pth is not None:
+        model_pth = os.path.join(opt.paths.models_dir, args.model_pth)
+    else:           
+        model_pth = os.path.join(opt.paths.models_dir, opt.testing.test_checkpoint)
+    
     test_datasets = [args.test_dataset] if args.test_dataset is not None else opt.datasets.test
     save_path = args.save_path if args.save_path is not None else opt.paths.prediction_dir
     testsize = opt.testing.testsize

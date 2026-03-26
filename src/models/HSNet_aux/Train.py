@@ -176,13 +176,20 @@ def train(train_loader, model, optimizer, epoch, opt, debug=False):
     """
     #if epoch == opt.epoch - 1
         # Last epoch reached, save the resulting model
-    torch.save(model.state_dict(), os.path.join(save_path, opt.experiment.name + '.pth'))
+    torch.save(model.state_dict(), os.path.join(save_path, opt.model_name + '.pth'))
 
 def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default='../../../configs/hsnet_aux.yaml', help='Path to the YAML configuration file')
     parser.add_argument('--debug', action='store_true', help='Enable debug mode to run a shorter training loop')
+    
+    # Optional command-line arguments to override specific configuration values from the YAML file, for run_training.py, but they can be used also for Train.py if needed
+    parser.add_argument('--sam_version' , type=int , default=None, help='Version of SAM to use for augmentation data (e.g., 1 or 2). If not specified, it will use the default version defined in the configuration file.')
+    parser.add_argument('--method', type=str, default=None, help='Method used for generating augmentation data. If not specified, it will use the default method defined in the configuration file.')
+    parser.add_argument('--model_name', type=str, default=None, help='Name of the model to be trained. This helps in identifying the model configuration when saving and tracking experiments. If not specified, it will use the default model name defined in the configuration file.')
+    parser.add_argument('--seed', type=int, default=None, help='Seed number for random number generation to ensure consistent results across runs. If not specified, it will use the default seed defined in the configuration file.')
+    
     args = parser.parse_args()
 
     if not os.path.exists(args.config):
@@ -193,6 +200,14 @@ def main():
     cfg_data = load_config(args.config)
     opt = Config(cfg_data)
 
+    # CLI overrides, used for path generation and name of the model
+    sam_version = args.sam_version if args.sam_version is not None else opt.experiment.sam_version
+    method = args.method if args.method is not None else opt.experiment.method
+    model_name = args.model_name if args.model_name is not None else opt.experiment.name
+    opt.model_name = model_name
+    
+    if args.seed is not None:
+        opt.experiment.seed = args.seed
 
     # Set a seed number for random number generation to ensure consistent results across runs
     seednumber = opt.experiment.seed
@@ -247,7 +262,7 @@ def main():
     gt_root    = os.path.join(opt.paths.datasets_root, opt.datasets.train[0], "masks/")
 
     # assumes augmentation output uses the same folder name as the training dataset
-    aux_root   = os.path.join(opt.paths.aux_root, opt.datasets.train[0], "images/")
+    aux_root   = os.path.join(opt.paths.aux_root_base, f"sam{sam_version}", method , opt.datasets.train[0], "images/")
 
 
     # Create a data loader to fetch training batches with the specified batch size and image dimensions.

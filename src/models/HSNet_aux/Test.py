@@ -48,7 +48,7 @@ def test(model, opt, dataset):
     image_root = os.path.join(data_path, "images/")
     gt_root = os.path.join(data_path, "masks/")
 
-    aux_folder= os.path.join(opt.paths.aux_root, dataset)
+    aux_folder= os.path.join(opt.paths.aux_root_base, f"sam{opt.experiment.sam_version}" , opt.experiment.method, dataset)
     aux_root = os.path.join(aux_folder, "images/")
 
 
@@ -111,20 +111,29 @@ def test(model, opt, dataset):
 
 def main():
     parser = argparse.ArgumentParser()
+    
     parser.add_argument('--config',type=str, default='../../../configs/hsnet_aux.yaml')
-    parser.add_argument('--aux_root', type=str , default=None)
     parser.add_argument('--test_dataset', type=str , default=None)
     parser.add_argument('--model_pth', type=str , default=None)
-    parser.add_argument('--save_path', type=str , default=None)
+    parser.add_argument('--sam_version' , type=int , default=None, help='Version of SAM to use for augmentation data (e.g., 1 or 2). If not specified, it will use the default version defined in the configuration file.')
+    parser.add_argument('--method', type=str, default=None, help='Method used for generating augmentation data. If not specified, it will use the default method defined in the configuration file.')
+    
     args = parser.parse_args()
 
     cfg_data = load_config(args.config)
     opt = Config(cfg_data)
 
     # CLI overrides
-    model_pth = args.model_pth if args.model_pth is not None else os.path.join(opt.paths.models_dir, opt.testing.test_checkpoint)
-    if args.aux_root:     opt.paths.aux_root = args.aux_root
-    if args.save_path:    opt.paths.prediction_dir = args.save_path
+    if args.model_pth is not None:
+        model_pth = os.path.join(opt.paths.models_dir, args.model_pth)
+    else:           
+        model_pth = os.path.join(opt.paths.models_dir, opt.testing.test_checkpoint)
+
+    if args.sam_version is not None:
+        opt.experiment.sam_version = args.sam_version
+    if args.method is not None:
+        opt.experiment.method = args.method
+
     test_datasets = [args.test_dataset] if args.test_dataset else opt.datasets.test
 
     model_name = os.path.splitext(os.path.basename(model_pth))[0]
@@ -139,8 +148,6 @@ def main():
         scores.append(score)
         print(dataset, score)
     print("center_m", sum(scores)/len(scores))
-
-
 
 if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
