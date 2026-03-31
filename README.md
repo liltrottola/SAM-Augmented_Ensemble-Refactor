@@ -1,10 +1,8 @@
 # SAM-Augmented Ensemble (Refactoring)
 
-⚠️ **PROJECT UNDER REFACTORING** ⚠️
+⚠️ Runner scripts (`run_training.py`, `run_inference.py`, `run_ensemble.py`) not yet validated on the cluster.
 
-Runner scripts (`run_training.py`, `run_inference.py`, `run_ensemble.py`) are implemented but not yet validated on the cluster.
-
-PolypPVT integration is still in progress.
+⚠️ PolypPVT training and inference not yet validated on the cluster.
 
 ## 📂 Original Project
 
@@ -21,14 +19,15 @@ This repository contains a framework for augmenting medical image datasets using
 │   ├── augmentation.yaml      # Configuration for augmentation
 │   ├── hsnet_vanilla.yaml     # HSNet (no SAM augmentation)
 │   ├── hsnet_aux.yaml         # HSNet (with SAM augmentation)
-│   ├── polypvt_vanilla.yaml   # PolypPVT (no random flip/rotation) ⚠️ in progress
-│   ├── polypvt_aux.yaml       # PolypPVT (with SAM augmentation) ⚠️ in progress
+│   ├── polypPVT_vanilla.yaml  # PolypPVT (no SAM augmentation)
+│   ├── polypPVT_aux.yaml      # PolypPVT (with SAM augmentation)
 │   └── sweep.yaml             # Experiment sweep (training + inference)
 ├── datasets/                  # Original datasets
 ├── output/                    # Generated outputs (gitignored)
 │   ├── augmentation/          # Augmented datasets
 │   ├── models/                # Saved model checkpoints
 │   ├── predictions/           # Inference outputs
+│   ├── logits/                # Raw pre-sigmoid logits (.npy)
 │   └── ensemble/              # Ensemble outputs
 ├── scripts/                   # Executable scripts
 │   ├── run_augmentation.py    # SAM augmentation runner
@@ -55,7 +54,13 @@ This repository contains a framework for augmenting medical image datasets using
 │       │   ├── lib/         # Model libraries
 │       │   ├── utils/dataloader.py
 │       │   └── pretrained_pth/
-│       └── PolypPVT/        # PolypPVT model ⚠️ in progress
+│       └── PolypPVT/        # PolypPVT model ⚠️ not yet cluster-validated
+│           ├── Train_vanilla.py  # Training (no SAM augmentation)
+│           ├── Train_aux.py      # Training (with SAM augmentation)
+│           ├── Test_vanilla.py   # Inference (no SAM augmentation)
+│           ├── Test_aux.py       # Inference (with SAM augmentation)
+│           ├── lib/
+│           └── utils/
 ├── checkpoints_sam/          # SAM checkpoints (downloaded automatically)
 ├── segment-anything-2/       # SAM2 repository (cloned automatically)
 ├── requirements.txt          # Python dependencies
@@ -172,6 +177,30 @@ python src/models/HSNet_aux/Test.py --model_pth output/models/HSNet_Aux_DA3.pth
 
 **Output:** Per-dataset Dice scores printed to console. Predictions saved in `output/predictions/{dataset_name}/`
 
+### PolypPVT Training ⚠️ not yet cluster-validated
+
+**Scripts:** [`src/models/PolypPVT/Train_vanilla.py`](src/models/PolypPVT/Train_vanilla.py) / [`Train_aux.py`](src/models/PolypPVT/Train_aux.py)
+
+**Configuration:** [`configs/polypPVT_vanilla.yaml`](configs/polypPVT_vanilla.yaml) / [`configs/polypPVT_aux.yaml`](configs/polypPVT_aux.yaml)
+
+```bash
+python src/models/PolypPVT/Train_vanilla.py --config configs/polypPVT_vanilla.yaml
+python src/models/PolypPVT/Train_aux.py --config configs/polypPVT_aux.yaml
+# debug mode:
+python src/models/PolypPVT/Train_vanilla.py --debug
+```
+
+### PolypPVT Inference ⚠️ not yet cluster-validated
+
+**Scripts:** [`src/models/PolypPVT/Test_vanilla.py`](src/models/PolypPVT/Test_vanilla.py) / [`Test_aux.py`](src/models/PolypPVT/Test_aux.py)
+
+```bash
+python src/models/PolypPVT/Test_vanilla.py --config configs/polypPVT_vanilla.yaml
+python src/models/PolypPVT/Test_aux.py --config configs/polypPVT_aux.yaml
+```
+
+**Output:** Predictions in `output/predictions/{model_name}/{dataset}/`, logits in `output/logits/{model_name}/{dataset}/`
+
 ### 🔄 Training Sweep Runner ⚠️ not yet cluster-validated
 
 **Script to run:** [`scripts/run_training.py`](scripts/run_training.py)
@@ -265,9 +294,10 @@ Methods implemented in [`src/augmentation/methods.py`](src/augmentation/methods.
 - SAM checkpoints are automatically downloaded to `checkpoints_sam/`
 - Dataset structure must follow the format: `{dataset}/images/` and `{dataset}/masks/`
 - All generated outputs (models, predictions, augmented data) are saved in `output/` and are gitignored
-- PolypPVT integration is in progress — `Train.py` and `Test.py` exist but runner compatibility is pending
+- All 4 Test scripts save raw logits (pre-sigmoid, float32, `.npy`) in `output/logits/`
+- PolypPVT scripts are complete but not yet validated on the cluster
 - Runner scripts have not yet been validated on the cluster
 
 ---
 
-*Last updated: 26 March 2026*
+*Last updated: 31 March 2026*
