@@ -1,7 +1,7 @@
 import torch
 import os
 import argparse
-from lib.pvt import HSNet_with_aux
+from lib.pvt import PolypPVT
 from utils.dataloader import test_dataset_with_aux # ,get_loader_with_aux
 import numpy as np
 # import random
@@ -25,28 +25,11 @@ class Config(object):
                 setattr(self, k, v)
 # ----------------------------------
 
-'''
-nothing random happening:
-
-The model weights are fixed (loaded from a .pth file)
-The test data is loaded in order, no shuffling
-The inference is purely deterministic math
-
-seednumber=10
-random.seed(seednumber)     # python random generator
-np.random.seed(seednumber)  # numpy random generator
-
-torch.manual_seed(seednumber)
-torch.cuda.manual_seed_all(seednumber)
-
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-'''
-
 def test(model, opt, dataset):
+
     data_path = os.path.join(opt.paths.datasets_root, dataset)
-    image_root = os.path.join(data_path, "images/")
-    gt_root = os.path.join(data_path, "masks/")
+    image_root = '{}/images/'.format(data_path)
+    gt_root = '{}/masks/'.format(data_path)
 
     aux_folder= os.path.join(opt.paths.aux_root_base, f"sam{opt.experiment.sam_version}" , opt.experiment.method, dataset)
     aux_root = os.path.join(aux_folder, "images/")
@@ -58,8 +41,6 @@ def test(model, opt, dataset):
     num1 = len(os.listdir(gt_root))
     test_loader = test_dataset_with_aux(image_root, gt_root, aux_root, opt.testing.testsize)
     DSC = 0.0
-    counter_aux = 0
-    counter_img = 0
     for i in range(num1):
         image, gt, aux,name = test_loader.load_data()
         gt = np.asarray(gt, np.float32)
@@ -67,35 +48,26 @@ def test(model, opt, dataset):
         image = image.cuda()
         aux=aux.cuda()
 
-        res,res1,res2,res3,_,_,_,_ = model(image)
-        res = F.interpolate(res + res1 + res2 + res3, size=gt.shape, mode='bilinear', align_corners=False)
-        
+        res, res1  = model(image)
+        res = F.interpolate(res + res1 , size=gt.shape, mode='bilinear', align_corners=False)
         res_logits = res.data.cpu().numpy().squeeze()
-        
         res = res.sigmoid().data.cpu().numpy().squeeze()
-        #res = (res - res.min()) / (res.max() - res.min() + 1e-8)    
-        #tmp = (res - res.min()) / (res.max() - res.min() + 1e-8)    
+        #res = (res - res.min()) / (res.max() - res.min() + 1e-8)
+
+        augres, augres1  = model(aux)
+        augres = F.interpolate(augres + augres1 , size=gt.shape, mode='bilinear', align_corners=False)
+        augres_logits = augres.data.cpu().numpy().squeeze()
+        augres = augres.sigmoid().data.cpu().numpy().squeeze()
+        #res = (res - res.min()) / (res.max() - res.min() + 1e-8)
 
         indicator1=np.mean(np.abs(res-0.5))
-        #TODO:anche qui image + aux
-        Ares,Ares1,Ares2,Ares3,_,_,_,_ = model(aux)
-        Ares = F.interpolate(Ares + Ares1 + Ares2 + Ares3, size=gt.shape, mode='bilinear', align_corners=False)
-        
-        ares_logits = Ares.data.cpu().numpy().squeeze()
-
-        Ares = Ares.sigmoid().data.cpu().numpy().squeeze()
-        #Ares = (Ares - Ares.min()) / (Ares.max() - Ares.min() + 1e-8)
-        #tmp = (Ares - Ares.min()) / (Ares.max() - Ares.min() + 1e-8)
-
-        indicator2=np.mean(np.abs(Ares-0.5))            
+        indicator2=np.mean(np.abs(augres-0.5))
         if indicator1>indicator2:
             input = res
             logits = res_logits
-            counter_img=counter_img+1
         else:
-            input = Ares
-            logits = ares_logits
-            counter_aux=counter_aux+1
+            input = augres
+            logits = augres_logits
 
         np.save(os.path.join(logits_dir, name.replace('.png', '.npy')), logits)
 
@@ -108,7 +80,7 @@ def test(model, opt, dataset):
         os.makedirs(save_dir, exist_ok=True)
 
         pil_img.save(os.path.join(save_dir, name))
-      
+        
         target = np.array(gt)
         smooth = 1
         input_flat = np.reshape(input, (-1))
@@ -118,13 +90,13 @@ def test(model, opt, dataset):
         dice = '{:.4f}'.format(dice)
         dice = float(dice)
         DSC = DSC + dice
-    #print("counter_aux/counter_img: ", counter_aux/counter_img)
+
     return DSC / num1
 
 def main():
     parser = argparse.ArgumentParser()
     
-    parser.add_argument('--config',type=str, default='../../../configs/hsnet_aux.yaml')
+    parser.add_argument('--config',type=str, default='../../../configs/polypPVT_aux.yaml')
     parser.add_argument('--test_dataset', type=str , default=None)
     parser.add_argument('--model_pth', type=str , default=None)
     parser.add_argument('--sam_version' , type=int , default=None, help='Version of SAM to use for augmentation data (e.g., 1 or 2). If not specified, it will use the default version defined in the configuration file.')
@@ -151,8 +123,9 @@ def main():
     model_name = os.path.splitext(os.path.basename(model_pth))[0]
     opt.model_name = model_name
 
-    model = HSNet_with_aux().cuda()
+    model = PolypPVT()
     model.load_state_dict(torch.load(model_pth))
+    model.cuda()
 
     scores = []
     for dataset in test_datasets:
@@ -164,4 +137,3 @@ def main():
 if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     main()
-

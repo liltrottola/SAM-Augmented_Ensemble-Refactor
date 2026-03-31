@@ -47,58 +47,6 @@ def structure_loss(pred, mask):
 def l1_loss(pred, mask):
     return (pred - mask).abs().mean()
 
-def test(model, opt, dataset):
-
-    data_path = os.path.join(opt.paths.datasets_root, dataset)
-
-    image_root = '{}/images/'.format(data_path)
-    gt_root = '{}/masks/'.format(data_path)
-
-    aux_path = os.path.join(opt.paths.aux_root, dataset)
-    aux_root = '{}/images/'.format(aux_path)
-
-    print(image_root, gt_root, aux_root)
-
-    model.eval()
-    num1 = len(os.listdir(gt_root))
-    test_loader = test_dataset_with_aux(image_root, gt_root, aux_root, opt.testing.testsize)
-    DSC = 0.0
-    for i in range(num1):
-        image, gt, aux,name = test_loader.load_data()
-        gt = np.asarray(gt, np.float32)
-        gt /= (gt.max() + 1e-8)
-        image = image.cuda()
-        aux=aux.cuda()
-
-        res, res1  = model(image)
-        res = F.interpolate(res + res1 , size=gt.shape, mode='bilinear', align_corners=False)
-        res = res.sigmoid().data.cpu().numpy().squeeze()
-        #res = (res - res.min()) / (res.max() - res.min() + 1e-8)
-
-        augres, augres1  = model(aux)
-        augres = F.interpolate(augres + augres1 , size=gt.shape, mode='bilinear', align_corners=False)
-        augres = augres.sigmoid().data.cpu().numpy().squeeze()
-        #res = (res - res.min()) / (res.max() - res.min() + 1e-8)
-
-        indicator1=np.mean(np.abs(res-0.5))
-        indicator2=np.mean(np.abs(augres-0.5))
-        if indicator1>indicator2:
-            input = res
-        else:
-            input = augres
-
-        target = np.array(gt)
-        # N = gt.shape
-        smooth = 1
-        input_flat = np.reshape(input, (-1))
-        target_flat = np.reshape(target, (-1))
-        intersection = (input_flat * target_flat)
-        dice = (2 * intersection.sum() + smooth) / (input.sum() + target.sum() + smooth)
-        dice = '{:.4f}'.format(dice)
-        dice = float(dice)
-        DSC = DSC + dice
-
-    return DSC / num1
 
 def train(train_loader, model, optimizer, epoch, opt, debug=False):
     model.train()
@@ -176,17 +124,18 @@ def train(train_loader, model, optimizer, epoch, opt, debug=False):
     #        logging.info('epoch: {}, dataset: {}, dice: {}'.format(epoch, dataset, dataset_dice))
     #        print(dataset, ': ', dataset_dice)
     #print('Mean Performance: ', mean_dice/len(['CVC-300', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB']))
-    torch.save(model.state_dict(), os.path.join(save_path , opt.experiment.name + '.pth'))
+    torch.save(model.state_dict(), os.path.join(save_path, opt.model_name + '.pth'))
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default='../../../configs/polypvt_aux.yaml', help='Path to the YAML configuration file')
+    parser.add_argument('--config', type=str, default='../../../configs/polypPVT_aux.yaml', help='Path to the YAML configuration file')
     parser.add_argument('--debug', action='store_true', help='Enable debug mode to run a shorter training loop')
     
-    #Override config parameters with command-line arguments if provided 
-    parser.add_argument('--aux_root', type=str, help='Path to SAM augmented images dataset (overrides config if provided)')
-    parser.add_argument('--model_name', type=str, help='Model name override (overrides experiment.name in config)')
-    parser.add_argument('--seed', type=int, help='Random seed for reproducibility (overrides config if provided)')
+    # Optional command-line arguments to override specific configuration values from the YAML file, for run_training.py, but they can be used also for Train.py if needed
+    parser.add_argument('--sam_version' , type=int , default=None, help='Version of SAM to use for augmentation data (e.g., 1 or 2). If not specified, it will use the default version defined in the configuration file.')
+    parser.add_argument('--method', type=str, default=None, help='Method used for generating augmentation data. If not specified, it will use the default method defined in the configuration file.')
+    parser.add_argument('--model_name', type=str, default=None, help='Name of the model to be trained. This helps in identifying the model configuration when saving and tracking experiments. If not specified, it will use the default model name defined in the configuration file.')
+    parser.add_argument('--seed', type=int, default=None, help='Seed number for random number generation to ensure consistent results across runs. If not specified, it will use the default seed defined in the configuration file.')
     
     args = parser.parse_args()
 
@@ -198,13 +147,12 @@ def main():
     cfg_data = load_config(args.config)
     opt = Config(cfg_data)
 
-    # Override config parameters with command-line arguments if provided
-    if args.aux_root is not None:
-        opt.paths.aux_root = args.aux_root
-
-    if args.model_name is not None:
-        opt.experiment.name = args.model_name
-
+    # CLI overrides, used for path generation and name of the model
+    sam_version = args.sam_version if args.sam_version is not None else opt.experiment.sam_version
+    method = args.method if args.method is not None else opt.experiment.method
+    model_name = args.model_name if args.model_name is not None else opt.experiment.name
+    opt.model_name = model_name
+    
     if args.seed is not None:
         opt.experiment.seed = args.seed
 
@@ -253,7 +201,6 @@ def main():
         optimizer = torch.optim.AdamW(params, opt.training.optimizer.lr, weight_decay=opt.training.optimizer.weight_decay)
     else:
         #to modify, currently hardcoded to use weight_decay=1e-4 and momentum=0.9. Also lr is taken from opt.training.optimizer.lr but is of different type of optimizer
-
         optimizer = torch.optim.SGD(params, opt.training.optimizer.lr, weight_decay=1e-4, momentum=0.9)
 
     # Configure a learning rate scheduler to reduce the learning rate at specific epochs.
@@ -266,7 +213,7 @@ def main():
     gt_root    = os.path.join(opt.paths.datasets_root, opt.datasets.train[0], "masks/")
 
     # assumes augmentation output uses the same folder name as the training dataset
-    aux_root   = os.path.join(opt.paths.aux_root, opt.datasets.train[0], "images/")
+    aux_root   = os.path.join(opt.paths.aux_root_base, f"sam{sam_version}", method , opt.datasets.train[0], "images/")
 
     # Create a data loader to fetch training batches with the specified batch size and image dimensions.
     train_loader = get_loader_with_aux(image_root, gt_root, aux_root, 
@@ -277,6 +224,11 @@ def main():
     # Determine the total number of steps in the training process.
     total_step = len(train_loader)
     print(f"Dataset loaded. Batches per epoch: {total_step}")
+
+    # In modalità debug, facciamo finta che ci sia 1 sola epoca per non perdere tempo
+    if args.debug:
+        print("!!! ATTENZIONE: MODALITÀ DEBUG ATTIVA !!!")
+        opt.training.epochs = 1
     
     # Begin the training process, iterating through each epoch.
     for epoch in range(1, opt.training.epochs+1):
@@ -291,107 +243,6 @@ if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     main()
 
-    '''
-    #dict_plot = {'CVC-300':[], 'CVC-ClinicDB':[], 'Kvasir':[], 'CVC-ColonDB':[], 'ETIS-LaribPolypDB':[], 'test':[]}
-    #name = ['CVC-300', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'test']
-    ##################model_name#############################
-    model_name = 'PolypPVT'
-    ###############################################
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--epoch', type=int,
-                        default=100, help='epoch number')
-
-    parser.add_argument('--lr', type=float,
-                        default=1e-4, help='learning rate')
-
-    parser.add_argument('--optimizer', type=str,
-                        default='AdamW', help='choosing optimizer AdamW or SGD')
-
-    parser.add_argument('--augmentation', type=str,
-                        default='da3', help='choose to do random flip rotation')
-
-    parser.add_argument('--batchsize', type=int,
-                        default=16, help='training batch size')
-
-    parser.add_argument('--trainsize', type=int,
-                        default=352, help='training dataset size')
-
-    parser.add_argument('--clip', type=float,
-                        default=0.5, help='gradient clipping margin')
-
-    parser.add_argument('--decay_rate', type=float,
-                        default=0.1, help='decay rate of learning rate')
-
-    parser.add_argument('--decay_epoch', type=int,
-                        default=50, help='every n epochs decay learning rate')
-
-    parser.add_argument('--train_path', type=str,
-                        default='./dataset/TrainDataset/',
-                        help='path to train dataset')
-    
-    parser.add_argument('--aux_path', type=str,
-                        default='',
-                        help='path to SAM augmented images dataset')
-
-    parser.add_argument('--test_path', type=str,
-                        default='./dataset/TestDataset/',
-                        help='path to testing Kvasir dataset')
-
-    parser.add_argument('--train_save', type=str,
-                        default='./model_pth/'+model_name+'/')
-    
-    parser.add_argument('--name_save', type=str,
-                        default='PolypPVT.pth')
-    
-    parser.add_argument('--loss', type=int, default=-1)
-
-    opt = parser.parse_args()
-    logging.basicConfig(filename='train_log.log',
-                        format='[%(asctime)s-%(filename)s-%(levelname)s:%(message)s]',
-                        level=logging.INFO, filemode='a', datefmt='%Y-%m-%d %I:%M:%S %p')
-
-    if opt.loss == -1:
-        structure_loss = structure_loss
-        print("Loss function: ", "structure_loss")
-    else:
-        structure_loss = newloss.losses[opt.loss]
-        print("Loss function: ",newloss.losses[opt.loss].__name__)
-
-    # ---- build models ----
-    # torch.cuda.set_device(0)  # set your gpu device
-    model = PolypPVT().cuda()
-
-    best = 0
-
-    params = model.parameters()
-
-    if opt.optimizer == 'AdamW':
-        optimizer = torch.optim.AdamW(params, opt.lr, weight_decay=0)
-    else:
-        optimizer = torch.optim.SGD(params, opt.lr, weight_decay=1e-4, momentum=0.9)
-
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[20],gamma=0.2)
-    image_root = '{}/images/'.format(opt.train_path)
-    gt_root = '{}/masks/'.format(opt.train_path)
-    aux_root = '{}/train/images/'.format(opt.aux_path)
-    
-    #print(image_root, gt_root, aux_root)
-    
-    train_loader = get_loader_with_aux(image_root, gt_root, aux_root, batchsize=opt.batchsize, trainsize=opt.trainsize,
-                              augmentation=opt.augmentation)
-    total_step = len(train_loader)
-
-    #print("#" * 20, "Start Training", "#" * 20)
-
-    for epoch in range(1, opt.epoch):
-        #adjust_lr(optimizer, opt.lr, epoch, 0.1, 200)
-        train(train_loader, model, optimizer, epoch, opt.test_path)
-        scheduler.step()
-    
-    # plot the eval.png in the training stage
-    # plot_train(dict_plot, name)
-'''
 
 ''' 
 structure_loss = structure_loss

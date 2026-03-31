@@ -71,6 +71,9 @@ def main():
         save_dir = os.path.join(save_path, model_name, _data_name)
         os.makedirs(save_dir, exist_ok=True)
 
+        logits_dir = os.path.join(opt.paths.logits_dir, model_name, _data_name)
+        os.makedirs(logits_dir, exist_ok=True)
+
         image_root = os.path.join(data_path, "images/")
         gt_root = os.path.join(data_path, "masks/")
         num1 = len(os.listdir(gt_root))
@@ -86,6 +89,12 @@ def main():
             P1,P2,P3,P4 = model(image)
             #original code: res = F.upsample(..) now deprecated, replaced with interpolate
             res = F.interpolate(P1+P2+P3+P4, size=gt.shape, mode='bilinear', align_corners=False)
+
+            #we save logits and then apply sigmoid before saving
+            logits_np = res.data.cpu().numpy().squeeze()
+            np.save(os.path.join(logits_dir, name.replace('.png', '.npy')), logits_np)
+
+            #apply sigmoid to get probabilities before saving as image
             res = res.sigmoid().data.cpu().numpy().squeeze()
 
             to_pil = transforms.ToPILImage()

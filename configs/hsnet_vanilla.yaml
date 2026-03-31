@@ -12,6 +12,7 @@ paths:
 
   #------TESTING ------
   prediction_dir: "../../../output/predictions/"
+  logits_dir: "../../../output/logits/"
 
 training:
   epochs: 100
