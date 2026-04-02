@@ -19,6 +19,6 @@ source venv_newSAMAug/bin/activate
 echo "Starting HSNet inference..."
 mkdir -p logs
 
-python src/models/HSNet/Test.py
+python src/models/HSNet/Test_vanilla.py
 
 echo "Inference of HSNet ----> DONE"

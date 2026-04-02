@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=HSNETAUX_TEST
-#SBATCH --output=logs/test_hsnetAux_%j.out
-#SBATCH --error=logs/test_hsnetAux_%j.err
+#SBATCH --job-name=HSNET_TEST
+#SBATCH --output=logs/test_hsnet_%j.out
+#SBATCH --error=logs/test_hsnet_%j.err
 #SBATCH --partition=allgroups
 #SBATCH --gres=gpu:rtx
 #SBATCH --nodes=1
@@ -16,9 +16,9 @@ echo "Node: $HOSTNAME"
 echo "Attivo VENV..."
 source venv_newSAMAug/bin/activate
 
-echo "Starting HSNet inference..."
+echo "Starting PolypPVT inference..."
 mkdir -p logs
 
-python src/models/HSNet/Test_aux.py
+python src/models/PolypPVT/Test_vanilla.py
 
-echo "Inference of HSNetAux ----> DONE"
+echo "Inference of HSNet ----> DONE"

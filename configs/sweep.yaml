@@ -2,14 +2,14 @@ models:
   - name: hsnet
     has_aux: false
     folder: "HSNet"
-    train_script: "Train.py"
-    test_script: "Test.py"
+    train_script: "Train_vanilla.py"
+    test_script: "Test_vanilla.py"
 
   - name: hsnet_aux
     has_aux: true
-    folder: "HSNet_aux"
-    train_script: "Train.py"
-    test_script: "Test.py"
+    folder: "HSNet"
+    train_script: "Train_aux.py"
+    test_script: "Test_aux.py"
 
   - name: polypvt_aux
     has_aux: true

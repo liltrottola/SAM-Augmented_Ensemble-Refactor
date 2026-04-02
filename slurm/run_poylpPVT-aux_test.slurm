@@ -16,9 +16,9 @@ echo "Node: $HOSTNAME"
 echo "Attivo VENV..."
 source venv_newSAMAug/bin/activate
 
-echo "Starting HSNet inference..."
+echo "Starting PolypPVT_aux inference..."
 mkdir -p logs
 
-python src/models/HSNet/Test_aux.py
+python src/models/PolypPVT/Test_aux.py
 
 echo "Inference of HSNetAux ----> DONE"

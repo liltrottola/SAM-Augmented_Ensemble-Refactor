@@ -4,7 +4,7 @@ experiment:
   sam_version: 2
   method: "ourSAMAug"
 
-# all paths are relative to the location of Train.py in src/models/HSNet_aux/
+# all paths are relative to the location of Train.py in src/models/HSNet/
 paths:
   datasets_root: "../../../datasets/"
   aux_root_base: "../../../output/augmentation/"  # SAM-augmented images from run_augmentation.py

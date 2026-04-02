@@ -4,7 +4,7 @@ import numpy as np
 import os, argparse
 #from scipy import misc
 import yaml
-from lib.pvt import HSNet
+from lib.pvt_vanilla import HSNet
 from utils.dataloader import test_dataset
 
 from PIL import Image

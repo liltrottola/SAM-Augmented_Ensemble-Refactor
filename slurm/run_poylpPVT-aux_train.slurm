@@ -15,8 +15,8 @@ cd $SLURM_SUBMIT_DIR
 echo "Attivo VENV..."
 source venv_newSAMAug/bin/activate
 
-echo "Avvio training di HSNet Aug..."
+echo "Avvio training di PolypPVT Aug..."
 mkdir -p logs
-python src/models/HSNet/Train_aux.py
+python src/models/PolypPVT/Train_aux.py
 
 echo "training HSNET Aux COMPLETATO!"
