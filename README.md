@@ -21,7 +21,8 @@ This repository contains a framework for augmenting medical image datasets using
 │   ├── hsnet_aux.yaml         # HSNet (with SAM augmentation)
 │   ├── polypPVT_vanilla.yaml  # PolypPVT (no SAM augmentation)
 │   ├── polypPVT_aux.yaml      # PolypPVT (with SAM augmentation)
-│   └── sweep.yaml             # Experiment sweep (training + inference)
+│   ├── sweep.yaml             # Experiment sweep (training + inference)
+│   └── ensemble.yaml          # Ensemble evaluation paths
 ├── datasets/                  # Original datasets
 ├── output/                    # Generated outputs (gitignored)
 │   ├── augmentation/          # Augmented datasets
@@ -42,18 +43,14 @@ This repository contains a framework for augmenting medical image datasets using
 │   ├── ensemble/             # Ensemble module
 │   │   └── ensemble.py      # Mean rule ensemble + Dice evaluation
 │   └── models/              # Segmentation models
-│       ├── HSNet/           # HSNet model
-│       │   ├── Train.py     # Training script
-│       │   ├── Test.py      # Testing/inference script
+│       ├── HSNet/           # HSNet model (vanilla + SAM-augmented)
+│       │   ├── Train_vanilla.py  # Training (no SAM augmentation)
+│       │   ├── Train_aux.py      # Training (with SAM augmentation)
+│       │   ├── Test_vanilla.py   # Inference (no SAM augmentation)
+│       │   ├── Test_aux.py       # Inference (with SAM augmentation, computes Dice)
 │       │   ├── lib/         # Model libraries
 │       │   ├── utils/       # Utilities
 │       │   └── pretrained_pth/  # Pretrained weights
-│       ├── HSNet_aux/       # HSNet with SAM-augmented images
-│       │   ├── Train.py     # Training script
-│       │   ├── Test.py      # Testing/inference script (computes Dice)
-│       │   ├── lib/         # Model libraries
-│       │   ├── utils/dataloader.py
-│       │   └── pretrained_pth/
 │       └── PolypPVT/        # PolypPVT model ⚠️ not yet cluster-validated
 │           ├── Train_vanilla.py  # Training (no SAM augmentation)
 │           ├── Train_aux.py      # Training (with SAM augmentation)
@@ -109,73 +106,43 @@ python scripts/run_augmentation.py --config configs/augmentation.yaml
 
 ### HSNet Training
 
-**Script to run:** [`src/models/HSNet/Train.py`](src/models/HSNet/Train.py)
+**Scripts:** [`src/models/HSNet/Train_vanilla.py`](src/models/HSNet/Train_vanilla.py) / [`Train_aux.py`](src/models/HSNet/Train_aux.py)
 
-**Configuration:** Edit the [`configs/hsnet_vanilla.yaml`](configs/hsnet_vanilla.yaml) file to specify training parameters.
+**Configuration:** [`configs/hsnet_vanilla.yaml`](configs/hsnet_vanilla.yaml) / [`configs/hsnet_aux.yaml`](configs/hsnet_aux.yaml)
+
+For `Train_aux.py`, set `paths.aux_root_base` to the folder containing SAM-augmented images.
 
 **Pretrained weights:** Download the HSNet pretrained model from [Google Drive](https://drive.google.com/drive/folders/1Eu8v9vMRvt-dyCH0XSV2i77lAd62nPXV) and place it in `./src/models/HSNet/pretrained_pth` as in the original HSNet repository: https://github.com/baiboat/HSNet .
 
 **Execution:**
 
 ```bash
-python src/models/HSNet/Train.py
-# or with explicit config:
-python src/models/HSNet/Train.py --config configs/hsnet_vanilla.yaml
+python src/models/HSNet/Train_vanilla.py --config configs/hsnet_vanilla.yaml
+python src/models/HSNet/Train_aux.py --config configs/hsnet_aux.yaml
 # debug mode (1 epoch, 5 batches):
-python src/models/HSNet/Train.py --debug
-```
-
-**Output:** Model checkpoints are saved in `output/models/`
-
-### HSNet Aux Training (SAM-augmented)
-
-**Script to run:** [`src/models/HSNet_aux/Train.py`](src/models/HSNet_aux/Train.py)
-
-**Configuration:** Edit [`configs/hsnet_aux.yaml`](configs/hsnet_aux.yaml). Set `paths.aux_root_base` to the folder containing SAM-augmented images.
-
-**Execution:**
-
-```bash
-python src/models/HSNet_aux/Train.py
-# or with explicit config:
-python src/models/HSNet_aux/Train.py --config configs/hsnet_aux.yaml
-# debug mode (5 batches):
-python src/models/HSNet_aux/Train.py --debug
+python src/models/HSNet/Train_vanilla.py --debug
+python src/models/HSNet/Train_aux.py --debug
 ```
 
 **Output:** Model checkpoints are saved in `output/models/`
 
 ### HSNet Inference
 
-**Script to run:** [`src/models/HSNet/Test.py`](src/models/HSNet/Test.py)
+**Scripts:** [`src/models/HSNet/Test_vanilla.py`](src/models/HSNet/Test_vanilla.py) / [`Test_aux.py`](src/models/HSNet/Test_aux.py)
 
-**Configuration:** Edit the `testing` and `datasets.test` sections in [`configs/hsnet_vanilla.yaml`](configs/hsnet_vanilla.yaml).
-
-**Execution:**
-
-```bash
-python src/models/HSNet/Test.py
-# or with explicit overrides:
-python src/models/HSNet/Test.py --model_pth output/models/HSNet_Baseline_DA3.pth --test_dataset TestDataset
-```
-
-**Output:** Predictions are saved in `output/predictions/{dataset_name}/`
-
-### HSNet Aux Inference
-
-**Script to run:** [`src/models/HSNet_aux/Test.py`](src/models/HSNet_aux/Test.py)
-
-**Configuration:** Edit the `testing` and `datasets.test` sections in [`configs/hsnet_aux.yaml`](configs/hsnet_aux.yaml).
+**Configuration:** Edit the `testing` and `datasets.test` sections in the respective YAML config.
 
 **Execution:**
 
 ```bash
-python src/models/HSNet_aux/Test.py
+python src/models/HSNet/Test_vanilla.py --config configs/hsnet_vanilla.yaml
+python src/models/HSNet/Test_aux.py --config configs/hsnet_aux.yaml
 # or with explicit overrides:
-python src/models/HSNet_aux/Test.py --model_pth output/models/HSNet_Aux_DA3.pth
+python src/models/HSNet/Test_vanilla.py --model_pth output/models/HSNet_Baseline_DA3.pth --test_dataset TestDataset
+python src/models/HSNet/Test_aux.py --model_pth output/models/HSNet_Aux_DA3.pth
 ```
 
-**Output:** Per-dataset Dice scores printed to console. Predictions saved in `output/predictions/{dataset_name}/`
+**Output:** Predictions saved in `output/predictions/{dataset_name}/`. `Test_aux.py` also prints per-dataset Dice scores.
 
 ### PolypPVT Training ⚠️ not yet cluster-validated
 
@@ -242,16 +209,22 @@ python scripts/run_inference.py --sweep configs/sweep.yaml --model hsnet_aux --r
 
 **Script to run:** [`scripts/run_ensemble.py`](scripts/run_ensemble.py)
 
+**Configuration:** [`configs/ensemble.yaml`](configs/ensemble.yaml) — defines default paths:
+- `paths.models_outputs` — folder containing one subfolder per model (i.e. `output/predictions/`)
+- `paths.test_masks` — datasets root, used to resolve `{dataset}/masks/`
+- `paths.out_folder` — where averaged predictions are saved
+
 **Execution:**
 
 ```bash
-python scripts/run_ensemble.py \
-    --models_outputs output/predictions/ \
-    --test_masks datasets/TestDatasets/TestDataset/ \
-    --out_folder output/ensemble/
+# Use defaults from configs/ensemble.yaml
+python scripts/run_ensemble.py
+
+# Override paths via CLI
+python scripts/run_ensemble.py --models_outputs output/predictions/ --out_folder output/ensemble/
 ```
 
-Loads all model prediction subfolders under `--models_outputs`, averages predictions pixel-wise (mean rule after sigmoid, threshold 0.5), prints per-dataset Dice and overall mean.
+Loads all model prediction subfolders under `models_outputs`, averages predictions pixel-wise (mean rule after sigmoid), prints per-dataset Dice and overall mean.
 
 ### ⚙️ Sweep Configuration (`configs/sweep.yaml`)
 
@@ -300,4 +273,4 @@ Methods implemented in [`src/augmentation/methods.py`](src/augmentation/methods.
 
 ---
 
-*Last updated: 31 March 2026*
+*Last updated: 04 Aprile 2026*

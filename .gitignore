@@ -21,9 +21,6 @@ src/augmentation/__pycache__
 help/
 logs/
 
-
-src/models/HSNet_aux/config_train.sh
-
 # --- Model Checkpoints ---
 # Non caricare pesi su GitHub (limite 100MB)
 checkpoints/
