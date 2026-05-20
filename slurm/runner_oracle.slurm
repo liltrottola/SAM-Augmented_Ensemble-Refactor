@@ -12,12 +12,12 @@
 cd $SLURM_SUBMIT_DIR
 
 echo "Node: $HOSTNAME"
-echo "Attivo VENV..."
+echo "Activating VENV..."
 
 source venv_newSAMAug/bin/activate
 
-echo "Avvio processo: ${MODE}"
+echo "Starting process: ${MODE}"
 
 python scripts/run_oracle.py --config ../configs/ensemble.yaml --mode ${MODE:-oracle1}
 
-echo "Processo ${MODE} completato con successo!"
+echo "Process ${MODE} completed succesfully!"

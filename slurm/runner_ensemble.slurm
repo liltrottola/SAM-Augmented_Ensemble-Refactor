@@ -12,11 +12,11 @@
 cd $SLURM_SUBMIT_DIR
 
 echo "Node: $HOSTNAME"
-echo "Attivo VENV..."
+echo "Activating VENV..."
 source venv_newSAMAug/bin/activate
 
-echo "Avvio processo di ENSEMBLE"
+echo "Starting ENSEMBLE process"
 
 python scripts/run_ensemble.py --config ../configs/ensemble.yaml
 
-echo "Ensemble completato con successo!"
+echo "Ensemble completed succesfully!"
