@@ -1,0 +1,38 @@
+experiment:
+  name: da1_augmentation
+  description: "Offline DA1: h-flip, v-flip, rot90 + foreground filter"
+  version: 1.0
+
+# Paths sono relativi alla root del progetto
+paths:
+
+   # Path base dove si trovano i dataset (ex dataset_path = "../datasets/")
+  dataset_root: "datasets/"
+
+  # Dove salvare l'output (ex saving_path)
+  output_root: "output/augmentation/"
+  
+  # Etichetta logica della sorgente (diventa <source> nella cartella di output)
+  #potrebbe diventara SamAug, RG_segPrior, etc. se si vuole applicare più di un metodo in sequenza (es: "SAMAug+DA1")
+  source_name: "original" 
+  
+datasets:
+  # Lista di dataset (sottocartelle di input_root) da processare
+  folders:
+    - "ProvaSmall/"        
+    # - "TrainDataset/"   # quando vorrai girare sul dataset completo
+
+augmentation:
+  # Lista metodi da applicare (devono esistere come funzioni in da1_methods.py)
+  methods:
+    - "fliplr"
+    - "flipud"
+    - "rot90"
+  
+  # Se true, copia anche l'originale nell'output (per dataset 4x)
+  keep_original: true
+  
+  # Filtro foreground: scarta varianti con mask troppo vuota
+  foreground_filter:
+    enabled: true
+    min_pixels: 100

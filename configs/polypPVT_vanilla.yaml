@@ -22,7 +22,7 @@ training:
   size_rates: [0.75, 1.0, 1.25]
   clip_margin: 0.5
 
-  augmentation: 3 #da3
+  augmentation: da3 # "da1", "da2", "da3" or null (no augmentation)
 
   optimizer:
     type: "AdamW"

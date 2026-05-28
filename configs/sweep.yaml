@@ -25,7 +25,7 @@ models:
 
 # training section
 training:
-  runs: 5
+  runs: 1
   seeds: [37, 42, 123, 456, 789]
 
   # Choose [1], [2], or [1, 2]
@@ -42,7 +42,7 @@ training:
 
 #inference/testing section
 testing:
-  runs: 5
+  runs: 1
 
   # Choose [1], [2], or [1, 2]
   sam_versions: [1, 2]

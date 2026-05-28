@@ -6,6 +6,20 @@ import numpy as np
 import random
 import torch
 
+
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..' , '..' , '..')) # to import from src
+
+from src.augmentation import da3
+
+'''
+DataLoader for polyp segmentation tasks, including handling SAM auxiliary data and optional augmentations. 
+The PolypDataset_aux class is a custom dataset that loads images, ground truth masks, and augmented data, 
+applies transformations, and ensures consistent augmentations across all data types.
+
+The get_loader_with_aux function creates a DataLoader for the PolypDataset_aux, allowing for efficient batching and shuffling during training.
+'''
+
 class PolypDataset_aux(data.Dataset):
     """
     Custom Dataset for polyp segmentation tasks, including handling auxiliary data and optional augmentations.
@@ -38,39 +52,7 @@ class PolypDataset_aux(data.Dataset):
         # If augmentations are enabled, set up a series of transformations to apply to the images and ground truth.
         # This includes resizing, random rotations, flips, color adjustments, and normalization.
         if self.augmentations=='da3':
-            print('Using DA3:  RandomRotation, RandomFlip, color changes')
-            self.img_transform = transforms.Compose([
-                transforms.Resize((self.trainsize, self.trainsize)),
-                transforms.RandomRotation(90),                   # Apply random rotation up to 90 degrees
-                transforms.RandomVerticalFlip(p=0.5),            # Apply random vertical flip with 50% probability
-                transforms.RandomHorizontalFlip(p=0.5),          # Apply random horizontal flip with 50% probability
-                transforms.RandomGrayscale(p=0.5),               # Randomly convert to grayscale with 50% probability
-                transforms.RandomInvert(p=0.5),                   # Randomly invert colors with 50% probability
-                transforms.RandomAutocontrast(p=0.2),             # Randomly adjust contrast with a 20% probability
-                transforms.RandomEqualize(p=0.2),                 # Randomly equalize image histogram with 20% probability
-                transforms.ToTensor(),                            # Convert image to tensor format
-                transforms.Normalize([0.485, 0.456, 0.406],     # Normalize tensor with pre-defined mean and std dev
-                                     [0.229, 0.224, 0.225])])
-
-            self.gt_transform = transforms.Compose([
-                transforms.Resize((self.trainsize, self.trainsize)),
-                transforms.RandomRotation(90),                   # Same augmentation applied to ground truth
-                transforms.RandomVerticalFlip(p=0.5),
-                transforms.RandomHorizontalFlip(p=0.5),
-                transforms.ToTensor()])
-
-            self.aux_transform = transforms.Compose([
-                transforms.Resize((self.trainsize, self.trainsize)),
-                transforms.RandomRotation(90),                   # Same augmentation applied to auxiliary data
-                transforms.RandomVerticalFlip(p=0.5),
-                transforms.RandomHorizontalFlip(p=0.5),
-                transforms.RandomGrayscale(p=0.5),
-                transforms.RandomInvert(p=0.5),
-                transforms.RandomAutocontrast(p=0.2),
-                transforms.RandomEqualize(p=0.2),
-                transforms.ToTensor(),
-                transforms.Normalize([0.485, 0.456, 0.406],
-                                     [0.229, 0.224, 0.225])])
+            self.img_transform , self.gt_transform , self.aux_transform = da3.get_da3_transforms_aux(self.trainsize)
         else:
             # If no augmentations are specified, use basic transformations that resize, convert to tensor, and normalize.
             print('no augmentation')
@@ -161,7 +143,7 @@ class PolypDataset_aux(data.Dataset):
     def __len__(self):
         return self.size
 
-def get_loader_with_aux(image_root, gt_root, aux_root, batchsize, trainsize, shuffle=True, num_workers=1, pin_memory=True, augmentation=False):
+def get_loader_with_aux(image_root, gt_root, aux_root, batchsize, trainsize, shuffle=True, num_workers=1, pin_memory=True, augmentation=None):
 
     # Create an instance of the dataset. This dataset will handle loading images, ground truth masks,
     # and auxiliary images from the specified directories. It will also apply necessary transformations
@@ -179,7 +161,6 @@ def get_loader_with_aux(image_root, gt_root, aux_root, batchsize, trainsize, shu
 
     # Return the configured DataLoader instance which can now be used in training or evaluation loops.
     return data_loader
-
 
 class test_dataset_with_aux:
     def __init__(self, image_root, gt_root, aux_root, testsize):
@@ -274,53 +255,6 @@ class test_dataset_with_aux:
 
 
 
-def get_loader(image_root, gt_root, batchsize, trainsize, shuffle=True, num_workers=1, pin_memory=True, augmentation=False):
-
-    dataset = PolypDataset(image_root, gt_root, trainsize, augmentation)
-    data_loader = data.DataLoader(dataset=dataset,
-                                  batch_size=batchsize,
-                                  shuffle=shuffle,
-                                  num_workers=num_workers,
-                                  pin_memory=pin_memory)
-    return data_loader
-
-
-class test_dataset:
-    def __init__(self, image_root, gt_root, testsize):
-        self.testsize = testsize
-        self.images = [image_root + f for f in os.listdir(image_root) if f.endswith('.jpg') or f.endswith('.png')]
-        self.gts = [gt_root + f for f in os.listdir(gt_root) if f.endswith('.tif') or f.endswith('.png')]
-        self.images = sorted(self.images)
-        self.gts = sorted(self.gts)
-        self.transform = transforms.Compose([
-            transforms.Resize((self.testsize, self.testsize)),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406],
-                                 [0.229, 0.224, 0.225])])
-        self.gt_transform = transforms.ToTensor()
-        self.size = len(self.images)
-        self.index = 0
-
-    def load_data(self):
-        image = self.rgb_loader(self.images[self.index])
-        image = self.transform(image).unsqueeze(0)
-        gt = self.binary_loader(self.gts[self.index])
-        name = self.images[self.index].split('/')[-1]
-        if name.endswith('.jpg'):
-            name = name.split('.jpg')[0] + '.png'
-        self.index += 1
-        return image, gt, name
-
-    def rgb_loader(self, path):
-        with open(path, 'rb') as f:
-            img = Image.open(f)
-            return img.convert('RGB')
-
-    def binary_loader(self, path):
-        with open(path, 'rb') as f:
-            img = Image.open(f)
-            return img.convert('L')
-
 class PolypDataset(data.Dataset):
     """
     dataloader for polyp segmentation tasks
@@ -329,13 +263,18 @@ class PolypDataset(data.Dataset):
         self.trainsize = trainsize
         self.augmentations = augmentations
         print(self.augmentations)
+        
         self.images = [image_root + f for f in os.listdir(image_root) if f.endswith('.jpg') or f.endswith('.png')]
         self.gts = [gt_root + f for f in os.listdir(gt_root) if f.endswith('.png')]
+        
         self.images = sorted(self.images)
         self.gts = sorted(self.gts)
+        
         self.filter_files()
         self.size = len(self.images)
-        if self.augmentations == 0:
+
+        '''
+        if self.augmentations == 'da1':
             print('Using RandomRotation, RandomFlip')
             self.img_transform = transforms.Compose([
                 transforms.RandomRotation(90),
@@ -351,27 +290,9 @@ class PolypDataset(data.Dataset):
                 transforms.RandomHorizontalFlip(p=0.5),
                 transforms.Resize((self.trainsize, self.trainsize)),
                 transforms.ToTensor()])
-        elif self.augmentations == 3:
-                print('Using RandomRotation, RandomFlip, color changes')
-                self.img_transform = transforms.Compose([
-                transforms.RandomRotation(90),
-                transforms.RandomVerticalFlip(p=0.5),
-                transforms.RandomHorizontalFlip(p=0.5),
-                transforms.RandomGrayscale(p=0.5),
-                transforms.RandomInvert(p=0.5),
-                transforms.RandomAutocontrast(p=0.2),
-                transforms.RandomEqualize(p=0.2),
-                transforms.Resize((self.trainsize, self.trainsize)),
-                transforms.ToTensor(),
-                transforms.Normalize([0.485, 0.456, 0.406],
-                                [0.229, 0.224, 0.225])])
-                self.gt_transform = transforms.Compose([
-                        transforms.RandomRotation(90),
-                        transforms.RandomVerticalFlip(p=0.5),
-                        transforms.RandomHorizontalFlip(p=0.5),
-                        transforms.Resize((self.trainsize, self.trainsize)),
-                        transforms.ToTensor()])  
-            
+        '''
+        if self.augmentations == 'da3':
+            self.img_transform , self.gt_transform = da3.get_da3_transforms(self.trainsize)  
         else:
             print('no augmentation')
             self.img_transform = transforms.Compose([
@@ -438,3 +359,49 @@ class PolypDataset(data.Dataset):
 
     def __len__(self):
         return self.size
+
+def get_loader(image_root, gt_root, batchsize, trainsize, shuffle=True, num_workers=1, pin_memory=True, augmentation=None):
+
+    dataset = PolypDataset(image_root, gt_root, trainsize, augmentation)
+    data_loader = data.DataLoader(dataset=dataset,
+                                  batch_size=batchsize,
+                                  shuffle=shuffle,
+                                  num_workers=num_workers,
+                                  pin_memory=pin_memory)
+    return data_loader
+
+class test_dataset:
+    def __init__(self, image_root, gt_root, testsize):
+        self.testsize = testsize
+        self.images = [image_root + f for f in os.listdir(image_root) if f.endswith('.jpg') or f.endswith('.png')]
+        self.gts = [gt_root + f for f in os.listdir(gt_root) if f.endswith('.tif') or f.endswith('.png')]
+        self.images = sorted(self.images)
+        self.gts = sorted(self.gts)
+        self.transform = transforms.Compose([
+            transforms.Resize((self.testsize, self.testsize)),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406],
+                                 [0.229, 0.224, 0.225])])
+        self.gt_transform = transforms.ToTensor()
+        self.size = len(self.images)
+        self.index = 0
+
+    def load_data(self):
+        image = self.rgb_loader(self.images[self.index])
+        image = self.transform(image).unsqueeze(0)
+        gt = self.binary_loader(self.gts[self.index])
+        name = self.images[self.index].split('/')[-1]
+        if name.endswith('.jpg'):
+            name = name.split('.jpg')[0] + '.png'
+        self.index += 1
+        return image, gt, name
+
+    def rgb_loader(self, path):
+        with open(path, 'rb') as f:
+            img = Image.open(f)
+            return img.convert('RGB')
+
+    def binary_loader(self, path):
+        with open(path, 'rb') as f:
+            img = Image.open(f)
+            return img.convert('L')

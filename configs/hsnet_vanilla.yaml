@@ -24,7 +24,7 @@ training:
 
   decay_rate: 0.01
   decay_epochs: 50
-  augmentation: 3 # 3 = "DA3"
+  augmentation: da3 # "da1", "da2", "da3" or null (no augmentation)
 
   optimizer:
     type: "AdamW"
