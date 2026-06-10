@@ -13,6 +13,14 @@ import logging
 
 import matplotlib.pyplot as plt
 
+'''
+    To import the lr_schedules, we need to add the src folder to the path,
+    since it is not in the same directory as Train.py
+'''
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'))  # to import from src
+from src.training.lr_schedules import get_lr_method, build_scheduler
+
 import yaml
 
 # -------- blocco per configurazioni da file yaml -----------
@@ -172,6 +180,8 @@ def main():
     parser.add_argument("--config", type=str, default="../../../configs/hsnet_vanilla.yaml", help="path to config file")
     parser.add_argument("--model_name", type=str, default=None, help="Model save name override")
     parser.add_argument('--seed', type=int, default=None, help='Seed number for random number generation to ensure consistent results across runs.')
+    parser.add_argument('--lr_method', type=str, default=None, help='Learning-rate strategy for ensemble diversity (lra/lrb/lrc). Overrides training.lr_method in the config. If not specified, uses the config value.')
+    
     args = parser.parse_args()
     
 
@@ -187,7 +197,11 @@ def main():
     opt.model_name = model_name # Aggiorna opt con il nome del modello (utile per salvataggio e logging)
     if args.seed is not None:
         opt.experiment.seed = args.seed # Aggiorna opt con il seed se fornito da CLI
-        
+
+    # CLI override del metodo LR ; se assente resta il valore del YAML
+    if args.lr_method is not None:
+        opt.training.lr_method = args.lr_method
+
     #setup logging
     logging.basicConfig(filename=opt.paths.log_file,
                         format='[%(asctime)s-%(filename)s-%(levelname)s:%(message)s]',
@@ -208,12 +222,20 @@ def main():
     model = HSNet().cuda()
     params = model.parameters()
 
-    if opt.training.optimizer.type == 'AdamW':
-        optimizer = torch.optim.AdamW(params, opt.training.optimizer.lr, weight_decay=opt.training.optimizer.weight_decay)
-    else:
-        optimizer = torch.optim.SGD(params, opt.training.optimizer.lr, weight_decay=1e-4, momentum=0.9)
+    # --- Asse LR (LRa/LRb/LRc) per diversità d'ensemble ---
+    # lr_cfg è None se training.lr_method è null → path legacy (decay manuale invariato).
+    lr_cfg = get_lr_method(getattr(opt.training, "lr_method", None))
+    init_lr = lr_cfg["init_lr"] if lr_cfg is not None else opt.training.optimizer.lr
 
-    print(f"Optimizer configurato: {opt.training.optimizer.type}, LR: {opt.training.optimizer.lr}")
+    if opt.training.optimizer.type == 'AdamW':
+        optimizer = torch.optim.AdamW(params, init_lr, weight_decay=opt.training.optimizer.weight_decay)
+    else:
+        optimizer = torch.optim.SGD(params, init_lr, weight_decay=1e-4, momentum=0.9)
+
+    # Scheduler MultiStepLR solo per i metodi LR nuovi; nel legacy resta il decay manuale nel loop.
+    scheduler = build_scheduler(optimizer, lr_cfg) if lr_cfg is not None else None
+
+    print(f"Optimizer configurato: {opt.training.optimizer.type}, LR: {init_lr}, lr_method: {getattr(opt.training, 'lr_method', None)}")
 
     #setup dataloader
 
@@ -241,11 +263,17 @@ def main():
     #     adjust_lr(optimizer, opt.lr, epoch, 0.1, 200)
     #     train(train_loader, model, optimizer, epoch, opt.test_path)
     for epoch in range(1, opt.training.epochs + 1):
-        # --- SCHEDULER MANUALE ORIGINALE ---
-        if epoch in opt.training.lr_schedule.milestones:
-            adjust_lr(optimizer, opt.training.lr_schedule.decay_factor)
+
+        if lr_cfg is None:
+            # --- SCHEDULER MANUALE ORIGINALE (path legacy, invariato) ---
+            if epoch in opt.training.lr_schedule.milestones:
+                adjust_lr(optimizer, opt.training.lr_schedule.decay_factor)
 
         train(train_loader, model, optimizer, epoch, opt, debug=args.debug)
+
+        if lr_cfg is not None:
+            # new lr scheduler step (solo per i metodi LR nuovi, se specificati)
+            scheduler.step()
     # plot the eval.png in the training stage
     # plot_train(dict_plot, name)
 

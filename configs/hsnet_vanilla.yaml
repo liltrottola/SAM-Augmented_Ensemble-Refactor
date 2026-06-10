@@ -24,8 +24,10 @@ training:
 
   decay_rate: 0.01
   decay_epochs: 50
-  augmentation: da3 # "da1", "da2", "da3" or null (no augmentation)
 
+  augmentation: da3 # "da1", "da2", "da3" or null (no augmentation)
+  lr_method: null   # "lra" | "lrb" | "lrc" | null (usa il blocco optimizer/lr_schedule " legacy")
+  
   optimizer:
     type: "AdamW"
     lr: 0.00005 # Learning rate (5e-5)

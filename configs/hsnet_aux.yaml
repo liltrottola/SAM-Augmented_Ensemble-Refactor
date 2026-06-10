@@ -18,19 +18,21 @@ paths:
   logits_dir: "../../../output/logits/"
 
 training:
-  epochs: 40
-  batchsize: 8
+  epochs: 40 #legacy
+  batchsize: 8 #legacy
   trainsize: 352
 
   size_rates: [0.75, 1.0, 1.25]
   clip_margin: 0.5
 
-  augmentation: null # "da1", "da2", "da3" or null (no augmentation)
+  augmentation: null # "da1"| "da2"| "da3" | null (no augmentation)
+  lr_method: null   # "lra" | "lrb" | "lrc" | null (usa il blocco optimizer/lr_schedule " legacy")
+
 
   optimizer:
     type: "Adam"
-    lr: 0.00005
-    weight_decay: 0
+    lr: 0.00005 #legacy
+    weight_decay: 0 #legacy
 
   lr_schedule:
     milestones: [20]

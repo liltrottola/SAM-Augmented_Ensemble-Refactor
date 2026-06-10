@@ -26,6 +26,7 @@ training:
   clip_margin: 0.5
 
   augmentation: null # "da1", "da2", "da3" or null (no augmentation)
+  lr_method: null   # "lra" | "lrb" | "lrc" | null (usa il blocco optimizer/lr_schedule " legacy") per 50 epoche trainig
 
   optimizer:
     type: "AdamW"
