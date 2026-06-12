@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'))  # to import from src
 from src.training.lr_schedules import get_lr_method, build_scheduler
+from src.augmentation import OFFLINE_DA_METHODS
 
 import yaml
 
@@ -181,7 +182,8 @@ def main():
     parser.add_argument("--model_name", type=str, default=None, help="Model save name override")
     parser.add_argument('--seed', type=int, default=None, help='Seed number for random number generation to ensure consistent results across runs.')
     parser.add_argument('--lr_method', type=str, default=None, help='Learning-rate strategy for ensemble diversity (lra/lrb/lrc). Overrides training.lr_method in the config. If not specified, uses the config value.')
-    
+    parser.add_argument('--augmentation', type=str, default=None, help='DA method: da1/da2 (offline), da3 (online), or omit. Overrides training.augmentation.')
+
     args = parser.parse_args()
     
 
@@ -201,6 +203,11 @@ def main():
     # CLI override del metodo LR ; se assente resta il valore del YAML
     if args.lr_method is not None:
         opt.training.lr_method = args.lr_method
+
+    # CLI override del metodo DA (per lo sweep DA × LR); se assente resta il valore del YAML
+    if args.augmentation is not None:
+        opt.training.augmentation = args.augmentation
+
 
     #setup logging
     logging.basicConfig(filename=opt.paths.log_file,
@@ -222,7 +229,7 @@ def main():
     model = HSNet().cuda()
     params = model.parameters()
 
-    # --- Asse LR (LRa/LRb/LRc) per diversità d'ensemble ---
+    # --- LR (LRa/LRb/LRc) per diversità d'ensemble ---
     # lr_cfg è None se training.lr_method è null → path legacy (decay manuale invariato).
     lr_cfg = get_lr_method(getattr(opt.training, "lr_method", None))
     init_lr = lr_cfg["init_lr"] if lr_cfg is not None else opt.training.optimizer.lr
@@ -237,17 +244,28 @@ def main():
 
     print(f"Optimizer configurato: {opt.training.optimizer.type}, LR: {init_lr}, lr_method: {getattr(opt.training, 'lr_method', None)}")
 
-    #setup dataloader
+    # --- DA (DA1/DA2/DA3) ---
+    # da1/da2 = offline (immagini gia' aumentate su disco), da3 = online, null = nessuna aug.
+    aug = opt.training.augmentation
+    dataset = opt.datasets.train[0]
 
-    #image_root = '{}/images/'.format(opt.paths.train_data)
-    #gt_root = '{}/masks/'.format(opt.paths.train_data)
-    image_root = '{}/{}/images/'.format(opt.paths.datasets_root, opt.datasets.train[0])
-    gt_root = '{}/{}/masks/'.format(opt.paths.datasets_root, opt.datasets.train[0])
+    # If DA offline, set image_root and gt_root to the augmented data folders; if online or no DA, use original dataset folders.
+    if aug in OFFLINE_DA_METHODS:
+        image_root = '{}/{}/{}/{}/images/'.format(opt.paths.offline_aug_base, aug, opt.training.da_source, dataset)
+        gt_root    = '{}/{}/{}/{}/masks/'.format(opt.paths.offline_aug_base, aug, opt.training.da_source, dataset)
+        assert os.path.isdir(image_root), f"Offline DA folder not found: {image_root} -- run run_{aug}_augmentation.py first"
+        online_aug = None    # images already augmented offline, no online augmentation
+        print(f"Using offline augmented data from: {image_root}")
+        
+    else:                    # 'da3' (online) o None
+        image_root = '{}/{}/images/'.format(opt.paths.datasets_root, dataset)
+        gt_root    = '{}/{}/masks/'.format(opt.paths.datasets_root, dataset)
+        online_aug = aug
 
-    train_loader = get_loader(image_root, gt_root, 
-                              batchsize=opt.training.batchsize, 
+    train_loader = get_loader(image_root, gt_root,
+                              batchsize=opt.training.batchsize,
                               trainsize=opt.training.trainsize,
-                              augmentation=opt.training.augmentation)
+                              augmentation=online_aug)
     total_step = len(train_loader)
 
     print(f"Dataset caricato. Batch per epoca: {total_step}")

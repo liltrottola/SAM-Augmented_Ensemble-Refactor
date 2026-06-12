@@ -8,21 +8,24 @@ def load_sweep_config(config_path):
         config = yaml.safe_load(f)
     return config
 
-def build_model_name(model, run_id, method=None, sam_version=None):
-    if sam_version is None:
-        return f"{model}_run{run_id}"
-    
-    return f"sam{sam_version}_{method}_{model}_run{run_id}"
+def build_model_name(model, run_id, method=None, sam_version=None, da_method=None, lr_method=None):
+    base = f"{model}_run{run_id}" if sam_version is None \
+           else f"sam{sam_version}_{method}_{model}_run{run_id}"
+    if da_method is not None:
+        base = f"{base}_{da_method}"
+    if lr_method is not None:
+        base = f"{base}_{lr_method}"
+    return base
 
-def build_command(model, seed, run_id, sam_version, method, debug):
+def build_command(model, seed, run_id, sam_version, method, da_method, lr_method, debug):
     cmd = []
     cmd.append("python")
     cmd.append(model['train_script'])
-    
+
     cmd.append("--model_name")
-    model_name = build_model_name(model['name'], run_id, method, sam_version)
+    model_name = build_model_name(model['name'], run_id, method, sam_version, da_method, lr_method)
     cmd.append(model_name)
-    
+
     cmd.append("--seed")
     cmd.append(str(seed))
 
@@ -31,10 +34,18 @@ def build_command(model, seed, run_id, sam_version, method, debug):
         cmd.append(str(sam_version))
         cmd.append("--method")
         cmd.append(str(method))
-    
+
+    if da_method is not None:
+        cmd.append("--augmentation")
+        cmd.append(str(da_method))
+
+    if lr_method is not None:
+        cmd.append("--lr_method")
+        cmd.append(str(lr_method))
+
     if debug:
         cmd.append("--debug")
-    
+
     return cmd
 
 def run_training(cmd, cwd):
@@ -85,15 +96,20 @@ def main():
             print(f"ERRORE: CARTELLA MODELLO NON TROVATA: {cwd}")
             exit(1)
         
+        da_methods = sweep['training'].get('da_methods', [None])   # asse DA (solo vanilla); senza chiave -> 1 run legacy
+        lr_methods = sweep['training'].get('lr_methods', [None])   # retrocompat: senza chiave -> 1 run legacy
         for run_id in run_ids:
             if model['has_aux']:
                 for sam_version in sweep['training']['sam_versions']:
                     for method in sweep['training']['aug_methods']:
-                        cmd = build_command(model, sweep['training']['seeds'][run_id - 1], run_id, sam_version, method, args.debug)
-                        run_training(cmd, cwd)
+                        for lr_method in lr_methods:
+                            cmd = build_command(model, sweep['training']['seeds'][run_id - 1], run_id, sam_version, method, None, lr_method, args.debug)
+                            run_training(cmd, cwd)
             else:
-                cmd = build_command(model, sweep['training']['seeds'][run_id - 1], run_id, None, None, args.debug)           
-                run_training(cmd, cwd)
+                for da_method in da_methods:
+                    for lr_method in lr_methods:
+                        cmd = build_command(model, sweep['training']['seeds'][run_id - 1], run_id, None, None, da_method, lr_method, args.debug)
+                        run_training(cmd, cwd)
         
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
