@@ -16,7 +16,9 @@ This repository contains a framework for augmenting medical image datasets using
 
 ```
 ├── configs/                    # YAML configuration files
-│   ├── augmentation.yaml      # Configuration for augmentation
+│   ├── sam_augmentation.yaml  # SAM augmentation config
+│   ├── da1_augmentation.yaml  # DA1 offline augmentation (paper-faithful)
+│   ├── da2_augmentation.yaml  # DA2 offline augmentation (paper-faithful, 13 methods)
 │   ├── hsnet_vanilla.yaml     # HSNet (no SAM augmentation)
 │   ├── hsnet_aux.yaml         # HSNet (with SAM augmentation)
 │   ├── polypPVT_vanilla.yaml  # PolypPVT (no SAM augmentation)
@@ -31,15 +33,20 @@ This repository contains a framework for augmenting medical image datasets using
 │   ├── logits/                # Raw pre-sigmoid logits (.npy)
 │   └── ensemble/              # Ensemble outputs
 ├── scripts/                   # Executable scripts
-│   ├── run_augmentation.py    # SAM augmentation runner
-│   ├── run_training.py        # Training sweep runner ⚠️ not yet validated
-│   ├── run_inference.py       # Inference sweep runner ⚠️ not yet validated
-│   └── run_ensemble.py        # Ensemble evaluation ⚠️ not yet validated
+│   ├── run_sam_augmentation.py  # SAM augmentation runner (was run_augmentation.py)
+│   ├── run_da1_augmentation.py  # DA1 offline augmentation runner
+│   ├── run_da2_augmentation.py  # DA2 offline augmentation runner (needs torchstain)
+│   ├── run_training.py        # Training sweep runner
+│   ├── run_inference.py       # Inference sweep runner 
+│   └── run_ensemble.py        # Ensemble evaluation 
 ├── slurm/                     # SLURM job submission scripts
 ├── src/                      # Modular source code
 │   ├── augmentation/         # Augmentation modules
-│   │   ├── methods.py       # Augmentation methods
-│   │   └── sam_loader.py    # SAM model loading
+│   │   ├── methods.py       # SAM augmentation methods (RG_logits, PCA_segPrior, ...)
+│   │   ├── sam_loader.py    # SAM model loading
+│   │   ├── da1_methods.py   # DA1 offline (fliplr, flipud, rot90 + foreground filter)
+│   │   ├── da2_methods.py   # DA2 offline (13 methods: geometric + photometric + stain norm)
+│   │   └── da3.py           # DA3 online (used inside dataloader)
 │   ├── ensemble/             # Ensemble module
 │   │   └── ensemble.py      # Mean rule ensemble + Dice evaluation
 │   └── models/              # Segmentation models
@@ -88,21 +95,21 @@ source venv_newSAMAug/bin/activate
 
 ### Dataset Augmentation
 
-**Script to run:** [`scripts/run_augmentation.py`](scripts/run_augmentation.py)
+Three families of augmentation are provided:
 
-**Configuration:** Edit the [`configs/augmentation.yaml`](configs/augmentation.yaml) file to specify:
-- Datasets to process (`datasets.folders`)
-- Augmentation methods (`augmentation.methods`)
-- SAM versions to use (`sam.versions`)
-- Checkpoint paths (`paths.checkpoints_root`)
+- **SAM augmentation** — [`scripts/run_sam_augmentation.py`](scripts/run_sam_augmentation.py) — uses SAM/SAM2 priors to augment images. Configured via [`configs/sam_augmentation.yaml`](configs/sam_augmentation.yaml).
+- **DA1 offline** — [`scripts/run_da1_augmentation.py`](scripts/run_da1_augmentation.py) — 3 geometric methods (fliplr, flipud, rot90) + `<100 px` foreground filter. Produces a 4× dataset. Configured via [`configs/da1_augmentation.yaml`](configs/da1_augmentation.yaml).
+- **DA2 offline** — [`scripts/run_da2_augmentation.py`](scripts/run_da2_augmentation.py) — 13 methods (5 geometric, 5 photometric, 3 stain normalization). Requires `torchstain` for Macenko. Configured via [`configs/da2_augmentation.yaml`](configs/da2_augmentation.yaml).
 
-**Execution:**
+**Execution examples:**
 
 ```bash
-python scripts/run_augmentation.py --config configs/augmentation.yaml
+python scripts/run_sam_augmentation.py --config configs/sam_augmentation.yaml
+python scripts/run_da1_augmentation.py --config configs/da1_augmentation.yaml
+python scripts/run_da2_augmentation.py --config configs/da2_augmentation.yaml
 ```
 
-**Output:** Augmented datasets are saved in `output/augmentation/`
+**Output:** Augmented datasets are saved under `output/augmentation/{sam|da1|da2}/<source>/<dataset>/{images,masks}/`
 
 ### HSNet Training
 
@@ -243,7 +250,9 @@ For SLURM: submit with `--array=1-5` and pass `$SLURM_ARRAY_TASK_ID` as `--run_i
 
 ## 🔧 Available Augmentation Methods
 
-Methods implemented in [`src/augmentation/methods.py`](src/augmentation/methods.py):
+### SAM-based methods
+
+Implemented in [`src/augmentation/methods.py`](src/augmentation/methods.py):
 
 - `SAMAug` - SAM segmentation prior added to G and B channels
 - `ourSAMAug` - Custom SAM augmentation
@@ -252,6 +261,22 @@ Methods implemented in [`src/augmentation/methods.py`](src/augmentation/methods.
 - `RG_logits` - Random Gaussian based on logits
 - `PCA_segPrior` - PCA with segmentation prior
 
+### Offline DA methods (paper *An empirical study on ensemble of segmentation approaches*)
+
+Ported 1:1 from the MATLAB reference toolbox. Configuration and runners live in `configs/` and `scripts/`, functions in `src/augmentation/`.
+
+- **DA1** — [`src/augmentation/da1_methods.py`](src/augmentation/da1_methods.py)
+  - `fliplr`, `flipud`, `rot90` (deterministic) + `has_enough_foreground` filter
+  - Produces a 4× dataset (original + 3 variants per image)
+
+- **DA2** — [`src/augmentation/da2_methods.py`](src/augmentation/da2_methods.py) — 13 methods:
+  - Geometric (5): `width_shift`, `height_shift`, `rotation`, `shear`, `random_flip`
+  - Photometric (5): `brightness_uniform`, `brightness_per_channel`, `speckle_noise`, `contrast_blur`, `shadows`
+  - Stain normalization (3): `rgb_histogram_match`, `reinhard_normalize`, `macenko_normalize` (via `torchstain`)
+
+- **DA3** — [`src/augmentation/da3.py`](src/augmentation/da3.py)
+  - Online augmentation applied inside the model dataloader (rotation + flip + color jitter). Not run standalone; enabled per model via the model config yaml.
+
 ## 📦 Main Dependencies
 
 - **Python 3.11**
@@ -259,7 +284,8 @@ Methods implemented in [`src/augmentation/methods.py`](src/augmentation/methods.
 - **segment-anything** (SAM v1)
 - **segment-anything-2** (SAM v2)
 - **timm** - For model backbones
-- **opencv-python, scikit-image** - Image processing
+- **opencv-python, scikit-image, scipy** - Image processing (used by DA2)
+- **torchstain** - Macenko stain normalization for DA2 (`pip install torchstain`)
 - **PyYAML** - Configuration management
 
 ## 📝 Notes
@@ -273,4 +299,4 @@ Methods implemented in [`src/augmentation/methods.py`](src/augmentation/methods.
 
 ---
 
-*Last updated: 04 Aprile 2026*
+*Last updated: 03 Luglio 2026*
