@@ -30,6 +30,8 @@ def main():
     parser.add_argument('--out_folder', type=str, default=None)
     parser.add_argument('--models_outputs', type=str, default=None)
     parser.add_argument('--test_masks', type=str, default=None)
+    parser.add_argument('--ensemble_name', type=str, default=None, help='name for this ensemble run')
+
     args = parser.parse_args()
 
     opt = Config(load_config(args.config))
@@ -41,6 +43,8 @@ def main():
         opt.paths.models_outputs = args.models_outputs
     if args.test_masks is not None:
         opt.paths.test_masks = args.test_masks
+    if args.ensemble_name is not None:
+        opt.paths.out_folder = os.path.join(opt.paths.out_folder, args.ensemble_name)
 
     #each subfolder of --models_outputs contains the output for the whole 5 polyp datasets.
     models_to_sum = os.listdir(opt.paths.models_outputs)

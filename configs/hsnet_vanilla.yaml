@@ -17,8 +17,8 @@ paths:
   logits_dir: "../../../output/logits/"
 
 training:
-  epochs: 100 #uso 50 con lr method, 100 per confronto se lr_method null 
-  batchsize: 8 #20 con lr method, 8 per confronto se lr_method null
+  epochs: 50 #uso 50 con lr method, 100 per confronto se lr_method null 
+  batchsize: 20 #20 con lr method, 8 per confronto se lr_method null
   trainsize: 352 # Original hardcoded image size for training
 
   size_rates: [0.75, 1.0, 1.25] # Multi-scale training (0.75x, 1.0x, 1.25x)
@@ -50,7 +50,8 @@ testing:
 
 datasets:
   train: 
-    - "TrainDataset"  #use only one folder for training divided in images and masks
+    #- "TrainDataset"  #use only one folder for training divided in images and masks
+    - "ProvaSmall"
   test:
     #- "ProvaSmall"
     #- "TestDatasets/TestDataset"

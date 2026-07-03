@@ -42,16 +42,16 @@ training:
 
   # Asse LR (diversità d'ensemble): null = path legacy, + i 3 metodi del paper
   lr_methods:
-    - null
+    #- null
     - "lra"
     - "lrb"
     - "lrc"
 
   # Asse DA (solo modelli vanilla): null = nessuna aug, da1/da2 offline, da3 online
   da_methods:
-    - null
+    #- null
     - "da1"
-    - "da2"
+    #- "da2"
     - "da3"
 
 #inference/testing section
@@ -71,14 +71,14 @@ testing:
     - "PCA_segPrior"
 
   lr_methods:
-    - null
+   # - null
     - "lra"
     - "lrb"
     - "lrc"
 
   # Deve combaciare con training.da_methods per ritrovare i checkpoint
   da_methods:
-    - null
+   # - null
     - "da1"
-    - "da2"
+    #- "da2"
     - "da3"

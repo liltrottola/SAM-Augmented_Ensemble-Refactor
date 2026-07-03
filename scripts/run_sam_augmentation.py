@@ -115,7 +115,7 @@ if __name__ == "__main__":
     current_dir = os.path.dirname(os.path.abspath(__file__))
     
     #costruisci il path del file di configurazione
-    config_path = os.path.abspath(os.path.join(current_dir, '../configs/augmentation.yaml'))
+    config_path = os.path.abspath(os.path.join(current_dir, '../configs/sam_augmentation.yaml'))
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default=config_path, help='Path to the config file.')
