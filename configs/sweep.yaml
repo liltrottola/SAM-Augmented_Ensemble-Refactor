@@ -25,7 +25,7 @@ models:
 
 # training section
 training:
-  runs: 1
+  runs: 5
   seeds: [37, 42, 123, 456, 789]
 
   # Choose [1], [2], or [1, 2]
@@ -40,23 +40,23 @@ training:
     - "RG_logits"
     - "PCA_segPrior"
 
-  # Asse LR (diversità d'ensemble): null = path legacy, + i 3 metodi del paper
+  # Asse LR (diversità d'ensemble): lrbase = path legacy, + i 3 metodi del paper
   lr_methods:
-    #- null
-    - "lra"
-    - "lrb"
-    - "lrc"
+    - "lrbase"
+    #- "lra"
+    #- "lrb"
+    #- "lrc"
 
   # Asse DA (solo modelli vanilla): null = nessuna aug, da1/da2 offline, da3 online
   da_methods:
     #- null
-    - "da1"
+    #- "da1"
     #- "da2"
     - "da3"
 
 #inference/testing section
 testing:
-  runs: 1
+  runs: 5
 
   # Choose [1], [2], or [1, 2]
   sam_versions: [1, 2]
@@ -71,14 +71,14 @@ testing:
     - "PCA_segPrior"
 
   lr_methods:
-   # - null
-    - "lra"
-    - "lrb"
-    - "lrc"
+    - "lrbase"
+   # - "lra"
+   # - "lrb"
+   # - "lrc"
 
   # Deve combaciare con training.da_methods per ritrovare i checkpoint
   da_methods:
    # - null
-    - "da1"
+    #- "da1"
     #- "da2"
     - "da3"

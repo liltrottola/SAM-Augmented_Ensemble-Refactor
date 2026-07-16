@@ -9,12 +9,12 @@ LR_METHODS = {
 
 def get_lr_method(name):
     """Return the {init_lr, milestones, gamma} dict for an LR method name."""
-    if name is None:
+    if name is None or name.lower() == "lrbase":
         return None
     key = name.lower()
 
     if key not in LR_METHODS:
-        raise ValueError(f"Unknown lr_method '{name}'. Expected one of {list(LR_METHODS)} or null.")
+        raise ValueError(f"Unknown lr_method '{name}'. Expected one of {list(LR_METHODS)}, 'lrbase', or null.")
     
     return LR_METHODS[key]
 

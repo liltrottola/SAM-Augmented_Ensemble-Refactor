@@ -17,8 +17,8 @@ paths:
   logits_dir: "../../../output/logits/"
 
 training:
-  epochs: 50 #uso 50 con lr method, 100 per confronto se lr_method null 
-  batchsize: 20 #20 con lr method, 8 per confronto se lr_method null
+  epochs: 100 #uso 50 con lr method, 100 per confronto se lr_method lrbase
+  batchsize: 8 #20 con lr method, 8 per confronto se lr_method lrbase
   trainsize: 352 # Original hardcoded image size for training
 
   size_rates: [0.75, 1.0, 1.25] # Multi-scale training (0.75x, 1.0x, 1.25x)
@@ -33,7 +33,7 @@ training:
   augmentation: da3 # "da1", "da2", "da3" or null (no augmentation)
   da_source: "original"    #"original" for augmentation on the original dataset, choose other name for augmentation applied on already augmented dataset (e.g. SAMAug, ourSAMAug, RG_segPrior, SV_segPrior, RG_logits, PCA_segPrior)
 
-  lr_method: null   # "lra" | "lrb" | "lrc" | null (usa il blocco optimizer/lr_schedule " legacy")
+  lr_method: lrbase   # "lra" | "lrb" | "lrc" | "lrbase" (usa il blocco optimizer/lr_schedule legacy)
   
   optimizer:
     type: "AdamW"
