@@ -10,38 +10,37 @@ paths:
 
 datasets:
   folders:
-    - "ProvaSmall/"
-    # - "TrainDataset/"
+    - "TrainDataset/"
 
 augmentation:
-  # tutte le 13 funzioni (devono esistere in da2_methods.py)
+  # All 13 methods (must exist as functions in da2_methods.py)
   methods:
-    # geometriche
+    # geometric
     - "width_shift"
     - "height_shift"
     - "rotation"
     - "shear"
     - "random_flip"
-    # fotometriche
+    # photometric
     - "brightness_uniform"
     - "brightness_per_channel"
     - "speckle_noise"
     - "contrast_blur"
     - "shadows"
-    # stain normalization (richiedono target)
+    # stain normalization (require target)
     - "rgb_histogram_match"
     - "reinhard_normalize"
     - "macenko_normalize"
 
   keep_original: true
 
-  # filtro foreground (come DA1)
+  # foreground filter (as in DA1)
   foreground_filter:
     enabled: true
     min_pixels: 100
 
-  # stain norm: target scelto random tra le prime N immagini 
+  # stain norm: target chosen randomly among the first N images
   target_pool_size: 90
 
-  # riproducibilità del dataset generato
+  # reproducibility of the generated dataset
   random_seed: 42

@@ -319,7 +319,7 @@ def main():
     total_step = len(train_loader)
     print(f"Dataset loaded. Batches per epoch: {total_step}")
     
-    # In modalità debug, facciamo finta che ci sia 1 sola epoca per non perdere tempo
+    # In debug mode, pretend there is only 1 epoch to avoid wasting time
     if args.debug:
         print("!!! ATTENZIONE: MODALITÀ DEBUG ATTIVA !!!")
         opt.training.epochs = 1

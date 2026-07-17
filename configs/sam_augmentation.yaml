@@ -8,7 +8,7 @@ paths:
   # Path base dove si trovano i dataset (ex dataset_path = "../datasets/")
   dataset_root: "datasets/"
 
-  # Dove salvare l'output (ex saving_path)
+  # Where to save the output (ex saving_path)
   output_root: "output/augmentation/"
   
   # Path dei checkpoint (ex checkpoints_root)

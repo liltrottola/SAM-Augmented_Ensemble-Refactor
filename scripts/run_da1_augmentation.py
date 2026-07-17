@@ -7,14 +7,13 @@ import numpy as np
 
 import argparse
 
-# Per importare i moduli da 'src' anche se siamo in 'scripts'
-# Aggiunge la cartella superiore al path di Python
+# Add the parent directory to the sys.path to allow imports from src
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from src.augmentation import da1_methods
 
 def run_processing(config):
-    print("Configurazione caricata:", config.keys())
+    print("Configuration loaded:", config.keys())
     dataset_root = config['paths']['dataset_root']
     output_root = config['paths']['output_root']
     source_name = config['paths']['source_name']
@@ -52,9 +51,9 @@ def run_processing(config):
             tM = io.imread(mask_path)
 
             if tM.ndim == 3:
-                tM = tM.max(axis=-1)    # 3D RGB triplicata → 2D (max per pixel) DA2 methods assumes 2D masks
+                tM = tM.max(axis=-1)    # 3D RGB is triple → 2D (max per pixel) DA2 methods assumes 2D masks
 
-            # Salva l'originale se richiesto
+            # Save the original if requested
             if keep_original:
                 io.imsave(os.path.join(saving_path_images, filename), tI)
                 io.imsave(os.path.join(saving_path_masks, filename), tM)
@@ -65,13 +64,13 @@ def run_processing(config):
                     aug_function = getattr(da1_methods, method_name)
                     augmented_image, augmented_mask = aug_function(tI, tM)
 
-                    # Applica il filtro sui pixel di foreground se abilitato
+                    # Apply the foreground pixel filter if enabled
                     if filter_enabled:
                         if not da1_methods.has_enough_foreground(augmented_mask, min_pixels):
                             print(f"Skipping {filename} with {method_name} due to insufficient foreground pixels.")
                             continue
 
-                    # Salva le immagini e maschere aumentate
+                    # Save the augmented images and masks
                     aug_filename = f"{os.path.splitext(filename)[0]}_{method_name}{os.path.splitext(filename)[1]}"
                     io.imsave(os.path.join(saving_path_images, aug_filename), augmented_image)
                     io.imsave(os.path.join(saving_path_masks, aug_filename), augmented_mask)

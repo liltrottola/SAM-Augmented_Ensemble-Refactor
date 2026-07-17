@@ -80,7 +80,7 @@ def main():
             print(f"ERRORE: CARTELLA MODELLO NON TROVATA: {cwd}")
             exit(1)
         
-        da_methods = sweep['testing'].get('da_methods', [None])   # asse DA (solo vanilla); senza chiave -> 1 run legacy
+        da_methods = sweep['testing'].get('da_methods', [None])   # DA axis (vanilla only); without key -> 1 legacy run
         lr_methods = sweep['testing'].get('lr_methods', [None])   # retrocompat: senza chiave -> 1 run legacy
         for run_id in run_ids:
             if model['has_aux']:

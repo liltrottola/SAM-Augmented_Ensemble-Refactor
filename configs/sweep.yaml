@@ -40,14 +40,14 @@ training:
     - "RG_logits"
     - "PCA_segPrior"
 
-  # Asse LR (diversità d'ensemble): lrbase = path legacy, + i 3 metodi del paper
+  # LR axis (ensemble diversity): lrbase = legacy path, + the 3 methods from the paper
   lr_methods:
     - "lrbase"
     #- "lra"
     #- "lrb"
     #- "lrc"
 
-  # Asse DA (solo modelli vanilla): null = nessuna aug, da1/da2 offline, da3 online
+  # DA axis (vanilla models only): null = no aug, da1/da2 offline, da3 online
   da_methods:
     #- null
     #- "da1"

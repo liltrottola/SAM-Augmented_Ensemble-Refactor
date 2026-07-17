@@ -23,7 +23,7 @@ training:
   clip_margin: 0.5
 
   augmentation: da3 # "da1", "da2", "da3" or null (no augmentation)
-  lr_method: null   # "lra" | "lrb" | "lrc" | null (usa il blocco optimizer/lr_schedule " legacy") per 50 epoche trainig
+  lr_method: null   # "lra" | "lrb" | "lrc" | null (uses the legacy optimizer/lr_schedule block, 50 training epochs)
 
   optimizer:
     type: "AdamW"
@@ -43,9 +43,8 @@ datasets:
   train:
     - "TrainDataset"
   test:
-    - "TestDatasets/TestDataset"
-    #- "TestDatasets/CVC-300"
-    #- "TestDatasets/CVC-ClinicDB"
-    #- "TestDatasets/CVC-ColonDB"
-    #- "TestDatasets/Kvasir"
-    #- "TestDatasets/ETIS-LaribPolypDB"
+    - "TestDatasets/CVC-300"
+    - "TestDatasets/CVC-ClinicDB"
+    - "TestDatasets/CVC-ColonDB"
+    - "TestDatasets/Kvasir"
+    - "TestDatasets/ETIS-LaribPolypDB"
