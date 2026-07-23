@@ -174,7 +174,6 @@ def plot_train(dict_plot=None, name = None):
     # plt.show()
 
 def main():
-    # --- GESTIONE ARGOMENTI ---
     parser = argparse.ArgumentParser()
     
     parser.add_argument("--debug", action="store_true", help="enable debug mode")
@@ -182,7 +181,8 @@ def main():
     parser.add_argument("--model_name", type=str, default=None, help="Model save name override")
     parser.add_argument('--seed', type=int, default=None, help='Seed number for random number generation to ensure consistent results across runs.')
     parser.add_argument('--lr_method', type=str, default=None, help='Learning-rate strategy for ensemble diversity (lra/lrb/lrc). Overrides training.lr_method in the config. If not specified, uses the config value.')
-    parser.add_argument('--augmentation', type=str, default=None, help='DA method: da1/da2 (offline), da3 (online), or omit. Overrides training.augmentation.')
+    parser.add_argument('--offline_da', type=str, default=None, help='Offline DA method: da1/da2, or omit. Redirects image_root to the pre-generated augmented dataset. Overrides training.offline_augmentation.')
+    parser.add_argument('--online_da', type=str, default=None, help='Online DA method: da3, or omit. Applied at runtime by the dataloader. Overrides training.online_augmentation.')
 
     args = parser.parse_args()
     
@@ -204,9 +204,11 @@ def main():
     if args.lr_method is not None:
         opt.training.lr_method = args.lr_method
 
-    # CLI override for the DA method (for DA × LR sweep); if absent, keep the YAML value
-    if args.augmentation is not None:
-        opt.training.augmentation = args.augmentation
+    # CLI overrides for the DA axes (for DA × LR sweep); if absent, keep the YAML value
+    if args.offline_da is not None:
+        opt.training.offline_augmentation = args.offline_da
+    if args.online_da is not None:
+        opt.training.online_augmentation = args.online_da
 
 
     #setup logging
@@ -214,7 +216,7 @@ def main():
                         format='[%(asctime)s-%(filename)s-%(levelname)s:%(message)s]',
                         level=logging.INFO, filemode='a', datefmt='%Y-%m-%d %I:%M:%S %p')
 
-    #seed per riproducibilità (non presente in HSNet originale)
+    #seed for reproducibility
     if hasattr(opt.experiment, 'seed'):
         seed = opt.experiment.seed
         random.seed(seed)
@@ -244,23 +246,19 @@ def main():
 
     print(f"Optimizer configured: {opt.training.optimizer.type}, LR: {init_lr}, lr_method: {getattr(opt.training, 'lr_method', None)}")
 
-    # --- DA (DA1/DA2/DA3) ---
-    # da1/da2 = offline (images already augmented), da3 = online, null/lrbase = no augmentation
-    aug = opt.training.augmentation
+    # --- DA: offline (da1/da2, redirects image_root) and online (da3, applied by the dataloader) are now independent axes ---
+    offline_aug = getattr(opt.training, "offline_augmentation", None)
+    online_aug = getattr(opt.training, "online_augmentation", None)
     dataset = opt.datasets.train[0]
 
-    # If DA offline, set image_root and gt_root to the augmented data folders; if online or no DA, use original dataset folders.
-    if aug in OFFLINE_DA_METHODS:
-        image_root = '{}/{}/{}/{}/images/'.format(opt.paths.offline_aug_base, aug, opt.training.da_source, dataset)
-        gt_root    = '{}/{}/{}/{}/masks/'.format(opt.paths.offline_aug_base, aug, opt.training.da_source, dataset)
-        assert os.path.isdir(image_root), f"Offline DA folder not found: {image_root} -- run run_{aug}_augmentation.py first"
-        online_aug = None    # images already augmented offline, no online augmentation
+    if offline_aug in OFFLINE_DA_METHODS:
+        image_root = '{}/{}/{}/{}/images/'.format(opt.paths.offline_aug_base, offline_aug, opt.training.da_source, dataset)
+        gt_root    = '{}/{}/{}/{}/masks/'.format(opt.paths.offline_aug_base, offline_aug, opt.training.da_source, dataset)
+        assert os.path.isdir(image_root), f"Offline DA folder not found: {image_root} -- run run_{offline_aug}_augmentation.py first"
         print(f"Using offline augmented data from: {image_root}")
-        
-    else:                    # 'da3' (online) o None
+    else:
         image_root = '{}/{}/images/'.format(opt.paths.datasets_root, dataset)
         gt_root    = '{}/{}/masks/'.format(opt.paths.datasets_root, dataset)
-        online_aug = aug
 
     train_loader = get_loader(image_root, gt_root,
                               batchsize=opt.training.batchsize,

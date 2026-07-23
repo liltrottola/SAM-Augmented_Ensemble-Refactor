@@ -29,9 +29,10 @@ training:
 
   #create ensemble  diversity
 
-  #da_source if da_method is da1 or da2, specify the source_name used in generation 
-  augmentation: da3 # "da1", "da2", "da3" or null (no augmentation)
+  #da_source if offline_augmentation is da1 or da2, specify the source_name used in generation
+  offline_augmentation: noda # "da1", "da2" or "noda" (no offline augmentation)
   da_source: "original"    #"original" for augmentation on the original dataset, choose other name for augmentation applied on already augmented dataset (e.g. SAMAug, ourSAMAug, RG_segPrior, SV_segPrior, RG_logits, PCA_segPrior)
+  online_augmentation: da3 # "da3" or null (no online augmentation)
 
   lr_method: lrbase   # "lra" | "lrb" | "lrc" | "lrbase" (uses the legacy optimizer/lr_schedule block)
   

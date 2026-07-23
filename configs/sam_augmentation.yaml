@@ -17,8 +17,7 @@ paths:
 datasets:
   # List of datasets to use for training and testing
   folders:
-    - "ProvaSmall/"
-    #- "TrainDataset/"
+    - "TrainDataset/"
     #- "small_ds/"
     #- "small_ds_2/"
     #- "TestDatasets/CVC-300/"
@@ -30,10 +29,10 @@ datasets:
 augmentation:
   #List of method names exactly as defined in lib.py
   methods:
-    #- "SAMAug"
-    #- "ourSAMAug"
-    #- "RG_segPrior"
-    #- "SV_segPrior"
+    - "SAMAug"
+    - "ourSAMAug"
+    - "RG_segPrior"
+    - "SV_segPrior"
     - "RG_logits"
     - "PCA_segPrior"
 

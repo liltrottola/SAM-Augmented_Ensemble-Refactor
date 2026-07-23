@@ -291,6 +291,8 @@ class PolypDataset(data.Dataset):
                 transforms.Resize((self.trainsize, self.trainsize)),
                 transforms.ToTensor()])
         '''
+        # If the specified augmentation method is 'da3', we apply a specific set of transformations defined in the da3 module.
+        # Otherwise, we apply a default set of transformations that include resizing, converting to tensor,
         if self.augmentations == 'da3':
             self.img_transform , self.gt_transform = da3.get_da3_transforms(self.trainsize)  
         else:

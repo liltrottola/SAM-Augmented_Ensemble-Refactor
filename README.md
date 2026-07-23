@@ -1,9 +1,5 @@
 # SAM-Augmented Ensemble (Refactoring)
 
-⚠️ Runner scripts (`run_training.py`, `run_inference.py`, `run_ensemble.py`) not yet validated on the cluster.
-
-⚠️ PolypPVT training and inference not yet validated on the cluster.
-
 ## 📂 Original Project
 
 https://github.com/LorisNanni/Exploring-SAM-Augmented-Ensembles
@@ -23,7 +19,8 @@ This repository contains a framework for augmenting medical image datasets using
 │   ├── hsnet_aux.yaml         # HSNet (with SAM augmentation)
 │   ├── polypPVT_vanilla.yaml  # PolypPVT (no SAM augmentation)
 │   ├── polypPVT_aux.yaml      # PolypPVT (with SAM augmentation)
-│   ├── sweep.yaml             # Experiment sweep (training + inference)
+│   ├── sweep_train.yaml       # Training sweep (models + training axes)
+│   ├── sweep_test.yaml        # Inference sweep (models + testing axes)
 │   └── ensemble.yaml          # Ensemble evaluation paths
 ├── datasets/                  # Original datasets
 ├── output/                    # Generated outputs (gitignored)
@@ -58,7 +55,7 @@ This repository contains a framework for augmenting medical image datasets using
 │       │   ├── lib/         # Model libraries
 │       │   ├── utils/       # Utilities
 │       │   └── pretrained_pth/  # Pretrained weights
-│       └── PolypPVT/        # PolypPVT model ⚠️ not yet cluster-validated
+│       └── PolypPVT/        # PolypPVT model 
 │           ├── Train_vanilla.py  # Training (no SAM augmentation)
 │           ├── Train_aux.py      # Training (with SAM augmentation)
 │           ├── Test_vanilla.py   # Inference (no SAM augmentation)
@@ -151,7 +148,7 @@ python src/models/HSNet/Test_aux.py --model_pth output/models/HSNet_Aux_DA3.pth
 
 **Output:** Predictions saved in `output/predictions/{dataset_name}/`. `Test_aux.py` also prints per-dataset Dice scores.
 
-### PolypPVT Training ⚠️ not yet cluster-validated
+### PolypPVT Training 
 
 **Scripts:** [`src/models/PolypPVT/Train_vanilla.py`](src/models/PolypPVT/Train_vanilla.py) / [`Train_aux.py`](src/models/PolypPVT/Train_aux.py)
 
@@ -164,7 +161,7 @@ python src/models/PolypPVT/Train_aux.py --config configs/polypPVT_aux.yaml
 python src/models/PolypPVT/Train_vanilla.py --debug
 ```
 
-### PolypPVT Inference ⚠️ not yet cluster-validated
+### PolypPVT Inference 
 
 **Scripts:** [`src/models/PolypPVT/Test_vanilla.py`](src/models/PolypPVT/Test_vanilla.py) / [`Test_aux.py`](src/models/PolypPVT/Test_aux.py)
 
@@ -179,40 +176,46 @@ python src/models/PolypPVT/Test_aux.py --config configs/polypPVT_aux.yaml
 
 **Script to run:** [`scripts/run_training.py`](scripts/run_training.py)
 
-**Configuration:** Edit [`configs/sweep.yaml`](configs/sweep.yaml) to select models, methods, SAM versions and number of runs.
+**Configuration:** Edit [`configs/sweep_train.yaml`](configs/sweep_train.yaml) to select models, methods, SAM versions and number of runs. Used by default (no `--sweep` needed).
 
 **Execution:**
 
 ```bash
-# Run all models, all combinations
-python scripts/run_training.py --sweep configs/sweep.yaml
+# Run all models, all combinations (defaults to configs/sweep_train.yaml)
+python scripts/run_training.py
 
 # Filter to one model only
-python scripts/run_training.py --sweep configs/sweep.yaml --model hsnet_aux
+python scripts/run_training.py --model hsnet_aux
 
-# SLURM array job (one run per job)
-python scripts/run_training.py --sweep configs/sweep.yaml --model hsnet_aux --run_id $SLURM_ARRAY_TASK_ID
+# Run a subset of runs (nargs: several IDs at once)
+python scripts/run_training.py --model hsnet_aux --run_id 2 3 4
+
+# SLURM array job (one run per job; --run_id gets a single value)
+python scripts/run_training.py --model hsnet_aux --run_id $SLURM_ARRAY_TASK_ID
 ```
 
-**Output:** Checkpoints saved as `output/models/sam{v}_{method}_{model_name}_run{id}.pth`
+Runs whose checkpoint already exists are skipped automatically; pass `--force` to retrain and overwrite them.
 
-### 🔄 Inference Sweep Runner ⚠️ not yet cluster-validated
+**Output:** Checkpoints saved as `output/models/sam{v}_{method}_{model_name}_{da}_{lr}_run{id}.pth`
+
+### 🔄 Inference Sweep Runner
 
 **Script to run:** [`scripts/run_inference.py`](scripts/run_inference.py)
 
-**Configuration:** Uses the `testing` section of [`configs/sweep.yaml`](configs/sweep.yaml) — independent from `training`, so inference can target a different subset.
+**Configuration:** Uses [`configs/sweep_test.yaml`](configs/sweep_test.yaml) (its `testing` section) — a separate file from `sweep_train.yaml`, so a test sweep can be edited while a training job is still queued. Used by default (no `--sweep` needed).
 
 **Execution:**
 
 ```bash
-python scripts/run_inference.py --sweep configs/sweep.yaml
-python scripts/run_inference.py --sweep configs/sweep.yaml --model hsnet_aux
-python scripts/run_inference.py --sweep configs/sweep.yaml --model hsnet_aux --run_id 3
+python scripts/run_inference.py
+python scripts/run_inference.py --model hsnet_aux
+python scripts/run_inference.py --model hsnet_aux --run_id 3
+python scripts/run_inference.py --model hsnet_aux --run_id 2 3 4
 ```
 
 **Output:** Predictions saved in `output/predictions/{model_name}/{dataset}/`
 
-### 🔄 Ensemble Evaluation ⚠️ not yet cluster-validated
+### 🔄 Ensemble Evaluation
 
 **Script to run:** [`scripts/run_ensemble.py`](scripts/run_ensemble.py)
 
@@ -233,18 +236,28 @@ python scripts/run_ensemble.py --models_outputs output/predictions/ --out_folder
 
 Loads all model prediction subfolders under `models_outputs`, averages predictions pixel-wise (mean rule after sigmoid), prints per-dataset Dice and overall mean.
 
-### ⚙️ Sweep Configuration (`configs/sweep.yaml`)
+### ⚙️ Sweep Configuration (`configs/sweep_train.yaml`, `configs/sweep_test.yaml`)
 
-`sweep.yaml` is the central configuration point for running experiments. It has two independent sections — `training` and `testing`.
+Experiments are driven by two files, one per stage:
+- [`configs/sweep_train.yaml`](configs/sweep_train.yaml) — `models` + `training` axes (used by `run_training.py`)
+- [`configs/sweep_test.yaml`](configs/sweep_test.yaml) — `models` + `testing` axes (used by `run_inference.py`)
+
+The `models` list is duplicated across both files on purpose and must stay in sync
+(same names, folders, scripts, config path).
 
 Key fields:
-- `models` — which models to run, their folder, scripts, and whether they use SAM augmentation (`has_aux: true/false`)
+- `models` — which models to run: their folder, scripts, per-model `config` yaml, and whether they use SAM augmentation (`has_aux: true/false`)
 - `training.seeds` — one seed per run for reproducibility across the 5 runs
-- `training.sam_versions` / `testing.sam_versions` — `[1]`, `[2]`, or `[1, 2]`
-- `training.aug_methods` / `testing.aug_methods` — comment/uncomment to select methods
+- `sam_versions` — `[1]`, `[2]`, or `[1, 2]`
+- `aug_methods` — comment/uncomment to select methods
+- `da_methods` / `lr_methods` — DA and LR axes; `sweep_test.da_methods` must match `sweep_train.da_methods` to find the checkpoints
 
-If `has_aux: true` → runner loops over `sam_versions × aug_methods × runs`.
-If `has_aux: false` → runner loops over `runs` only.
+If `has_aux: true` → runner loops over `sam_versions × aug_methods × da_methods × lr_methods × runs`.
+If `has_aux: false` → runner loops over `da_methods × lr_methods × runs`.
+
+Checkpoint naming (`build_model_name`) and combo validity (`is_valid_combo`) live in
+[`src/sweep/naming.py`](src/sweep/naming.py), shared by both runners so the training
+and testing stages can never disagree on filenames.
 
 For SLURM: submit with `--array=1-5` and pass `$SLURM_ARRAY_TASK_ID` as `--run_id`. Each array job runs all method combinations for that run ID in parallel with the others.
 

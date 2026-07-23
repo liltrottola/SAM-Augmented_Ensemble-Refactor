@@ -18,15 +18,15 @@ paths:
   logits_dir: "../../../output/logits/"
 
 training:
-  epochs: 100
+  epochs: 40 
   batchsize: 16
   trainsize: 352
 
   size_rates: [0.75, 1.0, 1.25]
   clip_margin: 0.5
 
-  augmentation: null # "da1", "da2", "da3" or null (no augmentation)
-  lr_method: null   # "lra" | "lrb" | "lrc" | null (uses the legacy optimizer/lr_schedule block, 50 training epochs)
+  online_augmentation: noda # "da3" or "noda" (no online augmentation) -- offline da1/da2 not supported for aux yet
+  lr_method: lrbase   # "lra" | "lrb" | "lrc" | lrbase (uses the legacy optimizer/lr_schedule block, 50 training epochs)
 
   optimizer:
     type: "AdamW"

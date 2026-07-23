@@ -199,6 +199,7 @@ def main():
     parser.add_argument('--model_name', type=str, default=None, help='Name of the model to be trained. This helps in identifying the model configuration when saving and tracking experiments. If not specified, it will use the default model name defined in the configuration file.')
     parser.add_argument('--seed', type=int, default=None, help='Seed number for random number generation to ensure consistent results across runs. If not specified, it will use the default seed defined in the configuration file.')
     parser.add_argument('--lr_method', type=str, default=None, help='Learning-rate strategy for ensemble diversity (lra/lrb/lrc). Overrides training.lr_method in the config. If not specified, uses the config value.')
+    parser.add_argument('--online_da', type=str, default=None, help='Online DA method: da3, or omit. Applied at runtime by the aux dataloader. Overrides training.online_augmentation.')
 
     args = parser.parse_args()
 
@@ -221,6 +222,9 @@ def main():
 
     if args.lr_method is not None:
         opt.training.lr_method = args.lr_method
+
+    if args.online_da is not None:
+        opt.training.online_augmentation = args.online_da
 
     # Set a seed number for random number generation to ensure consistent results across runs
     seednumber = opt.experiment.seed
@@ -310,10 +314,11 @@ def main():
 
 
     # Create a data loader to fetch training batches with the specified batch size and image dimensions.
-    train_loader = get_loader_with_aux(image_root, gt_root, aux_root, 
+    online_aug = getattr(opt.training, "online_augmentation", None)
+    train_loader = get_loader_with_aux(image_root, gt_root, aux_root,
                                        batchsize=opt.training.batchsize,
                                        trainsize=opt.training.trainsize,
-                                       augmentation=opt.training.augmentation)
+                                       augmentation=online_aug)
 
     # Determine the total number of steps in the training process.
     total_step = len(train_loader)

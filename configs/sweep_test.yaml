@@ -1,60 +1,38 @@
+# NOTE: the `models` list must stay in sync with sweep_train.yaml (same names,
+# folders, scripts, config). It is duplicated on purpose so a test sweep can be
+# edited while a training job is still queued on the cluster, without the two
+# ever touching the same file. Only the model registry is shared; the axes below
+# are independent from training on purpose.
 models:
   - name: hsnet
     has_aux: false
     folder: "HSNet"
     train_script: "Train_vanilla.py"
     test_script: "Test_vanilla.py"
+    config: "../configs/hsnet_vanilla.yaml"
 
   - name: hsnet_aux
     has_aux: true
     folder: "HSNet"
     train_script: "Train_aux.py"
     test_script: "Test_aux.py"
+    config: "../configs/hsnet_aux.yaml"
 
   - name: polypvt_aux
     has_aux: true
     folder: "PolypPVT"
     train_script: "Train_aux.py"
     test_script: "Test_aux.py"
+    config: "../configs/polypPVT_aux.yaml"
 
   - name: polypvt
     has_aux: false
     folder: "PolypPVT"
     train_script: "Train_vanilla.py"
     test_script: "Test_vanilla.py"
+    config: "../configs/polypPVT_vanilla.yaml"
 
-# training section
-training:
-  runs: 5
-  seeds: [37, 42, 123, 456, 789]
-
-  # Choose [1], [2], or [1, 2]
-  sam_versions: [1, 2]
-
-  #List of method names
-  aug_methods:
-    - "SAMAug"
-    - "ourSAMAug"
-    - "RG_segPrior"
-    - "SV_segPrior"
-    - "RG_logits"
-    - "PCA_segPrior"
-
-  # LR axis (ensemble diversity): lrbase = legacy path, + the 3 methods from the paper
-  lr_methods:
-    - "lrbase"
-    #- "lra"
-    #- "lrb"
-    #- "lrc"
-
-  # DA axis (vanilla models only): null = no aug, da1/da2 offline, da3 online
-  da_methods:
-    #- null
-    #- "da1"
-    #- "da2"
-    - "da3"
-
-#inference/testing section
+# inference/testing section
 testing:
   runs: 5
 
@@ -76,9 +54,9 @@ testing:
    # - "lrb"
    # - "lrc"
 
-  # Deve combaciare con training.da_methods per ritrovare i checkpoint
+  # Must match the da_methods used at training time to find the checkpoints
   da_methods:
-   # - null
+   # - "noda"
     #- "da1"
     #- "da2"
     - "da3"

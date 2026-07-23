@@ -5,6 +5,7 @@ experiment:
 # all paths are relative to the location of Train.py in src/models/PolypPVT/
 paths:
   datasets_root: "../../../datasets/"
+  offline_aug_base: "../../../output/augmentation/"   # folder DA offline (da1/da2/...)
 
   # ------ TRAINING --------
   models_dir: "../../../output/models/"
@@ -15,15 +16,19 @@ paths:
   logits_dir: "../../../output/logits/"
 
 training:
-  epochs: 100
-  batchsize: 16
+  epochs: 100 #use 50 with lr method, 100 to compare with lr_method lrbase
+  batchsize: 16 #20 with lr method, 8 to compare with lr_method lrbase
   trainsize: 352
 
   size_rates: [0.75, 1.0, 1.25]
   clip_margin: 0.5
 
-  augmentation: da3 # "da1", "da2", "da3" or null (no augmentation)
-  lr_method: null   # "lra" | "lrb" | "lrc" | null (uses the legacy optimizer/lr_schedule block, 50 training epochs)
+   #da_source if offline_augmentation is da1 or da2, specify the source_name used in generation
+  offline_augmentation: noda # "da1", "da2" or "noda" (no offline augmentation)
+  da_source: "original"    #"original" for augmentation on the original dataset, choose other name for augmentation applied on already augmented dataset (e.g. SAMAug, ourSAMAug, RG_segPrior, SV_segPrior, RG_logits, PCA_segPrior)
+  online_augmentation: da3 # "da3" or null (no online augmentation)
+
+  lr_method: lrbase  # "lra" | "lrb" | "lrc" | lrbase (uses the legacy optimizer/lr_schedule block, 50 training epochs)
 
   optimizer:
     type: "AdamW"

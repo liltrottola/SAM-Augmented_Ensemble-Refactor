@@ -25,7 +25,7 @@ training:
   size_rates: [0.75, 1.0, 1.25]
   clip_margin: 0.5
 
-  augmentation: null # "da1"| "da2"| "da3" | null (no augmentation)
+  online_augmentation: noda # "da3" or "noda" (no online augmentation) -- offline da1/da2 not supported for aux yet
   lr_method: lrbase   # "lra" | "lrb" | "lrc" | "lrbase" (uses the legacy optimizer/lr_schedule block)
 
 
