@@ -13,9 +13,18 @@ import logging
 
 import matplotlib.pyplot as plt
 
+'''
+    To import the lr_schedules, we need to add the src folder to the path,
+    since it is not in the same directory as Train.py
+'''
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'))  # to import from src
+from src.training.lr_schedules import get_lr_method, build_scheduler
+from src.augmentation import OFFLINE_DA_METHODS
+
 import yaml
 
-# -------- blocco per configurazioni da file yaml -----------
+# -------- YAML configuration loading block -----------
 def load_config(config_path):
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
@@ -126,11 +135,11 @@ def train(train_loader, model, optimizer, epoch, opt, debug=False):
             optimizer.step()
             # ---- recording loss ----
             if rate == 1:
-                #NOTE: qui era loss_P2_record.update(loss_P2.data, opt.batchsize)
+                # NOTE: was loss_P2_record.update(loss_P2.data, opt.batchsize)
                 loss_P2_record.update(loss_P4.data, opt.training.batchsize)
         # ---- train visualization ----
         if i % 20 == 0 or i == total_step:
-            #NOTE: qui era opt.epoch
+            # NOTE: was opt.epoch
             print('{} Epoch [{:03d}/{:03d}], Step [{:04d}/{:04d}], '
                   ' lateral-5: {:0.4f}] lr'.format(
                       datetime.now(), epoch, opt.training.epochs, i, total_step,
@@ -165,17 +174,20 @@ def plot_train(dict_plot=None, name = None):
     # plt.show()
 
 def main():
-    # --- GESTIONE ARGOMENTI ---
     parser = argparse.ArgumentParser()
     
-    parser.add_argument("--debug", action="store_true", help="attiva modalità per debug")
+    parser.add_argument("--debug", action="store_true", help="enable debug mode")
     parser.add_argument("--config", type=str, default="../../../configs/hsnet_vanilla.yaml", help="path to config file")
     parser.add_argument("--model_name", type=str, default=None, help="Model save name override")
     parser.add_argument('--seed', type=int, default=None, help='Seed number for random number generation to ensure consistent results across runs.')
+    parser.add_argument('--lr_method', type=str, default=None, help='Learning-rate strategy for ensemble diversity (lra/lrb/lrc). Overrides training.lr_method in the config. If not specified, uses the config value.')
+    parser.add_argument('--offline_da', type=str, default=None, help='Offline DA method: da1/da2, or omit. Redirects image_root to the pre-generated augmented dataset. Overrides training.offline_augmentation.')
+    parser.add_argument('--online_da', type=str, default=None, help='Online DA method: da3, or omit. Applied at runtime by the dataloader. Overrides training.online_augmentation.')
+
     args = parser.parse_args()
     
 
-    # 1. Carica Configurazione
+    # 1. Load configuration
     if not os.path.exists(args.config):
         print(f"ERRORE: FILE CONFIGURAZIONE NON TROVATO: {args.config}")
         exit(1)
@@ -184,16 +196,27 @@ def main():
     opt = Config(cfg_data) # Converte il dizionario in oggetto navigabile
 
     model_name = args.model_name if args.model_name is not None else opt.experiment.name
-    opt.model_name = model_name # Aggiorna opt con il nome del modello (utile per salvataggio e logging)
+    opt.model_name = model_name  # Update opt with the model name (used for saving and logging)
     if args.seed is not None:
         opt.experiment.seed = args.seed # Aggiorna opt con il seed se fornito da CLI
-        
+
+    # CLI override for the LR method; if absent, keep the YAML value
+    if args.lr_method is not None:
+        opt.training.lr_method = args.lr_method
+
+    # CLI overrides for the DA axes (for DA × LR sweep); if absent, keep the YAML value
+    if args.offline_da is not None:
+        opt.training.offline_augmentation = args.offline_da
+    if args.online_da is not None:
+        opt.training.online_augmentation = args.online_da
+
+
     #setup logging
     logging.basicConfig(filename=opt.paths.log_file,
                         format='[%(asctime)s-%(filename)s-%(levelname)s:%(message)s]',
                         level=logging.INFO, filemode='a', datefmt='%Y-%m-%d %I:%M:%S %p')
 
-    #seed per riproducibilità (non presente in HSNet originale)
+    #seed for reproducibility
     if hasattr(opt.experiment, 'seed'):
         seed = opt.experiment.seed
         random.seed(seed)
@@ -201,38 +224,53 @@ def main():
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
         torch.backends.cudnn.deterministic = True
-        print(f"Seed impostato a: {seed}")
+        print(f"Seed set to: {seed}")
 
     # ---- build models ----
     # torch.cuda.set_device(0)  # set your gpu device
     model = HSNet().cuda()
     params = model.parameters()
 
+    # --- LR (LRa/LRb/LRc) for ensemble diversity ---
+    # lr_cfg is None if training.lr_method is null/lrbase → legacy path (manual decay unchanged).
+    lr_cfg = get_lr_method(getattr(opt.training, "lr_method", None))
+    init_lr = lr_cfg["init_lr"] if lr_cfg is not None else opt.training.optimizer.lr
+
     if opt.training.optimizer.type == 'AdamW':
-        optimizer = torch.optim.AdamW(params, opt.training.optimizer.lr, weight_decay=opt.training.optimizer.weight_decay)
+        optimizer = torch.optim.AdamW(params, init_lr, weight_decay=opt.training.optimizer.weight_decay)
     else:
-        optimizer = torch.optim.SGD(params, opt.training.optimizer.lr, weight_decay=1e-4, momentum=0.9)
+        optimizer = torch.optim.SGD(params, init_lr, weight_decay=1e-4, momentum=0.9)
 
-    print(f"Optimizer configurato: {opt.training.optimizer.type}, LR: {opt.training.optimizer.lr}")
+    # MultiStepLR scheduler only for the new LR methods; legacy path keeps the manual decay in the loop.
+    scheduler = build_scheduler(optimizer, lr_cfg) if lr_cfg is not None else None
 
-    #setup dataloader
+    print(f"Optimizer configured: {opt.training.optimizer.type}, LR: {init_lr}, lr_method: {getattr(opt.training, 'lr_method', None)}")
 
-    #image_root = '{}/images/'.format(opt.paths.train_data)
-    #gt_root = '{}/masks/'.format(opt.paths.train_data)
-    image_root = '{}/{}/images/'.format(opt.paths.datasets_root, opt.datasets.train[0])
-    gt_root = '{}/{}/masks/'.format(opt.paths.datasets_root, opt.datasets.train[0])
+    # --- DA: offline (da1/da2, redirects image_root) and online (da3, applied by the dataloader) are now independent axes ---
+    offline_aug = getattr(opt.training, "offline_augmentation", None)
+    online_aug = getattr(opt.training, "online_augmentation", None)
+    dataset = opt.datasets.train[0]
 
-    train_loader = get_loader(image_root, gt_root, 
-                              batchsize=opt.training.batchsize, 
+    if offline_aug in OFFLINE_DA_METHODS:
+        image_root = '{}/{}/{}/{}/images/'.format(opt.paths.offline_aug_base, offline_aug, opt.training.da_source, dataset)
+        gt_root    = '{}/{}/{}/{}/masks/'.format(opt.paths.offline_aug_base, offline_aug, opt.training.da_source, dataset)
+        assert os.path.isdir(image_root), f"Offline DA folder not found: {image_root} -- run run_{offline_aug}_augmentation.py first"
+        print(f"Using offline augmented data from: {image_root}")
+    else:
+        image_root = '{}/{}/images/'.format(opt.paths.datasets_root, dataset)
+        gt_root    = '{}/{}/masks/'.format(opt.paths.datasets_root, dataset)
+
+    train_loader = get_loader(image_root, gt_root,
+                              batchsize=opt.training.batchsize,
                               trainsize=opt.training.trainsize,
-                              augmentation=opt.training.augmentation)
+                              augmentation=online_aug)
     total_step = len(train_loader)
 
-    print(f"Dataset caricato. Batch per epoca: {total_step}")
+    print(f"Dataset loaded. Batches per epoch: {total_step}")
     print("#" * 20, "Start Training", "#" * 20)
 
 
-    # In modalità debug, facciamo finta che ci sia 1 sola epoca per non perdere tempo
+    # In debug mode, pretend there is only 1 epoch to avoid wasting time
     if args.debug:
         print("!!! ATTENZIONE: MODALITÀ DEBUG ATTIVA !!!")
         opt.training.epochs = 1
@@ -241,11 +279,17 @@ def main():
     #     adjust_lr(optimizer, opt.lr, epoch, 0.1, 200)
     #     train(train_loader, model, optimizer, epoch, opt.test_path)
     for epoch in range(1, opt.training.epochs + 1):
-        # --- SCHEDULER MANUALE ORIGINALE ---
-        if epoch in opt.training.lr_schedule.milestones:
-            adjust_lr(optimizer, opt.training.lr_schedule.decay_factor)
+
+        if lr_cfg is None:
+            # --- ORIGINAL MANUAL SCHEDULER (legacy path, unchanged) ---
+            if epoch in opt.training.lr_schedule.milestones:
+                adjust_lr(optimizer, opt.training.lr_schedule.decay_factor)
 
         train(train_loader, model, optimizer, epoch, opt, debug=args.debug)
+
+        if lr_cfg is not None:
+            # new lr scheduler step (only for the new LR methods, if specified)
+            scheduler.step()
     # plot the eval.png in the training stage
     # plot_train(dict_plot, name)
 

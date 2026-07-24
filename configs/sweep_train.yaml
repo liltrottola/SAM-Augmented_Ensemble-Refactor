@@ -4,24 +4,28 @@ models:
     folder: "HSNet"
     train_script: "Train_vanilla.py"
     test_script: "Test_vanilla.py"
+    config: "../configs/hsnet_vanilla.yaml"
 
   - name: hsnet_aux
     has_aux: true
     folder: "HSNet"
     train_script: "Train_aux.py"
     test_script: "Test_aux.py"
+    config: "../configs/hsnet_aux.yaml"
 
   - name: polypvt_aux
     has_aux: true
     folder: "PolypPVT"
     train_script: "Train_aux.py"
     test_script: "Test_aux.py"
+    config: "../configs/polypPVT_aux.yaml"
 
   - name: polypvt
     has_aux: false
     folder: "PolypPVT"
     train_script: "Train_vanilla.py"
     test_script: "Test_vanilla.py"
+    config: "../configs/polypPVT_vanilla.yaml"
 
 # training section
 training:
@@ -31,7 +35,7 @@ training:
   # Choose [1], [2], or [1, 2]
   sam_versions: [1, 2]
 
-  #List of method names
+  #List of SAM method names
   aug_methods:
     - "SAMAug"
     - "ourSAMAug"
@@ -40,19 +44,16 @@ training:
     - "RG_logits"
     - "PCA_segPrior"
 
-#inference/testing section
-testing:
-  runs: 5
+  # LR axis (ensemble diversity): lrbase = legacy path, + the 3 methods from the paper
+  lr_methods:
+    - "lrbase"
+    #- "lra"
+    #- "lrb"
+    #- "lrc"
 
-  # Choose [1], [2], or [1, 2]
-  sam_versions: [1, 2]
-
-  #List of method names
-  aug_methods:
-    - "SAMAug"
-    - "ourSAMAug"
-    - "RG_segPrior"
-    - "SV_segPrior"
-    - "RG_logits"
-    - "PCA_segPrior"
-
+  # DA axis: "noda" = no augmentation at all, da1/da2 offline (vanilla only), da3 online (vanilla + aux)
+  da_methods:
+    #- "noda"
+    #- "da1"
+    #- "da2"
+    - "da3"

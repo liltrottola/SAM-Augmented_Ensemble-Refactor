@@ -15,7 +15,7 @@ from src.augmentation.sam_loader import load_sam_model
 from src.augmentation import methods
 
 def run_processing(config):
-    print("Configurazione caricata:", config.keys())
+    print("Configuration loaded:", config.keys())
     dataset_root = config['paths']['dataset_root']
     output_root = config['paths']['output_root']
 
@@ -114,8 +114,8 @@ if __name__ == "__main__":
     # Find directory of this file
     current_dir = os.path.dirname(os.path.abspath(__file__))
     
-    #costruisci il path del file di configurazione
-    config_path = os.path.abspath(os.path.join(current_dir, '../configs/augmentation.yaml'))
+    # build the config file path
+    config_path = os.path.abspath(os.path.join(current_dir, '../configs/sam_augmentation.yaml'))
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default=config_path, help='Path to the config file.')

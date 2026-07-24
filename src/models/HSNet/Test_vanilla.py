@@ -10,7 +10,7 @@ from utils.dataloader import test_dataset
 from PIL import Image
 import torchvision.transforms as transforms
 
-# -------- blocco per configurazioni da file yaml -----------
+# -------- configuration from yaml file -----------
 def load_config(config_path):
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
@@ -30,7 +30,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default='../../../configs/hsnet_vanilla.yaml', help='path to config file')
     
-    #2 ovveride for launcher
+    #2 override for launcher
     parser.add_argument('--model_pth', type=str, default=None, help='Override model pth')
     parser.add_argument('--test_dataset', type=str, default=None, help='Override test dataset path')
     parser.add_argument('--save_path', type=str, default=None, help='Override save path for predictions')
@@ -39,7 +39,7 @@ def main():
     args = parser.parse_args()
 
     if not os.path.exists(args.config):
-        print(f"ERRORE: FILE CONFIGURAZIONE NON TROVATO: {args.config}")
+        print(f"ERROR: CONFIGURATION FILE NOT FOUND: {args.config}")
         exit(1)
 
     cfg_data = load_config(args.config)

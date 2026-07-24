@@ -18,19 +18,21 @@ paths:
   logits_dir: "../../../output/logits/"
 
 training:
-  epochs: 40
-  batchsize: 8
+  epochs: 40 #legacy
+  batchsize: 8 #legacy
   trainsize: 352
 
   size_rates: [0.75, 1.0, 1.25]
   clip_margin: 0.5
 
-  augmentation: false
+  online_augmentation: noda # "da3" or "noda" (no online augmentation) -- offline da1/da2 not supported for aux yet
+  lr_method: lrbase   # "lra" | "lrb" | "lrc" | "lrbase" (uses the legacy optimizer/lr_schedule block)
+
 
   optimizer:
     type: "Adam"
-    lr: 0.00005
-    weight_decay: 0
+    lr: 0.00005 #legacy
+    weight_decay: 0 #legacy
 
   lr_schedule:
     milestones: [20]
@@ -45,9 +47,8 @@ datasets:
   train:
     - "TrainDataset"
   test:
-    - "TestDatasets/TestDataset"
-    #- "TestDatasets/CVC-300"
-    #- "TestDatasets/CVC-ClinicDB"
-    #- "TestDatasets/CVC-ColonDB"
-    #- "TestDatasets/Kvasir"
-    #- "TestDatasets/ETIS-LaribPolypDB"
+    - "TestDatasets/CVC-300"
+    - "TestDatasets/CVC-ClinicDB"
+    - "TestDatasets/CVC-ColonDB"
+    - "TestDatasets/Kvasir"
+    - "TestDatasets/ETIS-LaribPolypDB"

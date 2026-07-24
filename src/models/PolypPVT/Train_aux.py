@@ -20,6 +20,14 @@ import yaml
     from torch.autograd import Variable --> deprecated
 '''
 
+'''
+    To import the lr_schedules, we need to add the src folder to the path, 
+    since it is not in the same directory as Train.py
+'''
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'))  # to import from src
+from src.training.lr_schedules import get_lr_method, build_scheduler
+
 
 # ------- YAML config ---------------
 def load_config(config_path):
@@ -136,7 +144,9 @@ def main():
     parser.add_argument('--method', type=str, default=None, help='Method used for generating augmentation data. If not specified, it will use the default method defined in the configuration file.')
     parser.add_argument('--model_name', type=str, default=None, help='Name of the model to be trained. This helps in identifying the model configuration when saving and tracking experiments. If not specified, it will use the default model name defined in the configuration file.')
     parser.add_argument('--seed', type=int, default=None, help='Seed number for random number generation to ensure consistent results across runs. If not specified, it will use the default seed defined in the configuration file.')
-    
+    parser.add_argument('--lr_method', type=str, default=None, help='Learning-rate strategy for ensemble diversity (lra/lrb/lrc). Overrides training.lr_method in the config. If not specified, uses the config value.')
+    parser.add_argument('--online_da', type=str, default=None, help='Online DA method: da3, or omit. Applied at runtime by the aux dataloader. Overrides training.online_augmentation.')
+
     args = parser.parse_args()
 
     if not os.path.exists(args.config):
@@ -155,6 +165,13 @@ def main():
     
     if args.seed is not None:
         opt.experiment.seed = args.seed
+
+    if args.online_da is not None:
+        opt.training.online_augmentation = args.online_da
+    
+    if args.lr_method is not None:
+        opt.training.lr_method = args.lr_method
+
 
     # Set a seed number for random number generation to ensure consistent results across runs
     seednumber = opt.experiment.seed
@@ -197,16 +214,27 @@ def main():
     # ---- build optimizer ----
     params = model.parameters() 
 
-    if opt.training.optimizer.type == 'AdamW':
-        optimizer = torch.optim.AdamW(params, opt.training.optimizer.lr, weight_decay=opt.training.optimizer.weight_decay)
-    else:
-        #to modify, currently hardcoded to use weight_decay=1e-4 and momentum=0.9. Also lr is taken from opt.training.optimizer.lr but is of different type of optimizer
-        optimizer = torch.optim.SGD(params, opt.training.optimizer.lr, weight_decay=1e-4, momentum=0.9)
+    lr_cfg = get_lr_method( getattr(opt.training, "lr_method", None) )
+    
+    if lr_cfg is not None:
+        init_lr = lr_cfg["init_lr"]
+        optimizer = torch.optim.AdamW(params, 
+                                     init_lr, 
+                                     weight_decay=opt.training.optimizer.weight_decay)
+        
+        scheduler = build_scheduler(optimizer, lr_cfg)
 
-    # Configure a learning rate scheduler to reduce the learning rate at specific epochs.
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, 
-                                                     milestones=opt.training.lr_schedule.milestones, 
-                                                     gamma=opt.training.lr_schedule.gamma)
+        print(f"Using LR method '{opt.training.lr_method}': init_lr={init_lr}, "
+            f"milestones={lr_cfg['milestones']}, gamma={lr_cfg['gamma']}")
+    else:
+        # legacy path (unchanged)
+    
+        optimizer = torch.optim.AdamW(params, opt.training.optimizer.lr, weight_decay=opt.training.optimizer.weight_decay)
+        
+        # Configure a learning rate scheduler to reduce the learning rate at specific epochs.
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, 
+                                                        milestones=opt.training.lr_schedule.milestones, 
+                                                        gamma=opt.training.lr_schedule.gamma)
 
     # Set up paths for accessing training, ground truth, and auxiliary data.
     image_root = os.path.join(opt.paths.datasets_root, opt.datasets.train[0], "images/")
@@ -216,18 +244,19 @@ def main():
     aux_root   = os.path.join(opt.paths.aux_root_base, f"sam{sam_version}", method , opt.datasets.train[0], "images/")
 
     # Create a data loader to fetch training batches with the specified batch size and image dimensions.
-    train_loader = get_loader_with_aux(image_root, gt_root, aux_root, 
+    online_aug = getattr(opt.training, "online_augmentation", None)
+    train_loader = get_loader_with_aux(image_root, gt_root, aux_root,
                                        batchsize=opt.training.batchsize,
                                        trainsize=opt.training.trainsize,
-                                       augmentation=opt.training.augmentation)
+                                       augmentation=online_aug)
 
     # Determine the total number of steps in the training process.
     total_step = len(train_loader)
     print(f"Dataset loaded. Batches per epoch: {total_step}")
 
-    # In modalità debug, facciamo finta che ci sia 1 sola epoca per non perdere tempo
+    # In debug mode, limit the number of epochs to 1 for quicker testing.
     if args.debug:
-        print("!!! ATTENZIONE: MODALITÀ DEBUG ATTIVA !!!")
+        print("!!! ATTENTION: DEBUG MODE IS ACTIVE !!!")
         opt.training.epochs = 1
     
     # Begin the training process, iterating through each epoch.

@@ -1,0 +1,46 @@
+experiment:
+  name: da2_augmentation
+  description: "Offline DA2"
+  version: 1.0
+
+paths:
+  dataset_root: "datasets/"
+  output_root: "output/augmentation/"      
+  source_name: "original"
+
+datasets:
+  folders:
+    - "TrainDataset/"
+
+augmentation:
+  # All 13 methods (must exist as functions in da2_methods.py)
+  methods:
+    # geometric
+    - "width_shift"
+    - "height_shift"
+    - "rotation"
+    - "shear"
+    - "random_flip"
+    # photometric
+    - "brightness_uniform"
+    - "brightness_per_channel"
+    - "speckle_noise"
+    - "contrast_blur"
+    - "shadows"
+    # stain normalization (require target)
+    - "rgb_histogram_match"
+    - "reinhard_normalize"
+    - "macenko_normalize"
+
+  keep_original: true
+
+  # foreground filter (as in DA1)
+  foreground_filter:
+    enabled: true
+    min_pixels: 100
+
+  # stain norm: target chosen randomly among the first N images
+  target_pool_size: 90
+
+  # reproducibility of the generated dataset
+  random_seed: 42
