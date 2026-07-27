@@ -3,4 +3,4 @@
 # Single source of truth, imported by the vanilla train scripts to decide whether
 # to redirect image_root to output/augmentation/{method}/... Add a new offline DA
 # method here to extend the pipeline.
-OFFLINE_DA_METHODS = {"da1", "da2"}
+OFFLINE_DA_METHODS = {"da1", "da2" , "clahe"}
