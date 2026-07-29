@@ -30,7 +30,7 @@ class PolypDataset_aux(data.Dataset):
         # Set the size of the training images and whether to apply augmentations.
         self.trainsize = trainsize
         self.augmentations = augmentations
-        print(self.augmentations)
+        print("online augmentation:" , self.augmentations)
 
         # Gather and sort all image file paths from the specified directory, filtering by common image extensions.
         self.images = [image_root + f for f in os.listdir(image_root) if f.endswith('.jpg') or f.endswith('.png')]
@@ -55,7 +55,7 @@ class PolypDataset_aux(data.Dataset):
             self.img_transform , self.gt_transform , self.aux_transform = da3.get_da3_transforms_aux(self.trainsize)
         else:
             # If no augmentations are specified, use basic transformations that resize, convert to tensor, and normalize.
-            print('no augmentation')
+            print('no online augmentation')
             self.img_transform = transforms.Compose([
                 transforms.Resize((self.trainsize, self.trainsize)),
                 transforms.ToTensor(),                            # Only resizing, converting to tensor, and normalizing
@@ -262,8 +262,8 @@ class PolypDataset(data.Dataset):
     def __init__(self, image_root, gt_root, trainsize, augmentations):
         self.trainsize = trainsize
         self.augmentations = augmentations
-        print(self.augmentations)
-        
+        print("online augmentation:" , self.augmentations)
+                
         self.images = [image_root + f for f in os.listdir(image_root) if f.endswith('.jpg') or f.endswith('.png')]
         self.gts = [gt_root + f for f in os.listdir(gt_root) if f.endswith('.png')]
         
@@ -296,7 +296,7 @@ class PolypDataset(data.Dataset):
         if self.augmentations == 'da3':
             self.img_transform , self.gt_transform = da3.get_da3_transforms(self.trainsize)  
         else:
-            print('no augmentation')
+            print('no onlineaugmentation')
             self.img_transform = transforms.Compose([
                 transforms.Resize((self.trainsize, self.trainsize)),
                 transforms.ToTensor(),
