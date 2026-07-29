@@ -43,19 +43,17 @@ def build_command(model, seed, run_id, sam_version, method, da_method, lr_method
         cmd.append("--method")
         cmd.append(str(method))
 
-    if da_method == "noda":
-        # Explicit "no augmentation at all" - always pass the flag(s), never omit them.
-        # Omitting the flag would leave whatever offline/online_augmentation is already
-        # in the yaml config untouched, silently reusing a stale value instead of really
-        # disabling DA. Train_aux.py has no --offline_da flag (aux never had an offline axis).
-        cmd += ["--online_da", "noda"]
+    if da_method is not None:
+        # Always pass BOTH online and offline axes of augmentation explicitly, 
+        # never just the chosen one: leaving the other axis unmentioned falls back 
+        # to whatever offline_augmentation/online_augmentation is already in the yaml config, 
+        # silently stacking it on top instead of really isolating the chosen DA method.
+        offline_aug = da_method if da_method in OFFLINE_DA_METHODS else "noda"
+        online_aug = da_method if da_method == "da3" else "noda"
+        cmd += ["--online_da", online_aug]
         if not model.get("has_aux", False):
-            cmd += ["--offline_da", "noda"]
-    elif da_method is not None:
-        # offline (da1/da2) redirects image_root; online (da3) is applied at runtime by the dataloader.
-        # Train_aux.py has no --offline_da flag: passing da1/da2 for an aux model fails loud (unsupported combo, not yet implemented).
-        cmd.append("--offline_da" if da_method in OFFLINE_DA_METHODS else "--online_da")
-        cmd.append(str(da_method))
+            # Train_aux.py has no --offline_da flag (aux never had an offline axis).
+            cmd += ["--offline_da", offline_aug]
 
     if lr_method is not None:
         cmd.append("--lr_method")
