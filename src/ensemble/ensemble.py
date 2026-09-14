@@ -19,13 +19,16 @@ import os
 #    output for that test image.
 
 
-def process_images_in_folder(models_path, folder_to_save, dataset):
+def process_images_in_folder(models_path, folder_to_save, bin_folder_to_save, dataset):
     models = os.listdir(models_path)
     files = os.listdir(os.path.join(models_path, os.path.join(models[0], dataset)))
     image_files = sorted(files)
 
     if not os.path.exists(folder_to_save):
         os.makedirs(folder_to_save)
+
+    if not os.path.exists(bin_folder_to_save):
+        os.makedirs(bin_folder_to_save)
     
     for i in range(len(image_files)):
         paths = []
@@ -39,6 +42,10 @@ def process_images_in_folder(models_path, folder_to_save, dataset):
         mean_image = (mean.squeeze().numpy() * 255).astype(np.uint8)
         Image.fromarray(mean_image).save(file_n)
 
+        file_bin = os.path.join(bin_folder_to_save, image_files[i])
+        bin_tensor = (mean >= 0.5).float()
+        bin_image = (bin_tensor.squeeze().numpy() * 255).astype(np.uint8)
+        Image.fromarray(bin_image).save(file_bin)
 #input: "paths" is the list containing the paths of every different image we want to get the mean of.
 #This function use the average rule to combine the n images from the n networks, then it transforms the 
 #obtained image in a binary mask and return it.
@@ -88,6 +95,8 @@ def get_dice(labels_path, ensemble_prediction_path, dataset_name):
         targets.append(i2)
 
     dices=[]
+    image_scores = {}
+
     for i in range(0, len(outputs)):
         #dices.append(dice_metric(outputs[i].unsqueeze(0), targets[i].unsqueeze(0)).item())
         input=outputs[i]
@@ -105,8 +114,12 @@ def get_dice(labels_path, ensemble_prediction_path, dataset_name):
         dice = float(dice)
         dices.append(dice)
         
+        image_scores[files_gt[i]] = dice
+
     #for i, name in enumerate(files_gt):
     #    print(dataset_name, ",", name, ",", dices[i])
+    
+    mDice = sum(dices) / len(dices)
+    print(f"{dataset_name} mDICE: {mDice:.3f}")
 
-    print(f"{dataset_name} mDICE:", sum(dices) / len(dices))
-    return sum(dices) / len(dices)
+    return mDice, image_scores
