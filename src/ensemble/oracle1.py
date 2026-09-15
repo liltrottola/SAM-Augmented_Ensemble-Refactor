@@ -17,29 +17,43 @@ def calculate_dice(pred_tensor, gt_tensor):
     return dice
 
 def run_oracle(models_path, labels_root, dataset_name):
-    models = [m for m in os.listdir(models_path) if os.path.isdir(os.path.join(models_path, m))]
+    models = sorted([m for m in os.listdir(models_path) if os.path.isdir(os.path.join(models_path, m))])
     image_files = sorted(os.listdir(os.path.join(models_path, models[0], dataset_name)))
 
     transform = transforms.ToTensor()
     dataset_best_dices = []
 
     counts = np.zeros(len(models), dtype=int)
+
+    image_scores = {}
+
+    oracle1_out_dir = os.path.join("..", "output", "oracle1", dataset_name)
+    os.makedirs(oracle1_out_dir, exist_ok=True)
+    
     for img_name in image_files:
         gt_path = os.path.join(labels_root, "masks", img_name)
         gt_img = transform(Image.open(gt_path).convert("L"))
 
-        image_scores = []
+        model_dices = []
         for m in models:
             pred_path = os.path.join(models_path, m, dataset_name, img_name)
             pred_img = transform(Image.open(pred_path).convert("L"))
             score = calculate_dice(pred_img, gt_img)
-            image_scores.append(score)
+            model_dices.append(score)
 
-        best_model_idx = np.argmax(image_scores)
+        best_model_idx = np.argmax(model_dices)
         counts[best_model_idx] += 1
 
-        dataset_best_dices.append(max(image_scores))
+        best_expert_name = models[best_model_idx]
+        best_mask_path = os.path.join(models_path, best_expert_name, dataset_name, img_name)
+        Image.open(best_mask_path).save(os.path.join(oracle1_out_dir, img_name))
+
+        best_score = max(model_dices)
+        dataset_best_dices.append(best_score)
+        image_scores[img_name] = best_score
 
     mDice = sum(dataset_best_dices) / len(dataset_best_dices)
-    print(f"{dataset_name} mDICE: {mDice:.3f} - Counts: {counts.tolist()}")    
-    return mDice
+    print(f"{dataset_name} mDICE: {mDice:.3f}")    
+    print(f"Counts: {counts.tolist()}")
+    
+    return mDice, image_scores
