@@ -1,0 +1,21 @@
+experiment:
+  name: depth_augmentation
+  description: Depth augmentation experiment configuration
+
+paths:
+  dataset_root: "datasets/"
+  output_root: "output_test_dav3/" #"output/augmentation/"
+  checkpoints_root: "checkpoints_dav3/"
+
+datasets:
+  folders:
+    - "dav3_test/"
+    #- "TrainDataset/"
+    #- "TestDataset/Kvasir/"
+
+depth:
+  model_dirs: 
+    - "da3mono-large"
+    #- "da3-large-1.1"
+  process_res: 504
+  device: "cuda"

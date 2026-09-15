@@ -10,6 +10,8 @@ __pycache__/
 venv_newSAMAug/
 env/
 .env
+venv_da3/
+venv_dav3/
 
 
 # --- Datasets & Outputs ---
@@ -29,6 +31,13 @@ checkpoints_sam/
 *.pth
 *.pt
 *.onnx
+depth-anything-3/
+checkpoints_da3/
+checkpoints_dav3/
 
 # --- Logs ---
 *.log
+
+#da3
+run_dav3_single.sh
+output_test_dav3

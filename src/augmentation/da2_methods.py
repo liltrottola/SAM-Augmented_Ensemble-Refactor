@@ -218,10 +218,10 @@ def _fspecial_motion(length: float, angle: float) -> np.ndarray:
     centre, with rounded endpoints, normalised to sum 1; convolving an image
     with it produces a directional motion blur.
 
-    This is a from-scratch reimplementation of the algorithm used by MATLAB's
-    ``fspecial('motion', ...)`` (Image Processing Toolbox, (c) The MathWorks),
-    based on its documented behaviour rather than on its source. Like the
-    original it computes only the half-kernel growing from the origin and then
+    Matches the behaviour of MATLAB's ``fspecial('motion', ...)`` (Image
+    Processing Toolbox, MathWorks), on which the reference paper's DA2 pipeline
+    relies; written to reproduce its output on the length/angle range used by
+    DA2 . Like the original it computes only the half-kernel growing from the origin and then
     mirrors it to exploit the point symmetry of the PSF.
 
     Parameters
