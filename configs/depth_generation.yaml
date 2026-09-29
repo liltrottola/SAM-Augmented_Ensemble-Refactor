@@ -1,0 +1,39 @@
+experiment:
+  name: depth
+  description: Depth augmentation configuration
+
+# all paths are relatives to the home directory of the project SAM-Augmented_Ensemble-refactor
+paths:
+  dataset_root: "datasets/"
+  output_root: "output/"
+  checkpoints_root: "checkpoints_dav3/"
+
+datasets:
+  folders:
+    - "TrainDataset/"
+    #- "TestDatasets/Kvasir/"
+    #- "TestDatasets/CVC-300/"
+    #- "TestDatasets/CVC-ClinicDB/"
+    #- "TestDatasets/CVC-ColonDB/"
+    #- "TestDatasets/ETIS-LaribPolypDB/"
+
+depth:
+  model_dirs: 
+    - "da3mono-large"
+    #- "da3-large-1.1"
+
+  # Target size for DA3 preprocessing (default DA3 = 504).
+  # The ViT uses 14px patches: H and W are always brought to multiples of 14.
+  # 504 is the default DA3 size
+  process_res: 504
+ 
+ # How DA3 brings the image to process_res and to multiples of 14:
+  #   upper_bound_*  -> LONG side = process_res  (image <= process_res)
+  #   lower_bound_*  -> SHORT side = process_res (long side > process_res)
+  #   *_resize       -> small resize to the nearest multiple of 14: keeps the WHOLE image
+  #   *_crop         -> center crop to the lower multiple of 14: LOSES border pixels
+  # Use upper_bound_resize: the depth covers the whole image, so in the prior step
+  # it can be resized back to the original size and stays aligned with the mask.
+  # *_crop would break that alignment (e.g. 622x530 -> 504x420, 9 rows cut).
+  # Written explicitly even if it is the DA3 default, for reproducibility.
+  process_res_method: "upper_bound_resize"

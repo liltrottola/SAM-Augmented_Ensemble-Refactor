@@ -12,7 +12,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from src.augmentation.sam_loader import load_sam_model
-from src.augmentation import methods
+from src.augmentation import sam_methods
 
 def run_processing(config):
     print("Configuration loaded:", config.keys())
@@ -34,11 +34,11 @@ def run_processing(config):
         methods_list = config['augmentation'].get('methods') or []
         for chosen_aug in methods_list:
 
-            #Ottieni la funzione di augmentazione dal modulo methods
-            if hasattr(methods, chosen_aug): #cerco se il metodo esiste in methods.py
-                aug_function = getattr(methods, chosen_aug)
+            #Ottieni la funzione di augmentazione dal modulo sam_methods
+            if hasattr(sam_methods, chosen_aug): #cerco se il metodo esiste in sam_methods.py
+                aug_function = getattr(sam_methods, chosen_aug)
             else:
-                print(f"Attenzione: Il metodo '{chosen_aug}' non esiste in methods.py")
+                print(f"Attenzione: Il metodo '{chosen_aug}' non esiste in sam_methods.py")
                 continue
 
             #print("(!) chosen sam version: " , sam_version, "chosen method: ", aug_function.__name__)
