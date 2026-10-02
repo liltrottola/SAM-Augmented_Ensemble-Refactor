@@ -9,7 +9,7 @@ paths:
   dataset_root: "datasets/"
 
   # Where to save the output (ex saving_path)
-  output_root: "output/augmentation/"
+  output_root: "output/SAM_predictions/"
   
   # Path dei checkpoint (ex checkpoints_root)
   checkpoints_root: "checkpoints_sam"
@@ -26,16 +26,6 @@ datasets:
     #- "TestDatasets/Kvasir/"
     #- "TestDatasets/ETIS-LaribPolypDB/"
 
-augmentation:
-  #List of method names exactly as defined in lib.py
-  methods:
-    - "SAMAug"
-    - "ourSAMAug"
-    - "RG_segPrior"
-    - "SV_segPrior"
-    - "RG_logits"
-    - "PCA_segPrior"
-
 sam:
   # Choose [1], [2], or [1, 2]
   versions: [2]
@@ -46,9 +36,9 @@ sam:
       crop_nms: 0.5
       box_nms: 0.5
       pred_iou: 0.5
-    v2:                       # SAM2AutomaticMaskGenerator: library defaults = original code behaviour (baseline)
-      stability_score: 0.95
-      pred_iou: 0.8
+    v2:                       # SAM2AutomaticMaskGenerator, chosen by the 20-21/09 sweep
+      stability_score: 0.85   # library default 0.95 -> SAM2 almost mute (1-8 masks per image)
+      pred_iou: 0.8           # = library default, explicit for traceability
 
   checkpoints:
     v1: "sam_vit_h_4b8939.pth"

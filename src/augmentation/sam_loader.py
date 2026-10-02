@@ -31,7 +31,11 @@ def load_sam_model(version, checkpoint_path, sam_config, device='cuda'):
 
         print(f"Loading SAM2 from {checkpoint_path}...")
         sam_model = build_sam2(model_cfg, checkpoint_path, device=device, apply_postprocessing=False)
-        return SAM2AutomaticMaskGenerator(sam_model)
+        return SAM2AutomaticMaskGenerator(
+            sam_model,
+            stability_score_thresh=sam_config['thresholds']['v2']['stability_score'],
+            pred_iou_thresh=sam_config['thresholds']['v2']['pred_iou']
+        )
 
          #to load a finetuned model
             #ft_model=torch.load("/.../model.torch")
@@ -41,9 +45,9 @@ def load_sam_model(version, checkpoint_path, sam_config, device='cuda'):
         sam_model.to(device=device)
         return SamAutomaticMaskGenerator(
             sam_model, 
-            crop_nms_thresh=sam_config['thresholds']['crop_nms'], 
-            box_nms_thresh=sam_config['thresholds']['box_nms'], 
-            pred_iou_thresh=sam_config['thresholds']['pred_iou']
+            crop_nms_thresh=sam_config['thresholds']['v1']['crop_nms'],
+            box_nms_thresh=sam_config['thresholds']['v1']['box_nms'],
+            pred_iou_thresh=sam_config['thresholds']['v1']['pred_iou']
         )
     else:
         raise ValueError("(x) Error: insert a valid SAM version (1,2)")

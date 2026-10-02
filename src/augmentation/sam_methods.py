@@ -155,3 +155,28 @@ def PCA_segPrior(tI,mask_generator):
     modded_image= np.dstack((r,g,b))
 
     return modded_image
+
+def raw_SAM_generation(tI,mask_generator):
+    masks = mask_generator.generate(tI)
+    tI=skimage.img_as_float(tI)                     
+    
+    #initialize the matrix                     
+    SegPrior=np.zeros((tI.shape[0],tI.shape[1]))
+    BoundaryPrior=np.zeros((tI.shape[0],tI.shape[1]))
+
+    for mask in masks: 
+        thismask=mask['segmentation']
+        stability_score =mask['stability_score']
+        thismask_=np.zeros((thismask.shape))
+        #transform thismask from a boolean matrix to a 0-1 matrix
+        thismask_[np.where(thismask==True)]=1
+        #give color to the masks based on the stability score
+        SegPrior[np.where(thismask_==1)]=SegPrior[np.where(thismask_==1)]+stability_score
+        #boundry_prior contains the contours of SAM's masks  
+        BoundaryPrior=BoundaryPrior+find_boundaries(thismask_,mode='thick')
+        BoundaryPrior[np.where(BoundaryPrior>0)]=1
+    
+    segPrior_raw = np.asarray(SegPrior).astype(np.float32)
+    boundaryPrior_raw = np.asarray(BoundaryPrior).astype(np.float32)
+
+    return segPrior_raw , boundaryPrior_raw
