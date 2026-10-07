@@ -13,7 +13,7 @@ source venv_newSAMAug/bin/activate
 
 echo "CLONING SAM2 REPO"
 if [ ! -d "segment-anything-2" ]; then
-    git clone https://github.com/facebookresearch/segment-anything-2.git
+    git clone https://github.com/facebookresearch/sam2.git segment-anything-2
     echo "SAM2 repo cloned."
 
     echo "INSTALLING SAM2 REQUIREMENTS"
@@ -49,7 +49,6 @@ else
     echo "SAM1 checkpoint already exists."
 fi
 cd ..
-
 
 echo "The VENV must be activated before running all other scripts."
 echo "To activate it yourself, run: source venv_newSAMAug/bin/activate"
