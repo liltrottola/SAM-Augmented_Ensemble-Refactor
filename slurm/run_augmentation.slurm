@@ -12,11 +12,11 @@
 
 cd $SLURM_SUBMIT_DIR
 
-echo "Attivo VENV..."
+echo "Activating VENV..."
 source venv_newSAMAug/bin/activate
 
-echo "COmincio augmentation"
+echo "Starting augmentation"
 mkdir -p logs
 python scripts/run_augmentation.py
 
-echo "Augmentation completata"
+echo "Augmentation completed"

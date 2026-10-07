@@ -12,11 +12,11 @@
 
 cd $SLURM_SUBMIT_DIR
 
-echo "Attivo VENV..."
+echo "Activating VENV..."
 source venv_newSAMAug/bin/activate
 
-echo "Avvio training di HSNet base..."
+echo "Starting training of base HSNet..."
 mkdir -p logs
 python src/models/HSNet/Train_vanilla.py
 
-echo "training HSNET COMPLETATO!"
+echo "HSNet training COMPLETED!"

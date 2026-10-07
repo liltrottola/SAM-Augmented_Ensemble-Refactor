@@ -20,4 +20,4 @@ echo "Starting process: ${MODE}"
 
 python scripts/run_oracle.py --config ../configs/ensemble.yaml --mode ${MODE:-oracle1}
 
-echo "Process ${MODE} completed succesfully!"
+echo "Process ${MODE} completed successfully!"

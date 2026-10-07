@@ -19,4 +19,4 @@ echo "Starting ENSEMBLE process"
 
 python scripts/run_ensemble.py --config ../configs/ensemble.yaml
 
-echo "Ensemble completed succesfully!"
+echo "Ensemble completed successfully!"

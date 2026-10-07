@@ -28,7 +28,7 @@ def run_oracle(models_path, labels_root, dataset_name):
     sum_weights = np.zeros(len(models), dtype=float)
     max_weights = np.zeros(len(models), dtype=float)
     min_weights = np.ones(len(models), dtype=float) * float('inf')
-    zero_counts = [0] * len(models)               
+    zero_counts = [0] * len(models)
     zero_files = [[] for _ in range(len(models))]
     image_scores = {}
     image_zero_counts = {}
@@ -101,12 +101,10 @@ def run_oracle(models_path, labels_root, dataset_name):
     print(f"Zero Weight Counts: {zero_counts}")
     print(f"Zero Weight Files: {zero_files}")
     if dataset_name in ["CVC-ColonDB", "ETIS-LaribPolypDB"]:
-        print(f"\n--- Analisi Esperti a 0 per Immagine ({dataset_name}) ---")
+        print(f"\n--- Analysis of Experts at 0 per Image ({dataset_name}) ---")
         sorted_zeros = dict(sorted(image_zero_counts.items(), key=lambda item: item[1], reverse=True))
         for img, count in sorted_zeros.items():
             print(f"  {img}: {count}")
         print("-" * 50)
 
     return mDice, image_scores
-
-    

@@ -35,11 +35,11 @@ training:
   online_augmentation: da3 # "da3" or null (no online augmentation)
 
   lr_method: lrbase   # "lra" | "lrb" | "lrc" | "lrbase" (uses the legacy optimizer/lr_schedule block)
-  
+
   optimizer:
     type: "AdamW"
     lr: 0.00005 # Learning rate (5e-5)
-    weight_decay: 0.0001 # Valore originale hardcoded (1e-4)
+    weight_decay: 0.0001 # Original hardcoded value (1e-4)
 
   lr_schedule:
     milestones: [15, 30] # Epochs at which to decay the learning rate
@@ -50,7 +50,7 @@ testing:
   testsize: 352
 
 datasets:
-  train: 
+  train:
     - "TrainDataset"  #use only one folder for training divided in images and masks
   test:
     - "TestDatasets/CVC-300"

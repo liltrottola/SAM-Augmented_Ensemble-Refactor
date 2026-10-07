@@ -89,9 +89,9 @@ def test(model, path, dataset):
 
 def train(train_loader, model, optimizer, epoch, opt, debug=False):
     model.train()
-    # global best (mai usata)
+    # global best (never used)
 
-    #original logic 
+    #original logic
     size_rates = opt.training.size_rates
     clip_margin = opt.training.clip_margin
     #------------------------------------------------------------
@@ -114,7 +114,7 @@ def train(train_loader, model, optimizer, epoch, opt, debug=False):
             gts = Variable(gts).cuda()
 
             # ---- rescale ----
-            #uso dati da file yaml
+            # use data from YAML file
             trainsize = int(round(opt.training.trainsize * rate / 32) * 32)
 
             if rate != 1:
@@ -189,16 +189,16 @@ def main():
 
     # 1. Load configuration
     if not os.path.exists(args.config):
-        print(f"ERRORE: FILE CONFIGURAZIONE NON TROVATO: {args.config}")
+        print(f"ERROR: CONFIGURATION FILE NOT FOUND: {args.config}")
         exit(1)
 
     cfg_data = load_config(args.config)
-    opt = Config(cfg_data) # Converte il dizionario in oggetto navigabile
+    opt = Config(cfg_data) # Convert the dictionary into a navigable object
 
     model_name = args.model_name if args.model_name is not None else opt.experiment.name
     opt.model_name = model_name  # Update opt with the model name (used for saving and logging)
     if args.seed is not None:
-        opt.experiment.seed = args.seed # Aggiorna opt con il seed se fornito da CLI
+        opt.experiment.seed = args.seed # Update opt with the seed if provided via CLI
 
     # CLI override for the LR method; if absent, keep the YAML value
     if args.lr_method is not None:
@@ -272,7 +272,7 @@ def main():
 
     # In debug mode, pretend there is only 1 epoch to avoid wasting time
     if args.debug:
-        print("!!! ATTENZIONE: MODALITÀ DEBUG ATTIVA !!!")
+        print("!!! WARNING: DEBUG MODE ACTIVE !!!")
         opt.training.epochs = 1
 
     #for epoch in range(1, opt.epoch):
@@ -298,4 +298,3 @@ if __name__ == '__main__':
     # Set working directory to the script's location for consistent relative paths
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     main()
-   

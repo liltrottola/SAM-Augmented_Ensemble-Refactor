@@ -12,11 +12,11 @@
 
 cd $SLURM_SUBMIT_DIR
 
-echo "Attivo VENV..."
+echo "Activating VENV..."
 source venv_newSAMAug/bin/activate
 
-echo "Avvio training di PolypPVT Aug..."
+echo "Starting training of aug PolypPVT..."
 mkdir -p logs
 python src/models/PolypPVT/Train_aux.py
 
-echo "training HSNET Aux COMPLETATO!"
+echo "Aug PolypPVT training COMPLETED!"

@@ -16,9 +16,9 @@ mkdir -p logs
 
 source venv_newSAMAug/bin/activate
 
-echo "Run $SLURM_ARRAY_TASK_ID - avvio training HSNet vanilla..."
+echo "Run $SLURM_ARRAY_TASK_ID - starting training of HSNet vanilla..."
 python scripts/run_training.py \
     --model hsnet \
     --run_id $SLURM_ARRAY_TASK_ID
 
-echo "Run $SLURM_ARRAY_TASK_ID - COMPLETATO"
+echo "Run $SLURM_ARRAY_TASK_ID - COMPLETED"

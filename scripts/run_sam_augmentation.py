@@ -7,8 +7,8 @@ import numpy as np
 from tqdm import tqdm
 import sys
 
-# Per importare i moduli da 'src' anche se siamo in 'scripts'
-# Aggiunge la cartella superiore al path di Python
+# To import modules from 'src' even though we are in 'scripts'
+# Add the parent folder to the Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from src.augmentation.sam_loader import load_sam_model
@@ -30,15 +30,15 @@ def run_processing(config):
 
         mask_generator = load_sam_model(sam_version, path_to_sam_checkpoint, config['sam'])
         
-        # .get() per sicurezza se la lista è vuota
+        # .get() for safety in case the list is empty
         methods_list = config['augmentation'].get('methods') or []
         for chosen_aug in methods_list:
 
-            #Ottieni la funzione di augmentazione dal modulo methods
-            if hasattr(methods, chosen_aug): #cerco se il metodo esiste in methods.py
+            # Get the augmentation function from the methods module
+            if hasattr(methods, chosen_aug): # check whether the method exists in methods.py
                 aug_function = getattr(methods, chosen_aug)
             else:
-                print(f"Attenzione: Il metodo '{chosen_aug}' non esiste in methods.py")
+                print(f"Warning: method '{chosen_aug}' does not exist in methods.py")
                 continue
 
             #print("(!) chosen sam version: " , sam_version, "chosen method: ", aug_function.__name__)

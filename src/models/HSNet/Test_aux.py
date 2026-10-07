@@ -73,11 +73,11 @@ def test(model, opt, dataset):
         res_logits = res.data.cpu().numpy().squeeze()
         
         res = res.sigmoid().data.cpu().numpy().squeeze()
-        #res = (res - res.min()) / (res.max() - res.min() + 1e-8)    
-        #tmp = (res - res.min()) / (res.max() - res.min() + 1e-8)    
+        #res = (res - res.min()) / (res.max() - res.min() + 1e-8)
+        #tmp = (res - res.min()) / (res.max() - res.min() + 1e-8)
 
         indicator1=np.mean(np.abs(res-0.5))
-        #TODO:anche qui image + aux
+        #TODO: image + aux here too
         Ares,Ares1,Ares2,Ares3,_,_,_,_ = model(aux)
         Ares = F.interpolate(Ares + Ares1 + Ares2 + Ares3, size=gt.shape, mode='bilinear', align_corners=False)
         
@@ -87,7 +87,7 @@ def test(model, opt, dataset):
         #Ares = (Ares - Ares.min()) / (Ares.max() - Ares.min() + 1e-8)
         #tmp = (Ares - Ares.min()) / (Ares.max() - Ares.min() + 1e-8)
 
-        indicator2=np.mean(np.abs(Ares-0.5))            
+        indicator2=np.mean(np.abs(Ares-0.5))
         if indicator1>indicator2:
             input = res
             logits = res_logits
@@ -108,7 +108,7 @@ def test(model, opt, dataset):
         os.makedirs(save_dir, exist_ok=True)
 
         pil_img.save(os.path.join(save_dir, name))
-      
+        
         target = np.array(gt)
         smooth = 1
         input_flat = np.reshape(input, (-1))
@@ -138,7 +138,7 @@ def main():
     # CLI overrides
     if args.model_pth is not None:
         model_pth = os.path.join(opt.paths.models_dir, args.model_pth)
-    else:           
+    else:
         model_pth = os.path.join(opt.paths.models_dir, opt.testing.test_checkpoint)
 
     if args.sam_version is not None:
@@ -164,4 +164,3 @@ def main():
 if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     main()
-

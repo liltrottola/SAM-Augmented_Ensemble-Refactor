@@ -38,7 +38,7 @@ def main():
     args = parser.parse_args()
 
     if not os.path.exists(args.config):
-        print(f"ERRORE: FILE CONFIGURAZIONE NON TROVATO: {args.config}")
+        print(f"ERROR: CONFIGURATION FILE NOT FOUND: {args.config}")
         exit(1)
 
     cfg_data = load_config(args.config)
@@ -47,7 +47,7 @@ def main():
     # Override with command line arguments if provided
     if args.model_pth is not None:
         model_pth = os.path.join(opt.paths.models_dir, args.model_pth)
-    else:           
+    else:
         model_pth = os.path.join(opt.paths.models_dir, opt.testing.test_checkpoint)
     
     test_datasets = [args.test_dataset] if args.test_dataset is not None else opt.datasets.test
@@ -61,7 +61,7 @@ def main():
     model = PolypPVT()
     model.load_state_dict(torch.load(model_pth))
     model.cuda()
-    model.eval()   
+    model.eval()
 
     scores = []
     #5 test loop
@@ -118,4 +118,4 @@ def main():
 
 if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    main()      
+    main()

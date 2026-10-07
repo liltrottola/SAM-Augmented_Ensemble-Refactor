@@ -21,7 +21,7 @@ import yaml
 '''
 
 '''
-    To import the lr_schedules, we need to add the src folder to the path, 
+    To import the lr_schedules, we need to add the src folder to the path,
     since it is not in the same directory as Train.py
 '''
 import sys
@@ -59,7 +59,7 @@ def l1_loss(pred, mask):
 def train(train_loader, model, optimizer, epoch, opt, debug=False):
     model.train()
     # global best
-    size_rates = opt.training.size_rates 
+    size_rates = opt.training.size_rates
     loss_P2_record = AvgMeter()
 
     total_step = len(train_loader)
@@ -67,7 +67,7 @@ def train(train_loader, model, optimizer, epoch, opt, debug=False):
     for i, pack in enumerate(train_loader, start=1):
         if debug and i > 5:
             print("DEBUG MODE: stopping after 5 batches")
-            break    
+            break
         
         for rate in size_rates:
             # ---- data prepare ----
@@ -88,7 +88,7 @@ def train(train_loader, model, optimizer, epoch, opt, debug=False):
             # ---- loss function ----
             loss_P1 = structure_loss(P1, gts)
             loss_P2 = structure_loss(P2, gts)
-            loss = loss_P1 + loss_P2 
+            loss = loss_P1 + loss_P2
             # ---- backward ----
             loss.backward()
             clip_gradient(optimizer, opt.training.clip_margin)
@@ -100,7 +100,7 @@ def train(train_loader, model, optimizer, epoch, opt, debug=False):
             # ---- loss function ----
             loss_P1 = structure_loss(P1, gts)
             loss_P2 = structure_loss(P2, gts)
-            loss = loss_P1 + loss_P2 
+            loss = loss_P1 + loss_P2
             # ---- backward ----
             loss.backward()
             clip_gradient(optimizer, opt.training.clip_margin)
@@ -117,14 +117,14 @@ def train(train_loader, model, optimizer, epoch, opt, debug=False):
                   ' lateral-5: {:0.4f}]'.
                   format(datetime.now(), epoch, opt.training.epochs, i, total_step,
                          loss_P2_record.show()))
-    # save model 
+    # save model
     save_path = (opt.paths.models_dir)
     os.makedirs(save_path, exist_ok=True)
     #torch.save(model.state_dict(), save_path +str(epoch)+ 'PolypPVT.pth')
     # choose the best model
 
     #mean_dice = 0
-    #if (epoch + 1) % 1 == 0:#'CVC-300', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 
+    #if (epoch + 1) % 1 == 0:#'CVC-300', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB',
     #    #for dataset in ['CVC-300', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB']:
     #    for dataset in ['test']:
     #        dataset_dice = test(model, test_path, dataset)
@@ -150,7 +150,7 @@ def main():
     args = parser.parse_args()
 
     if not os.path.exists(args.config):
-        print(f"ERRORE: FILE CONFIGURAZIONE NON TROVATO: {args.config}")
+        print(f"ERROR: CONFIGURATION FILE NOT FOUND: {args.config}")
         exit(1)
 
     # Load the configuration from the specified YAML file
@@ -212,14 +212,14 @@ def main():
     model = PolypPVT().cuda()
 
     # ---- build optimizer ----
-    params = model.parameters() 
+    params = model.parameters()
 
     lr_cfg = get_lr_method( getattr(opt.training, "lr_method", None) )
     
     if lr_cfg is not None:
         init_lr = lr_cfg["init_lr"]
-        optimizer = torch.optim.AdamW(params, 
-                                     init_lr, 
+        optimizer = torch.optim.AdamW(params,
+                                     init_lr,
                                      weight_decay=opt.training.optimizer.weight_decay)
         
         scheduler = build_scheduler(optimizer, lr_cfg)
@@ -232,7 +232,7 @@ def main():
         optimizer = torch.optim.AdamW(params, opt.training.optimizer.lr, weight_decay=opt.training.optimizer.weight_decay)
         
         # Configure a learning rate scheduler to reduce the learning rate at specific epochs.
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, 
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
                                                         milestones=opt.training.lr_schedule.milestones, 
                                                         gamma=opt.training.lr_schedule.gamma)
 

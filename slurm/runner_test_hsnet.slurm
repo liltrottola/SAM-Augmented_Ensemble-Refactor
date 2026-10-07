@@ -15,9 +15,9 @@ cd $SLURM_SUBMIT_DIR
 
 source venv_newSAMAug/bin/activate
 
-echo "Run $SLURM_ARRAY_TASK_ID - avvio inference HSNet..."
+echo "Run $SLURM_ARRAY_TASK_ID - starting HSNet inference..."
 python scripts/run_inference.py \
     --model hsnet \
     --run_id $SLURM_ARRAY_TASK_ID
 
-echo "Run $SLURM_ARRAY_TASK_ID - COMPLETATO"
+echo "Run $SLURM_ARRAY_TASK_ID - COMPLETED"

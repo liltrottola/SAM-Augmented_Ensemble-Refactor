@@ -13,7 +13,7 @@ env/
 
 
 # --- Datasets & Outputs ---
-# Ignoriamo i dati pesanti, carichiamo solo il codice
+# Ignore heavy data, upload only the code
 datasets/
 old_code/
 output/
@@ -22,7 +22,7 @@ help/
 logs/
 
 # --- Model Checkpoints ---
-# Non caricare pesi su GitHub (limite 100MB)
+# Do not upload weights to GitHub (100MB limit)
 checkpoints/
 segment-anything-2/
 checkpoints_sam/

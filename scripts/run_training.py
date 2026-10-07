@@ -44,9 +44,9 @@ def build_command(model, seed, run_id, sam_version, method, da_method, lr_method
         cmd.append(str(method))
 
     if da_method is not None:
-        # Always pass BOTH online and offline axes of augmentation explicitly, 
-        # never just the chosen one: leaving the other axis unmentioned falls back 
-        # to whatever offline_augmentation/online_augmentation is already in the yaml config, 
+        # Always pass BOTH online and offline axes of augmentation explicitly,
+        # never just the chosen one: leaving the other axis unmentioned falls back
+        # to whatever offline_augmentation/online_augmentation is already in the yaml config,
         # silently stacking it on top instead of really isolating the chosen DA method.
         offline_aug = da_method if da_method in OFFLINE_DA_METHODS else "noda"
         online_aug = da_method if da_method == "da3" else "noda"
@@ -65,11 +65,11 @@ def build_command(model, seed, run_id, sam_version, method, da_method, lr_method
     return cmd
 
 def run_training(cmd, cwd):
-    print(f"Eseguendo comando: {' '.join(cmd)}")
+    print(f"Executing command: {' '.join(cmd)}")
     try:
         subprocess.run(cmd, cwd=cwd, check=True)
     except subprocess.CalledProcessError as e:
-        print(f"ERRORE: Il comando è terminato con un errore (codice {e.returncode}): {' '.join(cmd)}")
+        print(f"ERROR: Command failed with an error (exit code {e.returncode}): {' '.join(cmd)}")
         exit(1)
 
 def main():
@@ -85,7 +85,7 @@ def main():
     args = parser.parse_args()
 
     if not os.path.exists(args.sweep):
-        print(f"ERRORE: FILE CONFIGURAZIONE NON TROVATO: {args.sweep}")
+        print(f"ERROR: CONFIGURATION FILE NOT FOUND: {args.sweep}")
         exit(1)
 
     sweep = load_sweep_config(args.sweep)
@@ -96,8 +96,8 @@ def main():
         models_to_run = [model for model in sweep['models'] if model['name'] == args.model]
         if not models_to_run:
             available_models = ", ".join(model['name'] for model in sweep['models'])
-            print(f"ERRORE: MODELLO NON TROVATO NEL FILE DI CONFIGURAZIONE: {args.model}")
-            print(f"Modelli disponibili: {available_models}")
+            print(f"ERROR: MODEL NOT FOUND IN CONFIGURATION FILE: {args.model}")
+            print(f"Available models: {available_models}")
             exit(1)
 
     if args.run_id is not None:
@@ -107,14 +107,14 @@ def main():
 
     for model in models_to_run:
         cwd = "../src/models/" + model['folder']
-        print(f"Controllando esistenza cartella modello: {cwd}")
+        print(f"Checking that model folder exists: {cwd}")
         
         if not os.path.exists(cwd):
-            print(f"ERRORE: CARTELLA MODELLO NON TROVATA: {cwd}")
+            print(f"ERROR: MODEL FOLDER NOT FOUND: {cwd}")
             exit(1)
         
         da_methods = sweep['training'].get('da_methods', [None])   # DA axis; without key -> 1 legacy run
-        lr_methods = sweep['training'].get('lr_methods', [None])   # retrocompat: senza chiave -> 1 run legacy
+        lr_methods = sweep['training'].get('lr_methods', [None])   # backward compat: without key -> 1 legacy run
         for run_id in run_ids:
             if model['has_aux']:
                 for sam_version in sweep['training']['sam_versions']:
@@ -123,7 +123,7 @@ def main():
                             # aux models only support the online DA axis (da3/null); da1/da2 here is the
                             # deferred "SAM regenerated over offline-DA data" case, not yet implemented.
                             if not is_valid_combo(model, da_method):
-                                print(f"ERRORE: offline DA method '{da_method}' not supported for aux models yet (model={model['name']}) -- skipping")
+                                print(f"ERROR: offline DA method '{da_method}' not supported for aux models yet (model={model['name']}) -- skipping")
                                 continue
                             for lr_method in lr_methods:
                                 model_name = build_model_name(model['name'], run_id, method, sam_version, da_method, lr_method)
@@ -141,7 +141,7 @@ def main():
                             continue
                         cmd = build_command(model, sweep['training']['seeds'][run_id - 1], run_id, None, None, da_method, lr_method, args.debug)
                         run_training(cmd, cwd)
-        
+
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     main()

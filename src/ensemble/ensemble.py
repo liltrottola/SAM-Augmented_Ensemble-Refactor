@@ -12,7 +12,7 @@ import os
 #
 # For each test image in the test set (provided by the --test_masks argument), 
 # the following steps occur:
-# 1. Retrieve the paths of corresponding output images from each model’s output folder. 
+# 1. Retrieve the paths of corresponding output images from each model's output folder. 
 #    Here, n represents the number of models in the ensemble, so n images should be retrieved,
 #    one from each model output folder, corresponding to the same test image.
 # 2. Load each of the n images and sum them together pixel-wise to produce an aggregated 

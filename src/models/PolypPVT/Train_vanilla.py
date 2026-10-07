@@ -83,7 +83,7 @@ def train(train_loader, model, optimizer, epoch, opt, debug=False):
             # ---- loss function ----
             loss_P1 = structure_loss(P1, gts)
             loss_P2 = structure_loss(P2, gts)
-            loss = loss_P1 + loss_P2 
+            loss = loss_P1 + loss_P2
             # ---- backward ----
             loss.backward()
 
@@ -96,13 +96,13 @@ def train(train_loader, model, optimizer, epoch, opt, debug=False):
                 loss_P2_record.update(loss_P2.data, opt.training.batchsize)
         
         if i % 20 == 0 or i == total_step:
-            #NOTE: qui era opt.epoch
+            #NOTE: was opt.epoch
             print('{} Epoch [{:03d}/{:03d}], Step [{:04d}/{:04d}], '
                   ' lateral-5: {:0.4f}] lr'.format(
                       datetime.now(), epoch, opt.training.epochs, i, total_step,
                       loss_P2_record.show()), optimizer.param_groups[0]['lr'])
     
-     # save model 
+     # save model
     save_path = (opt.paths.models_dir)
     os.makedirs(save_path, exist_ok=True)
     #torch.save(model.state_dict(), save_path +str(epoch)+ 'PolypPVT.pth')
@@ -203,7 +203,7 @@ def main():
         gt_root    = '{}/{}/masks/'.format(opt.paths.datasets_root, dataset)
 
     train_loader = get_loader(image_root, gt_root,
-                              batchsize=opt.training.batchsize, 
+                              batchsize=opt.training.batchsize,
                               trainsize=opt.training.trainsize,
                               augmentation=online_aug)
     total_step = len(train_loader)
@@ -238,4 +238,3 @@ if __name__ == '__main__':
     # Set working directory to the script's location for consistent relative paths
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     main()
-   

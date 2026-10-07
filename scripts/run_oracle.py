@@ -32,7 +32,7 @@ def main():
     parser.add_argument('--out_folder', type=str, default=None)
     parser.add_argument('--models_outputs', type=str, default=None)
     parser.add_argument('--test_masks', type=str, default=None)
-    parser.add_argument('--mode', type=str, default='oracle1', help='Nome del file in src/ensemble senza .py')
+    parser.add_argument('--mode', type=str, default='oracle1', help='Name of the file in src/ensemble, without .py')
     args = parser.parse_args()
 
     opt = Config(load_config(args.config))
@@ -79,7 +79,7 @@ def main():
                     all_critical_results[item] = dataset_critical_scores
         else:
             mDice = result
-            
+        
         buffer.append(mDice)
         print(f"{item} mDICE: {mDice:.3f}")
 

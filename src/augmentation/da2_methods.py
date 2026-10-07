@@ -97,7 +97,7 @@ def rotation(image, mask):
 
 def shear(image, mask):
     '''
-    Shear random: XShear o YShear, ±45° (4 opzioni equiprobabili).
+    Random shear: XShear or YShear, ±45° (4 equiprobable options).
     '''
     # --- Random sampling ---
     # MATLAB: c=1+floor(rand)=1 always (likely bug), ang=45 → fixed ±45° shear

@@ -13,12 +13,12 @@
 cd $SLURM_SUBMIT_DIR
 
 echo "Node: $HOSTNAME"
-echo "Attivo VENV..."
+echo "Activating VENV..."
 source venv_newSAMAug/bin/activate
 
-echo "Starting HSNet inference..."
+echo "Starting aug HSNet inference..."
 mkdir -p logs
 
 python src/models/HSNet/Test_aux.py
 
-echo "Inference of HSNetAux ----> DONE"
+echo "Inference of aug HSNet ----> DONE"

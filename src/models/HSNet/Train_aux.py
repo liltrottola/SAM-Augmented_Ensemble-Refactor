@@ -12,7 +12,7 @@ import logging
 import yaml
 
 '''
-    To import the lr_schedules, we need to add the src folder to the path, 
+    To import the lr_schedules, we need to add the src folder to the path,
     since it is not in the same directory as Train.py
 '''
 import sys
@@ -24,7 +24,7 @@ from src.training.lr_schedules import get_lr_method, build_scheduler
     from torch.autograd import Variable --> is deprecated
     import torch.nn as nn --> is not used in this code, so it is not imported
     import pdb ----> not used in this code, so it is not imported
-    from torchvision import transforms ---> used only in test() and not in train() 
+    from torchvision import transforms ---> used only in test() and not in train()
     from PIL import Image ---> used only in test()
     import matplotlib.pyplot as plt
 '''
@@ -204,7 +204,7 @@ def main():
     args = parser.parse_args()
 
     if not os.path.exists(args.config):
-        print(f"ERRORE: FILE CONFIGURAZIONE NON TROVATO: {args.config}")
+        print(f"ERROR: CONFIGURATION FILE NOT FOUND: {args.config}")
         exit(1)
 
     # Load the configuration from the specified YAML file
@@ -266,7 +266,7 @@ def main():
 
     '''
 
-    old  
+    old
     
     # Set up the optimizer to adjust the model's parameters during training.
     # Using Adam optimizer with the learning rate specified in the arguments.
@@ -274,8 +274,8 @@ def main():
     optimizer = torch.optim.Adam(params, opt.training.optimizer.lr, weight_decay=opt.training.optimizer.weight_decay)
 
     # Configure a learning rate scheduler to reduce the learning rate at specific epochs.
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, 
-                                                     milestones=opt.training.lr_schedule.milestones, 
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
+                                                     milestones=opt.training.lr_schedule.milestones,
                                                      gamma=opt.training.lr_schedule.gamma)
     
     '''
@@ -287,8 +287,8 @@ def main():
     
     if lr_cfg is not None:
         init_lr = lr_cfg["init_lr"]
-        optimizer = torch.optim.Adam(params, 
-                                     init_lr, 
+        optimizer = torch.optim.Adam(params,
+                                     init_lr,
                                      weight_decay=opt.training.optimizer.weight_decay)
         
         scheduler = build_scheduler(optimizer, lr_cfg)
@@ -297,11 +297,11 @@ def main():
             f"milestones={lr_cfg['milestones']}, gamma={lr_cfg['gamma']}")
     else:
         # legacy path (unchanged)
-        optimizer = torch.optim.Adam(params, 
+        optimizer = torch.optim.Adam(params,
                                      opt.training.optimizer.lr,
                                      weight_decay=opt.training.optimizer.weight_decay)
         
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, 
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
                                                         milestones=opt.training.lr_schedule.milestones,
                                                         gamma=opt.training.lr_schedule.gamma)
 
@@ -326,7 +326,7 @@ def main():
     
     # In debug mode, pretend there is only 1 epoch to avoid wasting time
     if args.debug:
-        print("!!! ATTENZIONE: MODALITÀ DEBUG ATTIVA !!!")
+        print("!!! WARNING: DEBUG MODE ACTIVE !!!")
         opt.training.epochs = 1
         
     # Begin the training process, iterating through each epoch.
@@ -347,14 +347,14 @@ if __name__ == '__main__':
 
 
 '''
-        was in __main__ but it is strongly interconnected with the train() function. to be evaluated if it is better to keep it 
+        was in __main__ but it is strongly interconnected with the train() function. to be evaluated if it is better to keep it
         # Initialize a dictionary to store Dice scores for various datasets.
         # Each dataset name is mapped to an empty list which will later hold the Dice scores.
         dict_plot = {'test':[]}
         # Define a list of dataset names for easy reference.
         name = ['test']
 
-        # Set the name of the model to be used. This helps in identifying the model configuration 
+        # Set the name of the model to be used. This helps in identifying the model configuration
         # when saving and tracking experiments.
         model_name = 'hsnet_with_aux'
     '''
@@ -449,7 +449,7 @@ def test(model, dataset):
         DSC = DSC + dice
     
     # Return the average Dice coefficient across all samples
-    return DSC / num_test_samples 
+    return DSC / num_test_samples
 def plot_train(dict_plot=None, name = None):
     color = ['red', 'lawngreen', 'lime', 'gold', 'm', 'plum', 'blue']
     line = ['-', "--"]
