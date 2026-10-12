@@ -27,6 +27,22 @@ models:
     test_script: "Test_vanilla.py"
     config: "../configs/polypPVT_vanilla.yaml"
 
+  # HGM needs its own conda env (mamba_ssm, torch_geometric): always run it with --model hgm
+  # from the HGM conda env, never in a full sweep from venv_newSAMAug
+  - name: hgm
+    has_aux: false
+    folder: "HGM"
+    train_script: "Train_vanilla.py"
+    test_script: "Test_vanilla.py"
+    config: "../configs/hgm_vanilla.yaml"
+
+  - name: sam2unet
+    has_aux: false
+    folder: "SAM2UNet"
+    train_script: "Train_vanilla.py"
+    test_script: "Test_vanilla.py"
+    config: "../configs/sam2unet_vanilla.yaml"
+
 # training section
 training:
   runs: 5
