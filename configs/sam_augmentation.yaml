@@ -1,60 +1,45 @@
 experiment:
-  name: augmentation_experiment
-  description: Experiment to evaluate data augmentation techniques on model performance
-  version: 1.0
+  name: sam_augmentation
+  description: Aux images for the aux models built from the SAM priors saved by run_sam_generation.py (SAM does not run here)
 
 # all paths are relatives to the home directory of the project SAM-Augmented_Ensemble-refactor
 paths:
-  # Path base dove si trovano i dataset (ex dataset_path = "../datasets/")
+  # base path of the datasets
   dataset_root: "datasets/"
-
-  # Where to save the output (ex saving_path)
+  # prior maps (.npy float32, image size) written by run_sam_generation.py: <prior_root>/<prior_source>/<dataset>/<prior>/<name>.npy
+  # prior_source = sam folder built by run_sam_generation.py (sam1, or sam2_stab<threshold> e.g. sam2_stab085): run that script first
+  prior_root: "output/priors/"
+  prior_source: "sam2_stab085"
+  # aux images: <output_root>/<aux_source>/<method>/<dataset>/images/<name>.png
   output_root: "output/augmentation/"
-  
-  # Path dei checkpoint (ex checkpoints_root)
-  checkpoints_root: "checkpoints_sam"
+  # folder name under output_root = --aux_source of Train_aux.py / Test_aux.py (key in aux_sources of the sweep yaml).
+  # An existing folder with the same name is overwritten
+  aux_source: "sam2_stab085"
 
 datasets:
   # List of datasets to use for training and testing
   folders:
     - "TrainDataset/"
-    #- "small_ds/"
-    #- "small_ds_2/"
     #- "TestDatasets/CVC-300/"
     #- "TestDatasets/CVC-ClinicDB/"
     #- "TestDatasets/CVC-ColonDB/"
     #- "TestDatasets/Kvasir/"
     #- "TestDatasets/ETIS-LaribPolypDB/"
 
+# priors loaded for every image (folder names under <prior_root>/<prior_source>/<dataset>/),
+# passed to the methods as priors[<name>]: every prior used by a method below must be listed here
+priors:
+  - "segPrior"        # sum of the stability scores of the overlapping masks
+  - "boundaryPrior"   # contours of the masks, {0,1}
+  - "areaPrior"       # relative area of the masks, summed where they overlap
+  - "logits"          # logits of the predictor on the whole image
+
 augmentation:
-  #List of method names exactly as defined in lib.py
+  # names exactly as defined in src/augmentation/sam_prior_methods.py
   methods:
-    - "SAMAug"
-    - "ourSAMAug"
-    - "RG_segPrior"
-    - "SV_segPrior"
-    - "RG_logits"
-    - "PCA_segPrior"
-
-sam:
-  # Choose [1], [2], or [1, 2]
-  versions: [2]
-  model_cfg: "sam2_hiera_l.yaml" # Choose the checkpoint file for the SAM model (ex: "sam_vit_h_4b8939.pth" or "sam2_hiera_large.pt")
-  
-  thresholds:
-    v1:                       # SamAutomaticMaskGenerator (as in the original code)
-      crop_nms: 0.5
-      box_nms: 0.5
-      pred_iou: 0.5
-    v2:                       # SAM2AutomaticMaskGenerator: library defaults = original code behaviour (baseline)
-      stability_score: 0.95
-      pred_iou: 0.8
-
-  checkpoints:
-    v1: "sam_vit_h_4b8939.pth"
-    v2: "sam2_hiera_large.pt"
-
-image_processing:
-  # Parameters for image processing and augmentation
-  resize_threshold: 2000 
-  resize_dim: [1920, 1280] # Resize dimensions for images larger than the threshold
+    - "SAMAug"          # G += segPrior, B += boundaryPrior
+    - "ourSAMAug"       # R += areaPrior, G += segPrior, B += boundaryPrior
+    - "RG_segPrior"     # R, G, B = segPrior
+    - "SV_segPrior"     # G, B, segPrior of the RGB (despite the name, no HSV: see sam_prior_methods.py)
+    - "RG_logits"       # R, G, B = logits
+    - "PCA_segPrior"    # PCA 3->2 of RGB, B = segPrior

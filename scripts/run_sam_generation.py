@@ -7,8 +7,8 @@ import numpy as np
 from tqdm import tqdm
 import sys
 
-# Per importare i moduli da 'src' anche se siamo in 'scripts'
-# Aggiunge la cartella superiore al path di Python
+# import modules from src even if we are in scripts folder
+# (adds the parent folder to the Python path)
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from src.augmentation.sam_loader import load_sam_model
@@ -33,7 +33,7 @@ def run_processing(config):
 
         mask_generator = load_sam_model(sam_version, path_to_sam_checkpoint, config['sam'])
         
-        print(f"------ Running generationwith SAM v{sam_version} ------")
+        print(f"------ Running generation with SAM v{sam_version} ------")
 
         for cur_dir in config['datasets']['folders']:
                 
@@ -83,21 +83,31 @@ def run_processing(config):
                     tI=tI.astype(np.float32)
                     print(filename, ": resized to: ", tI.shape, "FIXED")
 
-                #replace here with the wanted augmentation method
-                segPrior, boundaryPrior = sam_methods.raw_SAM_generation(tI, mask_generator)
+                segPrior, boundaryPrior, areaPrior, logits = sam_methods.raw_SAM_generation(tI, mask_generator)
 
+                # back to the original size (H, W) of the image: original_size is (H, W, 3)
                 if resized_flag:
-                    segPrior = transform.resize(segPrior, original_size, anti_aliasing=True)
-                    boundaryPrior = transform.resize(boundaryPrior, original_size, anti_aliasing=True)
-                
+                    segPrior = transform.resize(segPrior, original_size[:2], anti_aliasing=True)
+                    boundaryPrior = transform.resize(boundaryPrior, original_size[:2], anti_aliasing=True)
+                    areaPrior = transform.resize(areaPrior, original_size[:2], anti_aliasing=True)
+                    logits = transform.resize(logits, original_size[:2], anti_aliasing=True)
+
                 segPrior_path = os.path.join(saving_path, "segPrior")
                 os.makedirs(segPrior_path, exist_ok=True)
                 boundaryPrior_path = os.path.join(saving_path, "boundaryPrior")
                 os.makedirs(boundaryPrior_path, exist_ok=True)
+                areaPrior_path = os.path.join(saving_path, "areaPrior")
+                os.makedirs(areaPrior_path, exist_ok=True)
+                logits_path = os.path.join(saving_path, "logits")
+                os.makedirs(logits_path, exist_ok=True)
 
-                # Save the generated maps to the specified folder
-                np.save(os.path.join(segPrior_path, filename + ".npy"), segPrior)
-                np.save(os.path.join(boundaryPrior_path, filename + ".npy"), boundaryPrior)
+                # Save the generated maps to the specified folder, named as the image without extension
+                # (149.png -> 149.npy): the N->3 loader and the aux scripts pair image and prior by name
+                base_name = os.path.splitext(filename)[0]
+                np.save(os.path.join(segPrior_path, base_name + ".npy"), segPrior)
+                np.save(os.path.join(boundaryPrior_path, base_name + ".npy"), boundaryPrior)
+                np.save(os.path.join(areaPrior_path, base_name + ".npy"), areaPrior)
+                np.save(os.path.join(logits_path, base_name + ".npy"), logits)
 
                 count = count + 1
                 print("(-) ",cur_dir, ": ", count,"/",len(file_names))

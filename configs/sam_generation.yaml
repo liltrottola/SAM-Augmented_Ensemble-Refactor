@@ -5,13 +5,14 @@ experiment:
 
 # all paths are relatives to the home directory of the project SAM-Augmented_Ensemble-refactor
 paths:
-  # Path base dove si trovano i dataset (ex dataset_path = "../datasets/")
+  # base path of the datasets 
   dataset_root: "datasets/"
 
-  # Where to save the output (ex saving_path)
-  output_root: "output/SAM_predictions/"
-  
-  # Path dei checkpoint (ex checkpoints_root)
+  # prior maps: <output_root>/<sam folder>/<dataset>/<prior>/<name>.npy, sam folder = sam1 or sam2_stab<threshold>
+  # (same root as the depth priors of depth_prior_maps.yaml)
+  output_root: "output/priors/"
+
+  # path of the SAM checkpoints 
   checkpoints_root: "checkpoints_sam"
 
 datasets:

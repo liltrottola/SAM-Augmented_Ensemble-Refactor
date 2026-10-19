@@ -1,130 +1,109 @@
 import os
+import sys
+import time
 import argparse
 import yaml
-import skimage
-from skimage import transform
 import numpy as np
-from tqdm import tqdm
-import sys
+import cv2
+import skimage
 
-# Per importare i moduli da 'src' anche se siamo in 'scripts'
-# Aggiunge la cartella superiore al path di Python
+# import modules from src even if we are in scripts folder
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.augmentation.sam_loader import load_sam_model
-from src.augmentation import sam_methods
+from src.augmentation import sam_prior_methods as spm
 
-def run_processing(config):
-    print("Configuration loaded:", config.keys())
+# The methods are chosen by name from the yaml: each name is a function
+# of sam_prior_methods.py with signature f(tI, priors) -> final uint8 image.
+# The priors are the .npy maps saved by run_sam_generation.py: SAM does not run here.
+
+
+def read_rgb(path):
+    """grayscale -> 3 channels, RGBA -> RGB, uint8."""
+    tI = skimage.io.imread(path)
+    if tI.ndim == 2:
+        tI = np.stack([tI] * 3, axis=-1)
+    if tI.shape[2] == 4:
+        tI = tI[:, :, :3]
+    if tI.dtype != np.uint8:
+        tI = skimage.img_as_ubyte(tI)
+    return tI
+
+
+def run_processing(config, limit=None):
     dataset_root = config['paths']['dataset_root']
-    output_root = config['paths']['output_root']
+    prior_root = os.path.join(config['paths']['prior_root'], config['paths']['prior_source'])
+    saving_root = os.path.join(config['paths']['output_root'], config['paths']['aux_source'])
+    prior_names = config['priors']
+    methods = config['augmentation']['methods']
 
-    for sam_version in config['sam']['versions']:
+    for m in methods:
+        if not hasattr(spm, m):  # check if the method exists in sam_prior_methods.py
+            raise ValueError(f"Method '{m}' not defined in sam_prior_methods.py")
 
-        checkpoints_root = config['paths']['checkpoints_root']
+    for dataset in config['datasets']['folders']:
+        images_path = os.path.join(dataset_root, dataset, "images")
+        prior_paths = {p: os.path.join(prior_root, dataset, p) for p in prior_names}
+        print(f"------ {dataset}: images {images_path}, priors {os.path.join(prior_root, dataset)} {prior_names}")
 
-        if sam_version == 1:
-            path_to_sam_checkpoint=os.path.join(checkpoints_root,config['sam']['checkpoints']['v1'])
-        elif sam_version == 2:
-            path_to_sam_checkpoint=os.path.join(checkpoints_root,config['sam']['checkpoints']['v2'])
+        file_names = sorted(f for f in os.listdir(images_path) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.tif')))
+        if limit is not None:
+            file_names = file_names[:limit]
 
-        mask_generator = load_sam_model(sam_version, path_to_sam_checkpoint, config['sam'])
-        
-        # .get() per sicurezza se la lista è vuota
-        methods_list = config['augmentation'].get('methods') or []
-        for chosen_aug in methods_list:
+        # the loader pairs image and aux by name: every image must have all its priors
+        for p, path in prior_paths.items():
+            missing = [f for f in file_names if not os.path.exists(os.path.join(path, os.path.splitext(f)[0] + ".npy"))]
+            if missing:
+                raise FileNotFoundError(f"{len(missing)} '{p}' maps missing in {path} "
+                                        f"(run run_sam_generation.py first), first: {missing[:5]}")
 
-            #Ottieni la funzione di augmentazione dal modulo sam_methods
-            if hasattr(sam_methods, chosen_aug): #cerco se il metodo esiste in sam_methods.py
-                aug_function = getattr(sam_methods, chosen_aug)
-            else:
-                print(f"Attenzione: Il metodo '{chosen_aug}' non esiste in sam_methods.py")
-                continue
+        out_dirs = {m: os.path.join(saving_root, m, dataset, "images") for m in methods}
+        for d in out_dirs.values():
+            os.makedirs(d, exist_ok=True)
 
-            #print("(!) chosen sam version: " , sam_version, "chosen method: ", aug_function.__name__)
-            print(f"------ Running {aug_function.__name__} with SAM v{sam_version} ------")
+        t_prior, t_methods = 0.0, 0.0
+        for count, filename in enumerate(file_names, 1):
+            name = os.path.splitext(filename)[0]
+            tI = read_rgb(os.path.join(images_path, filename))
+            h, w = tI.shape[:2]
 
-            for cur_dir in config['datasets']['folders']:
+            # SAM priors are saved at the image size already: resize (bilinear) only if they are not
+            t0 = time.time()
+            priors = {}
+            for p, path in prior_paths.items():
+                prior = np.load(os.path.join(path, name + ".npy")).astype(np.float32)
+                if prior.shape != (h, w):
+                    prior = cv2.resize(prior, (w, h), interpolation=cv2.INTER_LINEAR)
+                priors[p] = prior
+            t1 = time.time()
 
-                folder_path = os.path.join(dataset_root, cur_dir, "images")
-                saving_path = os.path.join(output_root, "sam"+str(sam_version), aug_function.__name__)
-                print(f"Processing dataset folder: {folder_path}")
-                print(f"Saving augmented images to: {saving_path}")
+            for m in methods:
+                aug_img = getattr(spm, m)(tI, priors)
+                # always PNG (lossless) with the image name: the aux loaders pair image and aux by sorted file name
+                skimage.io.imsave(os.path.join(out_dirs[m], name + ".png"), aug_img, check_contrast=False)
+            t2 = time.time()
+            t_prior += t1 - t0
+            t_methods += t2 - t1
 
-                file_names = os.listdir(folder_path)
+            print(f"(-) {dataset}: {count}/{len(file_names)}  {name}  priors {t1 - t0:.2f}s  methods+save {t2 - t1:.2f}s")
 
-                count = 0
-                for filename in file_names:
-                    tI = skimage.io.imread(os.path.join(folder_path, filename))
-
-                    shape=tI.shape
-                    # Check if the input image is grayscale (i.e., has only two dimensions: height and width)
-                    if len(shape) == 2:
-                        # Convert the grayscale image to an RGB image by duplicating the single channel across three channels
-                        tmp = np.stack([tI] * 3, axis=-1)
-                        # Assign the converted image back to tI
-                        tI = tmp
-                        shape=tI.shape
-
-                    #in case of RGB+alpha channel, we remove the alpha channel since is unused
-                    if shape[2]==4:
-                        print(filename,": wrong shape FIXED")
-                        tmp=np.empty((shape[0], shape[1], 3), dtype=float)
-                        tmp[:,:,0]=tI[:,:,0]
-                        tmp[:,:,1]=tI[:,:,1]
-                        tmp[:,:,2]=tI[:,:,2]
-                        tI=tmp
-
-                    if tI.dtype == np.float64:
-                        tI = (tI * 255).astype(np.uint8)
-                        print(filename,": wrong type FIXED")
-
-                    std_dim = tuple(config['image_processing']['resize_dim'])
-
-                    original_size=tI.shape
-                    resized_flag=False
-                    #resize the image if too large
-                    if original_size[0]>=config['image_processing']['resize_threshold'] or  original_size[1]>=config['image_processing']['resize_threshold']:
-                        resized_flag=True
-                        tI = transform.resize(tI, std_dim, anti_aliasing=True)
-                        tI=tI.astype(np.float32)
-                        print(filename, ": resized to: ", tI.shape, "FIXED")
-
-                    #replace here with the wanted augmentation method
-                    aug_img = aug_function(tI, mask_generator)
-
-                    if resized_flag:
-                        aug_img = transform.resize(aug_img, original_size, anti_aliasing=True)
-
-                    # Convert to uint8
-                    aug_img_scaled = skimage.exposure.rescale_intensity(aug_img, in_range='image', out_range=(0, 1))
-                    aug_img_uint8 = skimage.img_as_ubyte(aug_img_scaled)
-
-                    # save result
-                    full_saving_path= os.path.join(saving_path, cur_dir, "images")
-                    os.makedirs(full_saving_path, exist_ok=True)
-                    skimage.io.imsave(os.path.join(full_saving_path, filename), aug_img_uint8)
-
-                    count = count + 1
-                    print("(-) ",cur_dir, ": ", count,"/",len(file_names))
+        n = max(len(file_names), 1)
+        print(f"====== {dataset}: {len(file_names)} images, mean priors {t_prior / n:.2f} s/img, "
+              f"mean methods+save {t_methods / n:.2f} s/img")
 
 
 if __name__ == "__main__":
-
-    # Find directory of this file
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    # build the config file path
     config_path = os.path.abspath(os.path.join(current_dir, '../configs/sam_augmentation.yaml'))
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default=config_path, help='Path to the config file.')
+    parser.add_argument('--config', type=str, default=config_path)
+    parser.add_argument('--limit', type=int, default=None, help='Only the first N images of each dataset (quick test)')
     opt = parser.parse_args()
 
     if not os.path.exists(opt.config):
         raise FileNotFoundError(f"Config file not found: {opt.config}")
-    
+
     with open(opt.config, 'r') as f:
         config = yaml.safe_load(f)
 
-    run_processing(config)
+    run_processing(config, opt.limit)
