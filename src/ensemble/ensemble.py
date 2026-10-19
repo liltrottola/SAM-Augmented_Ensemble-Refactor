@@ -66,13 +66,14 @@ def get_dice(labels_path, ensemble_prediction_path, dataset_name):
     transform = transforms.ToTensor()
     
     files_gt = os.listdir(labels_path)
-    outputs = []
-    targets = []
 
+    #the dice of each image is computed as soon as the image is read: keeping every gt and
+    #prediction in memory does not fit for large datasets
+    dices=[]
     for gt in files_gt:
         n1 = os.path.join(labels_path, gt)
         n2 = os.path.join(ensemble_prediction_path, gt)
-        
+
         i1 = Image.open(n1).convert("L")
         i2 = Image.open(n2).convert("L")
 
@@ -80,18 +81,13 @@ def get_dice(labels_path, ensemble_prediction_path, dataset_name):
         i2 = transform(i2)
         #apply threshold to get binary image
         i1[i1>=0.5]=1
-        i1[i1<0.5]=0        
+        i1[i1<0.5]=0
         i2[i2>=0.5]=1
         i2[i2<0.5]=0
 
-        outputs.append(i1)
-        targets.append(i2)
-
-    dices=[]
-    for i in range(0, len(outputs)):
         #dices.append(dice_metric(outputs[i].unsqueeze(0), targets[i].unsqueeze(0)).item())
-        input=outputs[i]
-        target=targets[i]
+        input=i1
+        target=i2
         input=np.asarray(input, np.float32)
         input=input/(input.max()+1e-8)
         target=np.asarray(target, np.float32)

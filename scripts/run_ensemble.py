@@ -1,6 +1,7 @@
 import os
 import argparse
 import sys
+import csv
 import yaml
 
 # Per importare i moduli da 'src' anche se siamo in 'scripts'
@@ -30,7 +31,7 @@ def main():
     parser.add_argument('--out_folder', type=str, default=None)
     parser.add_argument('--models_outputs', type=str, default=None)
     parser.add_argument('--test_masks', type=str, default=None)
-    parser.add_argument('--ensemble_name', type=str, default=None, help='name for this ensemble run')
+    parser.add_argument('--name', type=str, default=None, help='name for this ensemble run')
 
     args = parser.parse_args()
 
@@ -43,18 +44,20 @@ def main():
         opt.paths.models_outputs = args.models_outputs
     if args.test_masks is not None:
         opt.paths.test_masks = args.test_masks
-    if args.ensemble_name is not None:
-        opt.paths.out_folder = os.path.join(opt.paths.out_folder, args.ensemble_name)
+    if args.name is not None:
+        opt.paths.out_folder = os.path.join(opt.paths.out_folder, args.name)
 
     #each subfolder of --models_outputs contains the output for the whole 5 polyp datasets.
     models_to_sum = os.listdir(opt.paths.models_outputs)
     buffer = []
+    dataset_names = []
 
     model1_path = os.path.join(opt.paths.models_outputs, models_to_sum[0])
     datasets = os.listdir(model1_path)
     for item in datasets:
+        dataset_names.append(item)
         current_labels_path = os.path.join(opt.paths.test_masks, item, "masks")
-        current_output_folder = os.path.join(opt.paths.out_folder, item, "mean")
+        current_output_folder = os.path.join(opt.paths.out_folder, item)
 
         if not os.path.exists(current_output_folder):
             os.makedirs(current_output_folder)
@@ -63,7 +66,20 @@ def main():
         buffer.append(get_dice(current_labels_path, current_output_folder, item))
         
     #mean across all datasets
-    print("mean", sum(buffer) / len(buffer))
+    mean_dice = sum(buffer) / len(buffer)
+    print("mean", mean_dice)
+
+    #save the models used and the dice per dataset in the ensemble folder
+    ensemble_name = os.path.basename(os.path.normpath(opt.paths.out_folder))
+    models = ";".join(sorted(models_to_sum))
+    csv_path = os.path.join(opt.paths.out_folder, "dice.csv")
+    with open(csv_path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["ensemble", "models", "dataset", "dice"])
+        for i in range(len(dataset_names)):
+            writer.writerow([ensemble_name, models, dataset_names[i], buffer[i]])
+        writer.writerow([ensemble_name, models, "mean", mean_dice])
+    print("saved", csv_path)
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
