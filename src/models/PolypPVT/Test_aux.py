@@ -31,7 +31,7 @@ def test(model, opt, dataset):
     image_root = '{}/images/'.format(data_path)
     gt_root = '{}/masks/'.format(data_path)
 
-    aux_folder= os.path.join(opt.paths.aux_root_base, f"sam{opt.experiment.sam_version}" , opt.experiment.method, dataset)
+    aux_folder= os.path.join(opt.paths.aux_root_base, opt.experiment.aux_source , opt.experiment.method, dataset)
     aux_root = os.path.join(aux_folder, "images/")
 
     logits_dir = os.path.join(opt.paths.logits_dir, opt.model_name, dataset)
@@ -40,6 +40,17 @@ def test(model, opt, dataset):
     model.eval()
     num1 = len(os.listdir(gt_root))
     test_loader = test_dataset_with_aux(image_root, gt_root, aux_root, opt.testing.testsize)
+
+    # The loader pairs image and aux by position in the sorted lists (and here it does not
+    # even check the counts), so check that the names match one to one
+    print(f"{dataset} - aux images: {aux_root} ({len(test_loader.aux)} files)")
+    image_names = [os.path.splitext(os.path.basename(f))[0] for f in test_loader.images]
+    aux_names = [os.path.splitext(os.path.basename(f))[0] for f in test_loader.aux]
+    if image_names != aux_names:
+        mismatch = [(i, a) for i, a in zip(image_names, aux_names) if i != a]
+        print(f"ERROR: IMAGE/AUX NAMES DO NOT MATCH in {dataset} ({len(image_names)} images, {len(aux_names)} aux, "
+              f"{len(mismatch)} mismatched pairs), first: {mismatch[:5]}")
+        exit(1)
     DSC = 0.0
     for i in range(num1):
         image, gt, aux,name = test_loader.load_data()
@@ -99,9 +110,9 @@ def main():
     parser.add_argument('--config',type=str, default='../../../configs/polypPVT_aux.yaml')
     parser.add_argument('--test_dataset', type=str , default=None)
     parser.add_argument('--model_pth', type=str , default=None)
-    parser.add_argument('--sam_version' , type=int , default=None, help='Version of SAM to use for augmentation data (e.g., 1 or 2). If not specified, it will use the default version defined in the configuration file.')
+    parser.add_argument('--aux_source', type=str, default=None, help='Folder under aux_root_base with the aux images (e.g. sam1, sam2, da3mono-large). If not specified, it will use experiment.aux_source defined in the configuration file.')
     parser.add_argument('--method', type=str, default=None, help='Method used for generating augmentation data. If not specified, it will use the default method defined in the configuration file.')
-    
+
     args = parser.parse_args()
 
     cfg_data = load_config(args.config)
@@ -113,8 +124,8 @@ def main():
     else:           
         model_pth = os.path.join(opt.paths.models_dir, opt.testing.test_checkpoint)
 
-    if args.sam_version is not None:
-        opt.experiment.sam_version = args.sam_version
+    if args.aux_source is not None:
+        opt.experiment.aux_source = args.aux_source
     if args.method is not None:
         opt.experiment.method = args.method
 

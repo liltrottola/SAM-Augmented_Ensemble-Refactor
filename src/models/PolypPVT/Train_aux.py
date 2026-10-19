@@ -140,7 +140,7 @@ def main():
     parser.add_argument('--debug', action='store_true', help='Enable debug mode to run a shorter training loop')
     
     # Optional command-line arguments to override specific configuration values from the YAML file, for run_training.py, but they can be used also for Train.py if needed
-    parser.add_argument('--sam_version' , type=int , default=None, help='Version of SAM to use for augmentation data (e.g., 1 or 2). If not specified, it will use the default version defined in the configuration file.')
+    parser.add_argument('--aux_source', type=str, default=None, help='Folder under aux_root_base with the aux images (e.g. sam1, sam2, da3mono-large). If not specified, it will use experiment.aux_source defined in the configuration file.')
     parser.add_argument('--method', type=str, default=None, help='Method used for generating augmentation data. If not specified, it will use the default method defined in the configuration file.')
     parser.add_argument('--model_name', type=str, default=None, help='Name of the model to be trained. This helps in identifying the model configuration when saving and tracking experiments. If not specified, it will use the default model name defined in the configuration file.')
     parser.add_argument('--seed', type=int, default=None, help='Seed number for random number generation to ensure consistent results across runs. If not specified, it will use the default seed defined in the configuration file.')
@@ -150,7 +150,7 @@ def main():
     args = parser.parse_args()
 
     if not os.path.exists(args.config):
-        print(f"ERRORE: FILE CONFIGURAZIONE NON TROVATO: {args.config}")
+        print(f"ERROR: CONFIG FILE NOT FOUND: {args.config}")
         exit(1)
 
     # Load the configuration from the specified YAML file
@@ -158,7 +158,7 @@ def main():
     opt = Config(cfg_data)
 
     # CLI overrides, used for path generation and name of the model
-    sam_version = args.sam_version if args.sam_version is not None else opt.experiment.sam_version
+    aux_source = args.aux_source if args.aux_source is not None else opt.experiment.aux_source
     method = args.method if args.method is not None else opt.experiment.method
     model_name = args.model_name if args.model_name is not None else opt.experiment.name
     opt.model_name = model_name
@@ -241,7 +241,7 @@ def main():
     gt_root    = os.path.join(opt.paths.datasets_root, opt.datasets.train[0], "masks/")
 
     # assumes augmentation output uses the same folder name as the training dataset
-    aux_root   = os.path.join(opt.paths.aux_root_base, f"sam{sam_version}", method , opt.datasets.train[0], "images/")
+    aux_root   = os.path.join(opt.paths.aux_root_base, aux_source, method , opt.datasets.train[0], "images/")
 
     # Create a data loader to fetch training batches with the specified batch size and image dimensions.
     online_aug = getattr(opt.training, "online_augmentation", None)
@@ -249,6 +249,17 @@ def main():
                                        batchsize=opt.training.batchsize,
                                        trainsize=opt.training.trainsize,
                                        augmentation=online_aug)
+
+    # The loader pairs image and aux by position in the sorted lists,
+    # so check that the names match one to one
+    print(f"Aux images: {aux_root} ({len(train_loader.dataset.aux)} files)")
+    image_names = [os.path.splitext(os.path.basename(f))[0] for f in train_loader.dataset.images]
+    aux_names = [os.path.splitext(os.path.basename(f))[0] for f in train_loader.dataset.aux]
+    if image_names != aux_names:
+        mismatch = [(i, a) for i, a in zip(image_names, aux_names) if i != a]
+        print(f"ERROR: IMAGE/AUX NAMES DO NOT MATCH ({len(image_names)} images, {len(aux_names)} aux, "
+              f"{len(mismatch)} mismatched pairs), first: {mismatch[:5]}")
+        exit(1)
 
     # Determine the total number of steps in the training process.
     total_step = len(train_loader)

@@ -52,17 +52,30 @@ models:
 testing:
   runs: 5
 
-  # Choose [1], [2], or [1, 2]
-  sam_versions: [1, 2]
-
-  #List of method names
-  aug_methods:
-    - "SAMAug"
-    - "ourSAMAug"
-    - "RG_segPrior"
-    - "SV_segPrior"
-    - "RG_logits"
-    - "PCA_segPrior"
+  # Must match the aux_sources used at training time to find the checkpoints
+  # source folder must be under output/augmentation/ -> its own method list
+  aux_sources:
+    sam1:
+      - "SAMAug"
+      - "ourSAMAug"
+      - "RG_segPrior"
+      - "SV_segPrior"
+      - "RG_logits"
+      - "PCA_segPrior"
+    sam2:
+      - "SAMAug"
+      - "ourSAMAug"
+      - "RG_segPrior"
+      - "SV_segPrior"
+      - "RG_logits"
+      - "PCA_segPrior"
+    da3mono-large:
+      - "DepthAug"
+      - "RG_voteV3"
+      - "RG_depth"
+      - "PCA_voteV3"
+      - "RG_localnorm"
+      - "LAB_gamut_aplus"
 
   lr_methods:
     - "lrbase"

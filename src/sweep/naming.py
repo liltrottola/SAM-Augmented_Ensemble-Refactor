@@ -7,11 +7,15 @@ test time can never drift apart.
 from src.augmentation import OFFLINE_DA_METHODS
 
 
-def build_model_name(model, run_id, method=None, sam_version=None,
+def build_model_name(model, run_id, method=None, aux_source=None,
                      da_method=None, lr_method=None):
-    """Deterministic checkpoint stem (no extension) for one sweep point."""
-    base = f"{model}" if sam_version is None \
-           else f"sam{sam_version}_{method}_{model}"
+    """Deterministic checkpoint stem (no extension) for one sweep point.
+
+    aux_source is the folder name under aux_root_base (e.g. "sam1", "sam2",
+    "da3mono-large")
+    """
+    base = f"{model}" if aux_source is None \
+           else f"{aux_source}_{method}_{model}"
     if da_method is not None:
         base = f"{base}_{da_method}"
     if lr_method is not None:
@@ -19,6 +23,16 @@ def build_model_name(model, run_id, method=None, sam_version=None,
 
     base = f"{base}_run{run_id}"
     return base
+
+
+def get_aux_sources(section):
+    """(aux_source, method) pairs to sweep for aux models, from a training/testing section.
+
+    aux_sources` maps each source folder to its own method list,  SAM methods and depth methods
+    only exist under their own source.
+    """
+    sources = section["aux_sources"]
+    return [(source, method) for source, methods in sources.items() for method in methods]
 
 
 def is_valid_combo(model, da_method):

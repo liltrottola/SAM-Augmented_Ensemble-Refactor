@@ -48,17 +48,32 @@ training:
   runs: 5
   seeds: [37, 42, 123, 456, 789]
 
-  # Choose [1], [2], or [1, 2]
-  sam_versions: [1, 2]
+  # Aux axis (aux models only): source folder must be under output/augmentation/ -> its own method list.
+  # The source name is also the checkpoint prefix (e.g. sam2_RG_logits_hsnet_aux_da3_lrbase_run1).
 
-  #List of SAM method names
-  aug_methods:
-    - "SAMAug"
-    - "ourSAMAug"
-    - "RG_segPrior"
-    - "SV_segPrior"
-    - "RG_logits"
-    - "PCA_segPrior"
+  aux_sources:
+    sam1:
+      - "SAMAug"
+      - "ourSAMAug"
+      - "RG_segPrior"
+      - "SV_segPrior"
+      - "RG_logits"
+      - "PCA_segPrior"
+    sam2:
+      - "SAMAug"
+      - "ourSAMAug"
+      - "RG_segPrior"
+      - "SV_segPrior"
+      - "RG_logits"
+      - "PCA_segPrior"
+    # depth aux images from run_depth_augmentation.py (method names as in src/augmentation/depth_prior_methods.py)
+    da3mono-large:
+      - "DepthAug"
+      - "RG_voteV3"
+      - "RG_depth"
+      - "PCA_voteV3"
+      - "RG_localnorm"
+      - "LAB_gamut_aplus"
 
   # LR axis (ensemble diversity): lrbase = legacy path, + the 3 methods from the paper
   lr_methods:
