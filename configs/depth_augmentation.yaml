@@ -1,0 +1,41 @@
+experiment:
+  name: depth_augmentation
+  description: Aux images for HSNet_aux built from the DA3 depth priors (frst_prior = vote_v3, localnorm), 07/10
+
+# all paths are relatives to the home directory of the project SAM-Augmented_Ensemble-refactor
+paths:
+  dataset_root: "datasets/"
+  # prior maps (.npy float32, DA3 resolution) written by run_depth_prior_maps.py: <prior_root>/<prior_source>/<dataset>/<prior>/<name>.npy
+  # = output_root / prior_source of depth_prior_maps.yaml (run that script first)
+  prior_root: "output/priors/"
+  prior_source: "da3mono-large"
+  # aux images: <output_root>/<aux_source>/<method>/<dataset>/images/<name>.png
+  output_root: "output/augmentation/"
+  # folder name under output_root = --aux_source of Train_aux.py / Test_aux.py (key in aux_sources of the sweep yaml)
+  aux_source: "da3mono-large"
+
+datasets:
+  folders:
+    - "TrainDataset/"
+    - "TestDatasets/CVC-300/"
+    - "TestDatasets/CVC-ClinicDB/"
+    - "TestDatasets/CVC-ColonDB/"
+    - "TestDatasets/Kvasir/"
+    - "TestDatasets/ETIS-LaribPolypDB/"
+
+# priors loaded for every image (folder names under <prior_root>/<prior_source>/<dataset>/),
+# passed to the methods as priors[<name>]: every prior used by a method below must be listed here
+priors:
+  - "frst_prior"    # region prior (vote_v3)
+  - "localnorm"     # boundary prior
+  - "depth_p1p99"   # reversed depth
+
+augmentation:
+  # names exactly as defined in src/augmentation/depth_prior_methods.py
+  methods:
+    - "DepthAug"        # G += frst_prior, B += localnorm
+    - "RG_voteV3"       # R, G, B = frst_prior
+    - "RG_depth"        # R, G, B = reversed depth, p1-p99 per image
+    - "PCA_voteV3"      # PCA 3->2 of RGB, B = frst_prior
+    - "RG_localnorm"    # R, G, B = localnorm
+    - "LAB_gamut_aplus"  # Lab, a* towards the reddest in-gamut value, proportional to frst_prior

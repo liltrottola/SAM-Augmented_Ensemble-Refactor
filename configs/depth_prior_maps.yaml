@@ -1,0 +1,30 @@
+experiment:
+  name: depth_prior_maps
+  description: 1-channel prior maps (.npy float32, DA3 resolution) computed from the raw DA3 depth, input channels of the N->3 block, 09/10
+
+# all paths are relatives to the home directory of the project SAM-Augmented_Ensemble-refactor
+paths:
+  dataset_root: "datasets/"
+  # raw DA3 depth (.npy float32, DA3 resolution) written by run_depth_generation.py: <depth_root>/<dataset>/npy/<name>.npy
+  depth_root: "output/depth/da3mono-large/"
+  # prior maps: <output_root>/<prior_source>/<dataset>/<prior>/<name>.npy
+  # (also read by run_depth_augmentation.py and by the N->3 model)
+  output_root: "output/priors/"
+  # model the priors come from
+  prior_source: "da3mono-large"
+
+datasets:
+  folders:
+    - "TrainDataset/"
+    - "TestDatasets/CVC-300/"
+    - "TestDatasets/CVC-ClinicDB/"
+    - "TestDatasets/CVC-ColonDB/"
+    - "TestDatasets/Kvasir/"
+    - "TestDatasets/ETIS-LaribPolypDB/"
+
+# names are the same as the functions in src/augmentation/depth_prior_methods.py, signature f(depth) -> (H, W) map;
+# the name is also the output folder name
+priors:
+  - "frst_prior"   # region prior (vote_v3): FRST + back-projection, p1-p99 per image
+  - "localnorm"    # boundary prior: gradient / local Gaussian mean, p99 per image
+  - "depth_p1p99"        # depth prior: reversed depth, p1-p99 per image
