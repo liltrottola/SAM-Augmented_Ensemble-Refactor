@@ -16,7 +16,6 @@ def run_processing(config):
     print("Configuration loaded:", config.keys())
     dataset_root = config['paths']['dataset_root']
     output_root = config['paths']['output_root']
-    source_name = config['paths']['source_name']
 
     method_list = config['augmentation'].get('methods') or []
     keep_original = config['augmentation'].get('keep_original', True)
@@ -31,8 +30,8 @@ def run_processing(config):
         mask_folder = os.path.join(dataset_root, cur_dir, "masks")
 
         #Path output
-        saving_path_images = os.path.join(output_root,"da1", source_name, cur_dir, "images")
-        saving_path_masks = os.path.join(output_root, "da1", source_name, cur_dir, "masks")
+        saving_path_images = os.path.join(output_root, "da1", cur_dir, "images")
+        saving_path_masks = os.path.join(output_root, "da1", cur_dir, "masks")
 
         print(f"Processing dataset folder: {image_folder}")
         print(f"Saving augmented images to: {saving_path_images}")

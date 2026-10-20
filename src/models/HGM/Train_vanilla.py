@@ -235,8 +235,8 @@ def main():
     dataset = opt.datasets.train[0]
 
     if offline_aug in OFFLINE_DA_METHODS:
-        image_root = '{}/{}/{}/{}/images/'.format(opt.paths.offline_aug_base, offline_aug, opt.training.da_source, dataset)
-        gt_root    = '{}/{}/{}/{}/masks/'.format(opt.paths.offline_aug_base, offline_aug, opt.training.da_source, dataset)
+        image_root = '{}/{}/{}/images/'.format(opt.paths.offline_aug_base, offline_aug, dataset)
+        gt_root    = '{}/{}/{}/masks/'.format(opt.paths.offline_aug_base, offline_aug, dataset)
         assert os.path.isdir(image_root), f"Offline DA folder not found: {image_root} -- run run_{offline_aug}_augmentation.py first"
         print(f"Using offline augmented data from: {image_root}")
     else:

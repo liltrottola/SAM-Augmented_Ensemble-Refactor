@@ -25,9 +25,7 @@ training:
 
   num_workers: 4 # original nworker 4 (to be equal to hsnet/polyp use 1)
 
-  #da_source if offline_augmentation is da1 or da2, specify the source_name used in generation
   offline_augmentation: noda # "da1", "da2", "clahe" or "noda" (no offline augmentation)
-  da_source: "original"
   online_augmentation: da3 # "da3" or "noda" (no online augmentation)
 
   lr_method: lrbase   # "lra" | "lrb" | "lrc" | "lrbase" (uses the legacy optimizer/lr_schedule block)

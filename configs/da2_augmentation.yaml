@@ -6,7 +6,6 @@ experiment:
 paths:
   dataset_root: "datasets/"
   output_root: "output/augmentation/"      
-  source_name: "original"
 
 datasets:
   folders:

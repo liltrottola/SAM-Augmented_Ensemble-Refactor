@@ -12,9 +12,6 @@ paths:
   # Where to save the output (ex saving_path)
   output_root: "output/augmentation/"
 
-  # Logical label of the source (becomes <source> in the output folder)
-  # Could become SamAug, RG_segPrior, etc. if chaining multiple methods (e.g. "SAMAug+DA1")
-  source_name: "original"
 
 datasets:
   # List of datasets (subfolders of dataset_root) to process

@@ -14,14 +14,13 @@ def run_processing(config):
     print("Configurazione caricata:", config.keys())
     dataset_root = config['paths']['dataset_root']
     output_root  = config['paths']['output_root']
-    source_name  = config['paths']['source_name']
 
     for cur_dir in config['datasets']['folders']:
         image_folder = os.path.join(dataset_root, cur_dir, "images")
         mask_folder  = os.path.join(dataset_root, cur_dir, "masks")
 
-        saving_path_images = os.path.join(output_root, "clahe", source_name, cur_dir, "images")
-        saving_path_masks  = os.path.join(output_root, "clahe", source_name, cur_dir, "masks")
+        saving_path_images = os.path.join(output_root, "clahe", cur_dir, "images")
+        saving_path_masks  = os.path.join(output_root, "clahe", cur_dir, "masks")
 
         os.makedirs(saving_path_images, exist_ok=True)
         os.makedirs(saving_path_masks,  exist_ok=True)
