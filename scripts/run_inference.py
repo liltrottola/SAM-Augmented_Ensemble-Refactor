@@ -5,8 +5,7 @@ import sys
 import yaml
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))  # to import from src
-from src.augmentation import OFFLINE_DA_METHODS
-from src.sweep.naming import build_model_name, get_aux_sources, is_valid_combo
+from src.sweep.naming import build_model_name, get_aux_sources
 
 def load_sweep_config(config_path):
     with open(config_path, 'r') as f:
@@ -98,10 +97,7 @@ def main():
             if model['has_aux']:
                 for aux_source, method in aux_pairs:
                     for da_method in da_methods:
-                        # mirror run_training.py's aux guard, or the checkpoint filename won't match
-                        if not is_valid_combo(model, da_method):
-                            print(f"ERROR: offline DA method '{da_method}' not supported for aux models yet (model={model['name']}) -- skipping")
-                            continue
+                        # the DA is only in the checkpoint name: the test always uses the original images and aux
                         for lr_method in lr_methods:
                             cmd = build_command(model, run_id, aux_source, method, da_method, lr_method)
                             run_inference(cmd, cwd)

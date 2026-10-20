@@ -10,13 +10,13 @@ or the test stage looks for a checkpoint the training stage never wrote:
 
 1. the checkpoint filename        -> `build_model_name`
 2. which (aux_source, method) pairs to sweep for aux models -> `get_aux_sources`
-3. which (model, DA) combos are valid -> `is_valid_combo`
+
 
 Both live in `naming.py` so the two runners import the same code and cannot drift.
 
 ## Files
 
-- `naming.py` — checkpoint naming + aux axis + combo validity (single source of truth).
+- `naming.py` — checkpoint naming + aux axis (single source of truth).
 
 ## Config layout
 
@@ -87,7 +87,7 @@ never on the whole sweep (it overwrites checkpoints with no backup).
 ## TODO / future work
 
 - [ ] DA registry: replace the `OFFLINE_DA_METHODS` set in `src/augmentation/__init__.py`
-      with per-method data (`modality: offline|online`, `aux_compatible or not`) once
+      with per-method data (`modality: offline|online`) once
       more DA methods land, so runners stop hardcoding the rule.
 - [ ] extract a full RunSpec / generate_run_specs generator if the nested loops grow
 - [ ] freeze the sweep yaml and the per-model yaml too (runner passes --sweep and --config snapshot to Train_*.py)

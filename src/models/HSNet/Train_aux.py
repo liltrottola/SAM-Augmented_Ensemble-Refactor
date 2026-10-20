@@ -18,6 +18,7 @@ import yaml
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'))  # to import from src
 from src.training.lr_schedules import get_lr_method, build_scheduler
+from src.augmentation import OFFLINE_DA_METHODS
 
 
 '''
@@ -200,6 +201,7 @@ def main():
     parser.add_argument('--seed', type=int, default=None, help='Seed number for random number generation to ensure consistent results across runs. If not specified, it will use the default seed defined in the configuration file.')
     parser.add_argument('--lr_method', type=str, default=None, help='Learning-rate strategy for ensemble diversity (lra/lrb/lrc). Overrides training.lr_method in the config. If not specified, uses the config value.')
     parser.add_argument('--online_da', type=str, default=None, help='Online DA method: da3, or omit. Applied at runtime by the aux dataloader. Overrides training.online_augmentation.')
+    parser.add_argument('--offline_da', type=str, default=None, help='Offline DA method: da1/da2/clahe, or omit. Redirects images, masks and aux to the pre-generated augmented train set. Overrides training.offline_augmentation.')
 
     args = parser.parse_args()
 
@@ -225,6 +227,9 @@ def main():
 
     if args.online_da is not None:
         opt.training.online_augmentation = args.online_da
+
+    if args.offline_da is not None:
+        opt.training.offline_augmentation = args.offline_da
 
     # Set a seed number for random number generation to ensure consistent results across runs
     seednumber = opt.experiment.seed
@@ -306,11 +311,21 @@ def main():
                                                         gamma=opt.training.lr_schedule.gamma)
 
     # Set up paths for accessing training, ground truth, and auxiliary data.
-    image_root = os.path.join(opt.paths.datasets_root, opt.datasets.train[0], "images/")
-    gt_root    = os.path.join(opt.paths.datasets_root, opt.datasets.train[0], "masks/")
+    offline_aug = getattr(opt.training, "offline_augmentation", None)
+    dataset = opt.datasets.train[0]
 
-    # assumes augmentation output uses the same folder name as the training dataset
-    aux_root   = os.path.join(opt.paths.aux_root_base, aux_source, method , opt.datasets.train[0], "images/")
+    if offline_aug in OFFLINE_DA_METHODS:
+        # offline DA: images and masks of the augmented train set, aux generated on those images
+        # (<aux_source>/<method>/<da>/<dataset>); the test always uses the original images and aux
+        image_root = os.path.join(opt.paths.offline_aug_base, offline_aug, dataset, "images/")
+        gt_root    = os.path.join(opt.paths.offline_aug_base, offline_aug, dataset, "masks/")
+        aux_root   = os.path.join(opt.paths.aux_root_base, aux_source, method, offline_aug, dataset, "images/")
+        print(f"Using offline augmented data from: {image_root}")
+    else:
+        image_root = os.path.join(opt.paths.datasets_root, dataset, "images/")
+        gt_root    = os.path.join(opt.paths.datasets_root, dataset, "masks/")
+        # assumes augmentation output uses the same folder name as the training dataset
+        aux_root   = os.path.join(opt.paths.aux_root_base, aux_source, method, dataset, "images/")
 
     # Create a data loader to fetch training batches with the specified batch size and image dimensions.
     online_aug = getattr(opt.training, "online_augmentation", None)

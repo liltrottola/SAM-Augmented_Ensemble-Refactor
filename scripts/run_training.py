@@ -6,7 +6,7 @@ import yaml
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))  # to import from src
 from src.augmentation import OFFLINE_DA_METHODS
-from src.sweep.naming import build_model_name, get_aux_sources, is_valid_combo
+from src.sweep.naming import build_model_name, get_aux_sources
 
 def load_sweep_config(config_path):
     with open(config_path, 'r') as f:
@@ -51,9 +51,7 @@ def build_command(model, seed, run_id, aux_source, method, da_method, lr_method,
         offline_aug = da_method if da_method in OFFLINE_DA_METHODS else "noda"
         online_aug = da_method if da_method == "da3" else "noda"
         cmd += ["--online_da", online_aug]
-        if not model.get("has_aux", False):
-            # Train_aux.py has no --offline_da flag (aux never had an offline axis).
-            cmd += ["--offline_da", offline_aug]
+        cmd += ["--offline_da", offline_aug]
 
     if lr_method is not None:
         cmd.append("--lr_method")
@@ -131,11 +129,7 @@ def main():
             if model['has_aux']:
                 for aux_source, method in aux_pairs:
                     for da_method in da_methods:
-                        # aux models only support the online DA axis (da3/null); da1/da2 here is the
-                        # deferred "SAM regenerated over offline-DA data" case, not yet implemented.
-                        if not is_valid_combo(model, da_method):
-                            print(f"ERROR: offline DA method '{da_method}' not supported for aux models yet (model={model['name']}) -- skipping")
-                            continue
+                        # offline DA (da1/da2/clahe): Train_aux.py reads the DA train set and the aux generated on it
                         for lr_method in lr_methods:
                             model_name = build_model_name(model['name'], run_id, method, aux_source, da_method, lr_method)
                             if checkpoint_exists(model, model_name) and not args.force:

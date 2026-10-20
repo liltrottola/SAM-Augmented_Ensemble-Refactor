@@ -4,7 +4,6 @@ Both run_training.py and run_inference.py import from here so that the
 checkpoint filename produced at training time and the one looked up at
 test time can never drift apart.
 """
-from src.augmentation import OFFLINE_DA_METHODS
 
 
 def build_model_name(model, run_id, method=None, aux_source=None,
@@ -33,15 +32,3 @@ def get_aux_sources(section):
     """
     sources = section["aux_sources"]
     return [(source, method) for source, methods in sources.items() for method in methods]
-
-
-def is_valid_combo(model, da_method):
-    """Whether a (model, da_method) pair is a real, trainable combination.
-
-    Aux models only support the online DA axis; an offline DA (da1/da2)
-    for an aux model is the not-yet-implemented "SAM regenerated over
-    offline-augmented data" case and must be skipped in both runners.
-    """
-    if model["has_aux"] and da_method in OFFLINE_DA_METHODS:
-        return False
-    return True

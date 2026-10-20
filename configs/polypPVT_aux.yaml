@@ -8,6 +8,7 @@ experiment:
 paths:
   datasets_root: "../../../datasets/"
   aux_root_base: "../../../output/augmentation/"  # aux images from run_sam_augmentation.py / run_depth_augmentation.py
+  offline_aug_base: "../../../output/augmentation/"   # offline DA train sets (da1/da2/clahe): <offline_aug_base>/<da>/<dataset>/
 
   # ------ TRAINING --------
   models_dir: "../../../output/models/"
@@ -25,7 +26,8 @@ training:
   size_rates: [0.75, 1.0, 1.25]
   clip_margin: 0.5
 
-  online_augmentation: noda # "da3" or "noda" (no online augmentation) -- offline da1/da2 not supported for aux yet
+  offline_augmentation: noda # "da1", "da2", "clahe" or "noda": train on the DA train set, with aux generated on it (<aux_source>/<method>/<da>/<dataset>)
+  online_augmentation: noda # "da3" or "noda" (no online augmentation)
   lr_method: lrbase   # "lra" | "lrb" | "lrc" | lrbase (uses the legacy optimizer/lr_schedule block, 50 training epochs)
 
   optimizer:
