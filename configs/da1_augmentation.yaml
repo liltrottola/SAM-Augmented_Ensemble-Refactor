@@ -10,7 +10,7 @@ paths:
   dataset_root: "datasets/"
 
   # Where to save the output (ex saving_path)
-  output_root: "output/augmentation/"
+  output_root: "datasets/"   # DA train sets are datasets too: datasets/<da>/<dataset>/
 
 
 datasets:

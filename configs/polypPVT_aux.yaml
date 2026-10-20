@@ -8,7 +8,7 @@ experiment:
 paths:
   datasets_root: "../../../datasets/"
   aux_root_base: "../../../output/augmentation/"  # aux images from run_sam_augmentation.py / run_depth_augmentation.py
-  offline_aug_base: "../../../output/augmentation/"   # offline DA train sets (da1/da2/clahe): <offline_aug_base>/<da>/<dataset>/
+  offline_aug_base: "../../../datasets/"   # offline DA train sets (da1/da2/clahe): <offline_aug_base>/<da>/<dataset>/ (= datasets_root)
 
   # ------ TRAINING --------
   models_dir: "../../../output/models/"

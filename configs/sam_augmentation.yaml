@@ -19,7 +19,10 @@ paths:
 datasets:
   # List of datasets to use for training and testing
   folders:
-    - "TrainDataset/"
+    - "ProvaSmall/"          # pipeline test (original + its offline DA sets)
+    - "da1/ProvaSmall/"
+    - "da2/ProvaSmall/"
+    #- "TrainDataset/"
     #- "TestDatasets/CVC-300/"
     #- "TestDatasets/CVC-ClinicDB/"
     #- "TestDatasets/CVC-ColonDB/"

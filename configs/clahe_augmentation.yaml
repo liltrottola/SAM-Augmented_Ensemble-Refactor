@@ -4,7 +4,7 @@ experiment:
 
 paths:
   dataset_root: "datasets/"
-  output_root: "output/augmentation/"      
+  output_root: "datasets/"   # DA train sets are datasets too: datasets/<da>/<dataset>/
 
 datasets:
   folders:

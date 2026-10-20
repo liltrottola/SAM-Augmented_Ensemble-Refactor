@@ -5,7 +5,7 @@ experiment:
 #all paths are relative to the location of Train.py file in src/models/SAM2UNet/
 paths:
   datasets_root: "../../../datasets/"
-  offline_aug_base: "../../../output/augmentation/"   # folder DA offline (da1/da2/...)
+  offline_aug_base: "../../../datasets/"   # offline DA train sets (da1/da2/clahe): <offline_aug_base>/<da>/<dataset>/ (= datasets_root)
   hiera_path: "../../../checkpoints_sam/sam2_hiera_large.pt" # SAM2 Hiera-L checkpoint, used only at training
 
   #------ TRAINING --------

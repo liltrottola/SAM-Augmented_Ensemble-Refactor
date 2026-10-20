@@ -16,12 +16,15 @@ paths:
 
 datasets:
   folders:
-    - "TrainDataset/"
-    - "TestDatasets/CVC-300/"
-    - "TestDatasets/CVC-ClinicDB/"
-    - "TestDatasets/CVC-ColonDB/"
-    - "TestDatasets/Kvasir/"
-    - "TestDatasets/ETIS-LaribPolypDB/"
+    - "ProvaSmall/"          # pipeline test (original + its offline DA sets)
+    - "da1/ProvaSmall/"
+    - "da2/ProvaSmall/"
+    #- "TrainDataset/"
+    #- "TestDatasets/CVC-300/"
+    #- "TestDatasets/CVC-ClinicDB/"
+    #- "TestDatasets/CVC-ColonDB/"
+    #- "TestDatasets/Kvasir/"
+    #- "TestDatasets/ETIS-LaribPolypDB/"
 
 # priors loaded for every image (folder names under <prior_root>/<prior_source>/<dataset>/),
 # passed to the methods as priors[<name>]: every prior used by a method below must be listed here

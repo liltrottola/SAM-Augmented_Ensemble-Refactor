@@ -10,7 +10,10 @@ paths:
 
 datasets:
   folders:
-    - "TrainDataset/"
+    - "ProvaSmall/"          # pipeline test (original + its offline DA sets)
+    - "da1/ProvaSmall/"
+    - "da2/ProvaSmall/"
+    #- "TrainDataset/"
     #- "TestDatasets/Kvasir/"
     #- "TestDatasets/CVC-300/"
     #- "TestDatasets/CVC-ClinicDB/"
