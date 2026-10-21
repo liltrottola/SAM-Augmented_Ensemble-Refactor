@@ -1,0 +1,88 @@
+# What exists for the sweep runners (run_training.py / run_inference.py): every model and every aux source
+# with all its methods. Do NOT comment entries here: what to launch is chosen in sweep_train.yaml /
+# sweep_test.yaml (comment / uncomment) or with the CLI flags, and both are checked against this file.
+# DA methods and LR methods are not here: they exist in the code (src/augmentation, src/training/lr_schedules.py).
+
+# folder of the models, relative to scripts/ (where the runners run): model folder = <models_root>/<folder>
+models_root: "../src/models/"
+
+# models: name used in the sweeps and in --model, folder under src/models/, scripts, model yaml
+# (config path relative to scripts/, where the runners run)
+models:
+  - name: hsnet
+    has_aux: false
+    folder: "HSNet"
+    train_script: "Train_vanilla.py"
+    test_script: "Test_vanilla.py"
+    config: "../configs/hsnet_vanilla.yaml"
+
+  - name: hsnet_aux
+    has_aux: true
+    folder: "HSNet"
+    train_script: "Train_aux.py"
+    test_script: "Test_aux.py"
+    config: "../configs/hsnet_aux.yaml"
+
+  - name: polypvt
+    has_aux: false
+    folder: "PolypPVT"
+    train_script: "Train_vanilla.py"
+    test_script: "Test_vanilla.py"
+    config: "../configs/polypPVT_vanilla.yaml"
+
+  - name: polypvt_aux
+    has_aux: true
+    folder: "PolypPVT"
+    train_script: "Train_aux.py"
+    test_script: "Test_aux.py"
+    config: "../configs/polypPVT_aux.yaml"
+
+  # HGM needs its own conda env (mamba_ssm, torch_geometric): always run it with --model hgm
+  # from the HGM conda env, never in a full sweep from venv_newSAMAug
+  - name: hgm
+    has_aux: false
+    folder: "HGM"
+    train_script: "Train_vanilla.py"
+    test_script: "Test_vanilla.py"
+    config: "../configs/hgm_vanilla.yaml"
+
+  - name: sam2unet
+    has_aux: false
+    folder: "SAM2UNet"
+    train_script: "Train_vanilla.py"
+    test_script: "Test_vanilla.py"
+    config: "../configs/sam2unet_vanilla.yaml"
+
+# aux sources: folder under output/augmentation/ (= --aux_source of Train_aux.py / Test_aux.py)
+# -> all its methods (folders under the source = function names in sam_prior_methods.py / depth_prior_methods.py)
+aux_sources:
+  # from the saved SAM priors (run_sam_generation.py + run_sam_augmentation.py), SAM2 stability_score 0.85
+  sam1:
+    - "SAMAug"
+    - "ourSAMAug"
+    - "RG_segPrior"
+    - "SV_segPrior"
+    - "RG_logits"
+    - "PCA_segPrior"
+  sam2:
+    - "SAMAug"
+    - "ourSAMAug"
+    - "RG_segPrior"
+    - "SV_segPrior"
+    - "RG_logits"
+    - "PCA_segPrior"
+  sam2_stab085:
+    - "SAMAug"
+    - "ourSAMAug"
+    - "RG_segPrior"
+    - "SV_segPrior"
+    - "RG_logits"
+    - "PCA_segPrior"
+  # from the saved depth priors (run_depth_prior_maps.py + run_depth_augmentation.py)
+  da3mono-large:
+    - "DepthAug"
+    - "RG_voteV3"
+    - "RG_depth"
+    - "PCA_voteV3"
+    - "RG_localnorm"
+    - "LAB_gamut_aplus"

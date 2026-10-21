@@ -16,7 +16,7 @@ paths:
 
 datasets:
   folders:
-    - "ProvaSmall/"          # pipeline test (original + its offline DA sets)
+    - "ProvaSmall/"          
     - "da1/ProvaSmall/"
     - "da2/ProvaSmall/"
     #- "TrainDataset/"

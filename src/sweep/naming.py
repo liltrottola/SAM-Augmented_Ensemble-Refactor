@@ -22,13 +22,3 @@ def build_model_name(model, run_id, method=None, aux_source=None,
 
     base = f"{base}_run{run_id}"
     return base
-
-
-def get_aux_sources(section):
-    """(aux_source, method) pairs to sweep for aux models, from a training/testing section.
-
-    aux_sources` maps each source folder to its own method list,  SAM methods and depth methods
-    only exist under their own source.
-    """
-    sources = section["aux_sources"]
-    return [(source, method) for source, methods in sources.items() for method in methods]

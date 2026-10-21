@@ -6,10 +6,10 @@ experiment:
 # Paths are relative to the project root
 paths:
 
-  # Base path where datasets are located (ex dataset_path = "../datasets/")
+  # Base path where datasets are located 
   dataset_root: "datasets/"
 
-  # Where to save the output (ex saving_path)
+  # Where to save the output 
   output_root: "datasets/"   # DA train sets are datasets too: datasets/<da>/<dataset>/
 
 
