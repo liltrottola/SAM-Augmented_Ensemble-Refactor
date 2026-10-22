@@ -12,7 +12,7 @@ env/
 .env
 venv_da3/
 venv_dav3/
-
+venv_dsine/
 
 # --- Datasets & Outputs ---
 # Ignoriamo i dati pesanti, carichiamo solo il codice

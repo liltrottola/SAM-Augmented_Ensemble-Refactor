@@ -1,0 +1,27 @@
+experiment:
+  name: normal_prior_maps
+  description: 1-channel prior maps (.npy float32, original image resolution) computed from the raw DSINE normals
+
+# all paths are relatives to the home directory of the project SAM-Augmented_Ensemble-refactor
+paths:
+  dataset_root: "datasets/"
+  # raw DSINE normals (.npy float32 (H, W, 3), [-1, 1]) written by run_normal_generation.py: <normal_root>/<dataset>/npy/<name>.npy
+  normal_root: "output/normals/dsine/"
+  # prior maps: <output_root>/<prior_source>/<dataset>/<prior>/<name>.npy
+  output_root: "output/priors/"
+  prior_source: "dsine"
+
+datasets:
+  folders:
+    - "ProvaSmall/"
+    - "da1/ProvaSmall/"
+    - "da2/ProvaSmall/"
+    #- "TrainDataset/"
+    #- "TestDatasets/Kvasir/"
+
+# names are the same as the functions in src/augmentation/normal_prior_methods.py, signature f(normals) -> (H, W) map;
+# the name is also the output folder name
+priors:
+  - "normal_nz"        # Nz component, (Nz + 1) / 2
+  - "normal_mean7"     # boundary prior: mean angular variation 7x7, p1-p99 per image
+ #- "normal_trimmed7"  # boundary prior: trimmed mean angular variation 7x7, p1-p99 per image

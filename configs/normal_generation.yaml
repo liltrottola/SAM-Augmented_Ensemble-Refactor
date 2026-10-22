@@ -1,0 +1,18 @@
+experiment:
+  name: normal_generation
+  description: Surface normal maps from DSINE
+
+paths:
+  dataset_root: "datasets/"
+  output_root: "output/"
+
+normals:
+  dsine_root: "DSINE/"
+  config_txt: "DSINE/projects/dsine/experiments/exp001_cvpr2024/dsine.txt"
+  fov: 60.0
+
+datasets:
+  folders:
+    - "ProvaSmall/"
+    - "da1/ProvaSmall/"
+    - "da2/ProvaSmall/"
