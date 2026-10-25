@@ -34,6 +34,7 @@ checkpoints_sam/
 depth-anything-3/
 checkpoints_da3/
 checkpoints_dav3/
+DSINE/
 
 # --- Logs ---
 *.log
