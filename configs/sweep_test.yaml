@@ -7,7 +7,9 @@ models:
   - "polypvt"
   - "polypvt_aux"
   - "hgm"
+  #- "hgm_aux"        # HGM conda env only: launch with --model hgm_aux
   - "sam2unet"
+  - "sam2unet_aux"
 
 # inference/testing section
 testing:

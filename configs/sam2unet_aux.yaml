@@ -1,0 +1,58 @@
+experiment:
+  name: "SAM2UNet_Aux"
+  seed: 37
+  aux_source: "sam2"   # folder under aux_root_base with the aux images (sam1, sam2, sam2_stab085, da3mono-large, ...)
+  method: "ourSAMAug"
+
+#all paths are relative to the location of Train.py file in src/models/SAM2UNet/
+paths:
+  datasets_root: "../../../datasets/"
+  aux_root_base: "../../../output/augmentation/"  # aux images from run_sam_augmentation.py / run_depth_augmentation.py
+  offline_aug_base: "../../../datasets/"   # offline DA train sets (da1/da2/clahe): <offline_aug_base>/<da>/<dataset>/ (= datasets_root)
+  hiera_path: "../../../checkpoints_sam/sam2_hiera_large.pt" # SAM2 Hiera-L checkpoint, used only at training
+
+  #------ TRAINING --------
+  models_dir: "../../../output/models/"
+  log_file: "train_log_sam2unet_aux.log"
+
+  #------TESTING ------
+  prediction_dir: "../../../output/predictions/"
+  logits_dir: "../../../output/logits/"
+
+training:
+  epochs: 20        # original SAM2-UNet 20
+  batchsize: 12     # original SAM2-UNet 12
+  trainsize: 352
+
+  size_rates: [0.75, 1.0, 1.25] # Multi-scale; [1.0] = original train.py (no multi-scale)
+  clip_margin: null             # original SAM2-UNet has no gradient clipping
+
+  num_workers: 8 # original nworker 8 (to be equal to hsnet/polyp use 1)
+
+  
+  offline_augmentation: noda # "da1", "da2", "clahe" or "noda": train on the DA train set, with aux generated on it (<aux_source>/<method>/<da>/<dataset>)
+  online_augmentation: noda # "da3" or "noda" (no online augmentation)
+
+  lr_method: lrbase   # "lra" | "lrb" | "lrc" | "lrbase" (uses the legacy optimizer/lr_schedule block)
+
+  optimizer:
+    type: "AdamW"         # original SAM2-UNet: AdamW
+    lr: 0.001             # original --lr 1e-3
+    weight_decay: 0.0005  # original --weight_decay 5e-4
+
+  lr_schedule:
+    eta_min: 1.0e-7  # original CosineAnnealingLR(T_max=epochs, eta_min=1e-7), used only with lrbase
+
+testing:
+  test_checkpoint: "SAM2UNet_Aux.pth"
+  testsize: 352
+
+datasets:
+  train:
+    - "TrainDataset"
+  test:
+    - "TestDatasets/CVC-300"
+    - "TestDatasets/CVC-ClinicDB"
+    - "TestDatasets/CVC-ColonDB"
+    - "TestDatasets/Kvasir"
+    - "TestDatasets/ETIS-LaribPolypDB"

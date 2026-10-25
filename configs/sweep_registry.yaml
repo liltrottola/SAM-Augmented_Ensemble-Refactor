@@ -46,12 +46,27 @@ models:
     test_script: "Test_vanilla.py"
     config: "../configs/hgm_vanilla.yaml"
 
+  # same conda env constraint as hgm: always run it with --model hgm_aux from the HGM conda env
+  - name: hgm_aux
+    has_aux: true
+    folder: "HGM"
+    train_script: "Train_aux.py"
+    test_script: "Test_aux.py"
+    config: "../configs/hgm_aux.yaml"
+
   - name: sam2unet
     has_aux: false
     folder: "SAM2UNet"
     train_script: "Train_vanilla.py"
     test_script: "Test_vanilla.py"
     config: "../configs/sam2unet_vanilla.yaml"
+
+  - name: sam2unet_aux
+    has_aux: true
+    folder: "SAM2UNet"
+    train_script: "Train_aux.py"
+    test_script: "Test_aux.py"
+    config: "../configs/sam2unet_aux.yaml"
 
 # aux sources: folder under output/augmentation/ (= --aux_source of Train_aux.py / Test_aux.py)
 # -> all its methods (folders under the source = function names in sam_prior_methods.py / depth_prior_methods.py)
