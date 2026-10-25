@@ -1,0 +1,21 @@
+experiment:
+  name: depth_prior_maps_curvature
+  description: Curvature priors (Shape Index, Mean Curvature) from the raw DA3 depth
+
+paths:
+  dataset_root: "datasets/"
+  depth_root: "output/depth/da3mono-large/"
+  output_root: "output/priors/"
+  prior_source: "da3mono-large"
+
+datasets:
+  folders:
+    #- "TrainDataset/"
+    - "ProvaSmall/"
+    #- "da1/ProvaSmall/"
+    #- "da2/ProvaSmall/"
+
+priors:
+  - "shapeindex"
+  - "meancurvature"
+  - "meancurvature_p5p95"          

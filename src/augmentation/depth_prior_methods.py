@@ -296,3 +296,77 @@ def LAB_gamut(tI, Vote, kind="a+"):
 def LAB_gamut_aplus(tI, priors):
     # LAB_gamut is already uint8: no save_like_pipeline
     return LAB_gamut(tI, priors["frst_prior"], "a+")
+
+
+# ---------------------------------------------------------------- curvature priors (second-order)
+SIGMA_SI = 1.0          # sigma (px, DA3 resolution) of the Gaussian second derivatives, Shape Index
+SIGMA_MC = 1.0          # sigma (px, DA3 resolution), Mean Curvature
+GAUSS_TRUNCATE = 3.0    # kernel truncation (in sigmas)
+
+
+def _shape_index_curvedness(depth, sigma):
+    """Shape Index in [-1, 1] and curvedness, from the eigenvalues of the Hessian of the depth."""
+    kw = dict(sigma=sigma, mode="nearest", truncate=GAUSS_TRUNCATE)
+    dxx = gaussian_filter(depth, order=(0, 2), **kw)
+    dyy = gaussian_filter(depth, order=(2, 0), **kw)
+    dxy = gaussian_filter(depth, order=(1, 1), **kw)
+
+    trace_half = (dxx + dyy) / 2.0
+    discriminant = np.sqrt(((dxx - dyy) / 2.0) ** 2 + dxy ** 2)
+    lambda1 = trace_half + discriminant
+    lambda2 = trace_half - discriminant
+
+    shape_index = (2.0 / np.pi) * np.arctan2(lambda1 + lambda2, lambda1 - lambda2)
+    curvedness = np.sqrt((lambda1 ** 2 + lambda2 ** 2) / 2.0)
+    return shape_index, curvedness
+
+
+def shapeindex(depth):
+    """
+        Shape Index weighted by curvedness: flat areas = 0.5, curved structures = (1 - SI) / 2.
+        Curvedness is normalized by its p95 per image and used as a weight.
+    """
+    d = depth.astype(np.float64)
+    shape_index, curvedness = _shape_index_curvedness(d, SIGMA_SI)
+
+    c_max = np.percentile(curvedness, 95)
+    if c_max == 0:
+        c_max = 1e-8
+    c_norm = np.clip(curvedness / c_max, 0.0, 1.0)
+
+    si_base = (1.0 - shape_index) / 2.0
+    return np.clip(0.5 + c_norm * (si_base - 0.5), 0.0, 1.0)
+
+
+def _mean_curvature(depth, sigma):
+    """Mean curvature of the surface z = f(x, y), with Gaussian derivatives."""
+    kw = dict(sigma=sigma, mode="nearest", truncate=GAUSS_TRUNCATE)
+    fx = gaussian_filter(depth, order=(0, 1), **kw)
+    fy = gaussian_filter(depth, order=(1, 0), **kw)
+    fxx = gaussian_filter(depth, order=(0, 2), **kw)
+    fyy = gaussian_filter(depth, order=(2, 0), **kw)
+    fxy = gaussian_filter(depth, order=(1, 1), **kw)
+
+    numerator = (1.0 + fy ** 2) * fxx - 2.0 * fx * fy * fxy + (1.0 + fx ** 2) * fyy
+    denominator = 2.0 * np.power(1.0 + fx ** 2 + fy ** 2, 1.5)
+    return numerator / denominator
+
+
+def meancurvature(depth):
+    """Mean curvature of the min-max normalized depth, then p1-p99 per image."""
+    d = depth.astype(np.float64)
+    # min-max first: this curvature is not scale invariant and DA3 depth is relative
+    d = (d - d.min()) / (d.max() - d.min() + 1e-12)
+    return nrm01(_mean_curvature(d, SIGMA_MC))
+
+def _meancurvature_h(depth):
+    d = depth.astype(np.float64)
+    d = (d - d.min()) / (d.max() - d.min() + 1e-12)
+    return _mean_curvature(d, SIGMA_MC)
+
+
+def meancurvature_p5p95(depth):
+    h = _meancurvature_h(depth)
+    low, high = np.percentile(h, (5, 95))
+    return np.clip((h - low) / (high - low + 1e-12), 0, 1)
+
