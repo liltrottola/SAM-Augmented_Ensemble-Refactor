@@ -3,7 +3,7 @@
 # Single source of truth, imported by the train scripts to decide whether
 # to redirect image_root to datasets/<method>/... Add a new offline DA
 # method here to extend the pipeline.
-OFFLINE_DA_METHODS = {"da1", "da2" , "clahe"}
+OFFLINE_DA_METHODS = {"da1", "da2" , "clahe", "light"}
 
 # DA methods applied online by the dataloader, and the "no augmentation" value:
 # with OFFLINE_DA_METHODS they are the only valid values of da_methods in the sweeps.

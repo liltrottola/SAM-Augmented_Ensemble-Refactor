@@ -1,0 +1,53 @@
+experiment:
+  name: light_augmentation
+  description: "Offline light DA: relighting with DSINE normals, depth-guided attenuation, CLAHE-LAB"
+  version: 1.0
+
+# Paths are relative to the project root
+paths:
+
+  # Base path where datasets are located
+  dataset_root: "datasets/"
+
+  # Where to save the output
+  output_root: "datasets/"   # DA train sets are datasets too: datasets/light/<dataset>/
+
+  # raw DA3 depth (.npy, DA3 resolution) written by run_depth_generation.py: <depth_root>/<dataset>/npy/<name>.npy
+  depth_root: "output/depth/da3mono-large/"
+
+  # raw DSINE normals (.npy float32 (H, W, 3), [-1, 1]) written by run_normal_generation.py: <normal_root>/<dataset>/npy/<name>.npy
+  normal_root: "output/normals/dsine/"
+
+
+datasets:
+  # List of datasets (subfolders of dataset_root) to process
+  folders:
+    - "ProvaSmall/"
+    # - "TrainDataset/"   # switch when running on the full dataset
+
+augmentation:
+  # If true, also copy the original to the output
+  keep_original: true
+
+  # Relighting: one variant per light direction (lx, ly, lz) -> <name>_rl1 ... <name>_rlN
+  light_directions:
+    - [-0.6, -0.6, 1.0]
+    - [ 0.0, -0.6, 1.0]
+    - [ 0.6, -0.6, 1.0]
+    - [-0.6,  0.0, 1.0]
+    - [ 0.0,  0.0, 1.0]
+    - [ 0.6,  0.0, 1.0]
+    - [-0.6,  0.6, 1.0]
+    - [ 0.0,  0.6, 1.0]
+    - [ 0.6,  0.6, 1.0]
+
+  # Depth-guided attenuation: one variant per floor -> <name>_att1 ... <name>_attN
+  # A = floor + (1 - floor) * DP, DP = depth_p1p99(depth) (near = 1, far = 0)
+  floors:
+    - 0.5
+    - 0.3
+
+  # CLAHE on the L channel of LAB: one variant per clip limit -> <name>_clahe1 ... <name>_claheN
+  clip_limits:
+    - 2.0
+    - 3.0
