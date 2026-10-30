@@ -4,12 +4,16 @@
 models:
   - "hsnet"
   - "hsnet_aux"
+  - "hsnet_n3"
   - "polypvt"
   - "polypvt_aux"
+  - "polypvt_n3"
   - "hgm"
-  #- "hgm_aux"        # HGM conda env only: launch with --model hgm_aux
+  - "hgm_aux"        # HGM conda env only: launch with --model hgm_aux
+  - "hgm_n3"         # HGM conda env only: launch with --model hgm_n3
   - "sam2unet"
   - "sam2unet_aux"
+  - "sam2unet_n3"
 
 # training section
 training:
@@ -43,12 +47,30 @@ training:
       - "RG_localnorm"
       - "LAB_gamut_aplus"
 
+  # N3 axis (N3 models only): the prior channels after the RGB, per family (sam / depth / dsine, folder of each family in
+  # prior_sources of configs/sweep_registry.yaml, where the priors are checked). Order: families as in the registry,
+  # then the priors as written here. One combination per sweep (another one: edit here or --sam_priors / --depth_priors /
+  # --dsine_priors). The prior names go into the checkpoint name
+  # (e.g. segPrior-boundaryPrior-frst_prior-localnorm_hsnet_n3_da3_lrbase_run1). Must match sweep_test.yaml.
+  prior_sources:
+    sam:
+      - "segPrior"
+      - "boundaryPrior"
+    depth:
+      - "frst_prior"
+      - "localnorm"
+
   # LR axis (ensemble diversity): lrbase = legacy path, + the 3 methods from the paper
   lr_methods:
     - "lrbase"
     #- "lra"
     #- "lrb"
     #- "lrc"
+
+  # Train set axis: folders under datasets/ (each with images/ and masks/); always in the checkpoint name, first
+  # (e.g. TrainDataset_hsnet_da3_lrbase_run1). Offline DA reads datasets/<da>/<train set>, aux and priors follow it.
+  train_datasets:
+    - "TrainDataset"
 
   # DA axis: "noda" = no augmentation at all, da1/da2 offline (vanilla only), da3 online (vanilla + aux)
   da_methods:

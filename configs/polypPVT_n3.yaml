@@ -1,0 +1,76 @@
+experiment:
+  name: "PolypPVT_N3" # checkpoint name when Train_N3 is launched without --model_name (run_training.py always passes it)
+  seed: 37
+
+# all paths are relative to the location of Train.py in src/models/PolypPVT/
+paths:
+  datasets_root: "../../../datasets/"
+  offline_aug_base: "../../../datasets/"   # offline DA train sets (da1/da2/clahe/light): <offline_aug_base>/<da>/<dataset>/ (= datasets_root)
+  # N3: priors in <prior_root>/<folder>/[<da>/]<dataset>/<prior>/<name>.npy, folder of each family in prior_sources
+  # of configs/sweep_registry.yaml (offline DA: the priors generated on the DA train set)
+  prior_root: "../../../output/priors/"
+
+  # ------ TRAINING --------
+  models_dir: "../../../output/models/"
+  log_file: "train_log_polypvt_n3.log"
+
+  # ------ TESTING ------
+  prediction_dir: "../../../output/predictions/"
+  logits_dir: "../../../output/logits/"
+
+# training hyperparameters = polypPVT_vanilla.yaml
+training:
+  epochs: 100 #use 50 with lr method, 100 to compare with lr_method lrbase
+  batchsize: 16 #20 with lr method, 8 to compare with lr_method lrbase
+  trainsize: 352
+
+  size_rates: [0.75, 1.0, 1.25]
+  clip_margin: 0.5
+
+  offline_augmentation: noda # "da1", "da2", "clahe", "light" or "noda": DA train set + the priors generated on it
+  online_augmentation: noda  # "da3" (geometric on all channels, photometric only on the RGB) or "noda"; never both with offline
+
+  lr_method: lrbase  # "lra" | "lrb" | "lrc" | lrbase (uses the legacy optimizer/lr_schedule block, 50 training epochs)
+
+  optimizer:
+    type: "AdamW"
+    lr: 0.0001
+    weight_decay: 0.0001
+
+  lr_schedule:
+    milestones: [15, 30] # Epochs at which to decay the learning rate
+    decay_factor: 0.5 # Factor by which to decay the learning rate at each milestone
+
+# N3: input = RGB + prior channels (N = 3 + number of priors) -> ChannelReduction(N) -> PolypPVT()
+n3:
+  # default prior channels after the RGB, per family (sam / depth / dsine), as prior_sources of the sweeps; families and
+  # priors checked against prior_sources of configs/sweep_registry.yaml (where the folder of each family is).
+  # Order: families as in the registry, then the priors as written here (same order at test time).
+  # --sam_priors / --depth_priors / --dsine_priors replace this list (families not given = not used).
+  prior_sources:
+    sam:
+      - "segPrior"
+      - "boundaryPrior"
+    depth:
+      - "frst_prior"
+      - "localnorm"
+  # false = block output used directly (decided architecture); true = RGB + block, last conv at zero
+  residual: false
+  # kernel of the FIRST conv of the block: 1 = per-pixel (decided architecture), 3 = 3x3 neighbourhood
+  kernel_size: 1
+  # LR of the block = optimizer.lr * reduce_lr_mult (PolypPVT keeps optimizer.lr); 30 as HSNet (block LR 3e-3 here)
+  reduce_lr_mult: 30
+
+testing:
+  test_checkpoint: "PolypPVT_N3.pth" # checkpoint tested when Test_N3 is launched without --model_pth (run_inference.py always passes it)
+  testsize: 352
+
+datasets:
+  train:
+    - "TrainDataset"
+  test:
+    - "TestDatasets/CVC-300"
+    - "TestDatasets/CVC-ClinicDB"
+    - "TestDatasets/CVC-ColonDB"
+    - "TestDatasets/Kvasir"
+    - "TestDatasets/ETIS-LaribPolypDB"

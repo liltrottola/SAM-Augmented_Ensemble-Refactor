@@ -24,6 +24,20 @@ def get_da3_transforms(trainsize):
     
     return img_transform , gt_transform
 
+def get_da3_geometric_transforms():
+    '''
+    N3: only the geometric part of get_da3_transforms, for the prior channels (photometric changes only on the RGB).
+    Applied on the (K, trainsize, trainsize) prior tensor, already resized: the 3 random draws (angle, vertical flip,
+    horizontal flip) come in the same order as in img_transform / gt_transform, whose geometric transforms come before
+    the photometric ones, so with the same seed RGB, GT and priors get the same rotation and flips.
+    '''
+    prior_transform = transforms.Compose([
+        transforms.RandomRotation(90),                   # same angle as image and gt (nearest, fill 0)
+        transforms.RandomVerticalFlip(p=0.5),
+        transforms.RandomHorizontalFlip(p=0.5)])
+
+    return prior_transform
+
 def get_da3_transforms_aux(trainsize):
     print('Using DA3:  RandomRotation, RandomFlip, color changes')
     img_transform = transforms.Compose([

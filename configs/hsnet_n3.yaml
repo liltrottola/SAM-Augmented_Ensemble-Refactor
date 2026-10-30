@@ -1,0 +1,83 @@
+experiment:
+  name: "HSNet_N3" # N3: prefix, Train_N3/Test_N3 add DA and priors: <name>_<da>_<prior1-prior2-...> + tags, unless --model_name
+  seed: 37
+
+#all paths are relative to the location of Train.py file in src/models/HSNet/
+paths:
+  datasets_root: "../../../datasets/"
+  offline_aug_base: "../../../datasets/"   # offline DA train sets (da1/da2/clahe): <offline_aug_base>/<da>/<dataset>/ (= datasets_root)
+  # N3: priors in <prior_root>/<folder>/[<da>/]<dataset>/<prior>/<name>.npy, folder of each family in prior_sources
+  # of configs/sweep_registry.yaml (offline DA: the priors generated on the DA train set)
+  prior_root: "../../../output/priors/"
+
+
+  #------ TRAINING --------
+  models_dir: "../../../output/models/"
+  log_file: "train_log_hsnet_n3.log"
+
+  #------TESTING ------
+  prediction_dir: "../../../output/predictions/"
+  logits_dir: "../../../output/logits/"
+
+training:
+  epochs: 100 #use 50 with lr method, 100 to compare with lr_method lrbase
+  batchsize: 8 #20 with lr method, 8 to compare with lr_method lrbase
+  trainsize: 352 # Original hardcoded image size for training
+
+  size_rates: [0.75, 1.0, 1.25] # Multi-scale training (0.75x, 1.0x, 1.25x)
+  clip_margin: 0.5 # Margin for gradient clipping
+
+  decay_rate: 0.01
+  decay_epochs: 50
+
+  #create ensemble  diversity
+
+  offline_augmentation: noda # N3: only "noda" for now (offline DA needs the priors of the DA train sets)
+  online_augmentation: noda # N3: "noda" or "da3" (geometric on all channels, photometric only on the RGB); hsnet_vanilla.yaml uses da3
+
+  lr_method: lrbase   # "lra" | "lrb" | "lrc" | "lrbase" (uses the legacy optimizer/lr_schedule block)
+  
+  optimizer:
+    type: "AdamW"
+    lr: 0.00005 # Learning rate (5e-5)
+    weight_decay: 0.0001 # Valore originale hardcoded (1e-4)
+
+  lr_schedule:
+    milestones: [15, 30] # Epochs at which to decay the learning rate
+    decay_factor: 0.5 # Factor by which to decay the learning rate at each milestone
+
+# N3: input = RGB + prior channels (N = 3 + number of priors) -> ChannelReduction(N) -> HSNet()
+n3:
+  # default prior channels after the RGB, per family (sam / depth / dsine), as prior_sources of the sweeps; families and
+  # priors checked against prior_sources of configs/sweep_registry.yaml (where the folder of each family is).
+  # Order: families as in the registry, then the priors as written here (same order at test time).
+  # --sam_priors / --depth_priors / --dsine_priors replace this list (families not given = not used).
+  prior_sources:
+    sam:
+      - "segPrior"         # SAM2 stability 0.85, raw (sum of the stability scores of the overlapping masks, ~0.9 per mask)
+      - "boundaryPrior"    # SAM2 stability 0.85, contours of the masks, {0,1}
+    depth:
+      - "frst_prior"       # DA3 region prior (vote_v3): FRST + back-projection, [0,1] p1-p99 per image
+      - "localnorm"        # DA3 boundary prior: gradient / local Gaussian mean, [0,1] p99 per image
+      #- "depth_p1p99"     # DA3 reversed depth (near = 1), [0,1] p1-p99 per image
+  # false = block output used directly (decided architecture); true = RGB + block, last conv at zero
+  residual: false
+  # kernel of the FIRST conv of the block: 1 = per-pixel, 3 = 3x3 neighbourhood; tag "_k3" in the name if != 1
+  kernel_size: 1
+  # LR of the block = optimizer.lr * reduce_lr_mult (network keeps  its optimizer); tag "_rlr<mult>" in the name if != 1
+  reduce_lr_mult: 30
+  
+
+testing:
+  test_checkpoint: "HSNet_N3_noda_segPrior-boundaryPrior-frst_prior-localnorm.pth" # N3: NOT used by Test_N3 (default = same name as Train_N3, or --model_pth)
+  testsize: 352
+
+datasets:
+  train: 
+    - "TrainDataset"  #use only one folder for training divided in images and masks
+  test:
+    - "TestDatasets/CVC-300"
+    - "TestDatasets/CVC-ClinicDB"
+    - "TestDatasets/CVC-ColonDB"
+    - "TestDatasets/Kvasir"
+    - "TestDatasets/ETIS-LaribPolypDB"

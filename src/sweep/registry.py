@@ -1,3 +1,4 @@
+import os
 import sys
 import yaml
 
@@ -88,6 +89,70 @@ def get_aux_pairs(registry, sweep_section, cli_source=None, cli_methods=None):
                 fail(f"unknown method '{method}' for aux source '{source}'", registry_sources[source])
             pairs.append((source, method))
     return pairs
+
+
+def get_n3_priors(registry, sweep_section, cli_priors=None):
+    """Prior channels of the N3 models, as an ordered list of "<folder>/<prior>" (one combination per sweep).
+    Families (sam / depth / dsine) and their folder under output/priors/ are in prior_sources of the registry.
+    - no flag:   prior_sources of the sweep ({family: [priors]})
+    - flags:     cli_priors = {family: [priors] or None} from --sam_priors / --depth_priors / --dsine_priors; when at
+                 least one is given they replace the sweep (families not given = not used)
+    Order: families as in the registry, then the priors in the written order (same order, so same checkpoint name,
+    at training and test time). Every family and prior is checked against the registry; the same prior twice is refused."""
+    registry_families = registry['prior_sources']
+
+    # families given with the flags: only the ones with at least one prior (a flag not used is None)
+    given = {}
+    if cli_priors is not None:
+        for family, priors in cli_priors.items():
+            if priors:
+                given[family] = priors
+
+    # the flags replace the sweep; without flags, prior_sources of the sweep
+    if given:
+        chosen = given
+    else:
+        chosen = sweep_section.get('prior_sources') or {}
+        if not chosen:
+            fail("the N3 models need prior_sources in the sweep config (or --sam_priors / --depth_priors / --dsine_priors)")
+
+    # every family must exist in the registry
+    for family in chosen:
+        if family not in registry_families:
+            fail(f"unknown prior family: {family}", list(registry_families.keys()))
+
+    channels = []
+    names = []
+    for family, entry in registry_families.items():   # registry order of the families
+        for prior in chosen.get(family) or []:
+            # the prior must exist in this family of the registry
+            if prior not in entry['priors']:
+                fail(f"unknown prior '{prior}' for prior family '{family}'", entry['priors'])
+            # only the prior name goes into the checkpoint name: it must be unique in the run
+            if prior in names:
+                fail(f"prior '{prior}' given twice: the checkpoint name would be ambiguous")
+            names.append(prior)
+            channels.append(f"{entry['folder']}/{prior}")
+    return channels
+
+
+def get_train_datasets(sweep_section, cli_values=None, datasets_root="../datasets"):
+    """Train sets to launch: the ones given with --train_dataset, or train_datasets of the sweep.
+    Each one must be a folder <datasets_root>/<name>/images (datasets_root relative to scripts/, where the runners run).
+    Neither of them -> ["TrainDataset"] (with a warning): the train set of the model yamls.
+    The train set always goes into the checkpoint name (naming.build_model_name)."""
+    if cli_values is not None:
+        values = cli_values
+    elif 'train_datasets' in sweep_section:
+        values = sweep_section['train_datasets']
+    else:
+        print("WARNING: no train_datasets in the sweep config and no --train_dataset: TrainDataset is used")
+        values = ["TrainDataset"]
+
+    for value in values:
+        if not os.path.isdir(os.path.join(datasets_root, value, "images")):
+            fail(f"train dataset not found: {os.path.join(datasets_root, value, 'images')}")
+    return values
 
 
 def get_da_methods(sweep_section, cli_values=None):

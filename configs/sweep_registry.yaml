@@ -23,6 +23,16 @@ models:
     test_script: "Test_aux.py"
     config: "../configs/hsnet_aux.yaml"
 
+  # N3 models (n3: true): RGB + the prior channels of prior_sources (sweep or --sam_priors / --depth_priors /
+  # --dsine_priors) -> ChannelReduction -> model; block settings (residual, kernel, LR mult) fixed in the model yaml
+  - name: hsnet_n3
+    has_aux: false
+    n3: true
+    folder: "HSNet"
+    train_script: "Train_N3.py"
+    test_script: "Test_N3.py"
+    config: "../configs/hsnet_n3.yaml"
+
   - name: polypvt
     has_aux: false
     folder: "PolypPVT"
@@ -36,6 +46,14 @@ models:
     train_script: "Train_aux.py"
     test_script: "Test_aux.py"
     config: "../configs/polypPVT_aux.yaml"
+
+  - name: polypvt_n3
+    has_aux: false
+    n3: true
+    folder: "PolypPVT"
+    train_script: "Train_N3.py"
+    test_script: "Test_N3.py"
+    config: "../configs/polypPVT_n3.yaml"
 
   # HGM needs its own conda env (mamba_ssm, torch_geometric): always run it with --model hgm
   # from the HGM conda env, never in a full sweep from venv_newSAMAug
@@ -54,6 +72,15 @@ models:
     test_script: "Test_aux.py"
     config: "../configs/hgm_aux.yaml"
 
+  # same conda env constraint as hgm: always run it with --model hgm_n3 from the HGM conda env
+  - name: hgm_n3
+    has_aux: false
+    n3: true
+    folder: "HGM"
+    train_script: "Train_N3.py"
+    test_script: "Test_N3.py"
+    config: "../configs/hgm_n3.yaml"
+
   - name: sam2unet
     has_aux: false
     folder: "SAM2UNet"
@@ -68,8 +95,17 @@ models:
     test_script: "Test_aux.py"
     config: "../configs/sam2unet_aux.yaml"
 
+  - name: sam2unet_n3
+    has_aux: false
+    n3: true
+    folder: "SAM2UNet"
+    train_script: "Train_N3.py"
+    test_script: "Test_N3.py"
+    config: "../configs/sam2unet_n3.yaml"
+
 # aux sources: folder under output/augmentation/ (= --aux_source of Train_aux.py / Test_aux.py)
-# -> all its methods (folders under the source = function names in sam_prior_methods.py / depth_prior_methods.py)
+# -> all its methods (folders under the source = function names in sam_prior_methods.py / depth_prior_methods.py /
+# normal_prior_methods.py)
 aux_sources:
   # from the saved SAM priors (run_sam_generation.py + run_sam_augmentation.py), SAM2 stability_score 0.85
   sam1:
@@ -101,3 +137,39 @@ aux_sources:
     - "PCA_voteV3"
     - "RG_localnorm"
     - "LAB_gamut_aplus"
+    - "RG_shapeindex"
+    - "RG_meancurvature"
+    - "RG_meancurvature_p5p95"
+  # from the saved DSINE normal priors (run_normal_prior_maps.py + run_normal_augmentation.py)
+  dsine:
+    - "RG_normal_nz"
+    - "RG_normal_mean7"
+
+# prior families for the N3 models: one source (folder under output/priors/) per family and all the priors it provides
+# (= folder names under <folder>/<dataset>/). The N3 channels of a run (prior_sources of sweep_train.yaml /
+# sweep_test.yaml, or --sam_priors / --depth_priors / --dsine_priors) are checked against this list; they can mix
+# families (e.g. 2 SAM + 2 depth). Channel order: families in this order, then the priors in the written order.
+# To use another model of a family (e.g. sam1 instead of sam2_stab085), change its folder here: the checkpoint name
+# contains only the prior names, so do not mix runs of two folders of the same family.
+prior_sources:
+  sam:      # run_sam_generation.py, SAM2 stability_score 0.85
+    folder: "sam2_stab085"
+    priors:
+      - "segPrior"
+      - "boundaryPrior"
+      - "areaPrior"
+      - "logits"
+  depth:    # run_depth_prior_maps.py (configs/depth_prior_maps.yaml, depth_prior_maps_curvature.yaml)
+    folder: "da3mono-large"
+    priors:
+      - "frst_prior"
+      - "localnorm"
+      - "depth_p1p99"
+      - "shapeindex"
+      - "meancurvature"
+      - "meancurvature_p5p95"
+  dsine:    # run_normal_prior_maps.py (configs/normal_prior_maps.yaml)
+    folder: "dsine"
+    priors:
+      - "normal_nz"
+      - "normal_mean7"

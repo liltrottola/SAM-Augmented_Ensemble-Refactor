@@ -4,12 +4,16 @@
 models:
   - "hsnet"
   - "hsnet_aux"
+  - "hsnet_n3"
   - "polypvt"
   - "polypvt_aux"
+  - "polypvt_n3"
   - "hgm"
   #- "hgm_aux"        # HGM conda env only: launch with --model hgm_aux
+  #- "hgm_n3"         # HGM conda env only: launch with --model hgm_n3
   - "sam2unet"
   - "sam2unet_aux"
+  - "sam2unet_n3"
 
 # inference/testing section
 testing:
@@ -40,11 +44,24 @@ testing:
       - "RG_localnorm"
       - "LAB_gamut_aplus"
 
+  # Must match the prior_sources used at training time to find the checkpoints (N3 models only)
+  prior_sources:
+    sam:
+      - "segPrior"
+      - "boundaryPrior"
+    depth:
+      - "frst_prior"
+      - "localnorm"
+
   lr_methods:
     - "lrbase"
    # - "lra"
    # - "lrb"
    # - "lrc"
+
+  # Must match the train_datasets used at training time to find the checkpoints (the test sets are those of the model yamls)
+  train_datasets:
+    - "TrainDataset"
 
   # Must match the da_methods used at training time to find the checkpoints
   da_methods:

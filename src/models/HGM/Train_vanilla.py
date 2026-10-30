@@ -162,6 +162,7 @@ def main():
     parser.add_argument('--lr_method', type=str, default=None, help='Learning-rate strategy for ensemble diversity (lra/lrb/lrc). Overrides training.lr_method in the config. If not specified, uses the config value.')
     parser.add_argument('--offline_da', type=str, default=None, help='Offline DA method: da1/da2/clahe, or omit. Redirects image_root to the pre-generated augmented dataset. Overrides training.offline_augmentation.')
     parser.add_argument('--online_da', type=str, default=None, help='Online DA method: da3, or omit. Applied at runtime by the dataloader. Overrides training.online_augmentation.')
+    parser.add_argument('--train_dataset', type=str, default=None, help='Train set: folder under datasets_root (offline DA: <offline_aug_base>/<da>/<train set>). Overrides datasets.train.')
 
     args = parser.parse_args()
     
@@ -188,6 +189,9 @@ def main():
         opt.training.offline_augmentation = args.offline_da
     if args.online_da is not None:
         opt.training.online_augmentation = args.online_da
+    # train set (run_training.py --train_dataset); offline DA, aux images and priors follow it
+    if args.train_dataset is not None:
+        opt.datasets.train = [args.train_dataset]
 
 
     #setup logging

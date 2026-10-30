@@ -147,6 +147,7 @@ def main():
     parser.add_argument('--seed', type=int, default=None, help='Seed number for random number generation to ensure consistent results across runs. If not specified, it will use the default seed defined in the configuration file.')
     parser.add_argument('--lr_method', type=str, default=None, help='Learning-rate strategy for ensemble diversity (lra/lrb/lrc). Overrides training.lr_method in the config. If not specified, uses the config value.')
     parser.add_argument('--online_da', type=str, default=None, help='Online DA method: da3, or omit. Applied at runtime by the aux dataloader. Overrides training.online_augmentation.')
+    parser.add_argument('--train_dataset', type=str, default=None, help='Train set: folder under datasets_root (offline DA: <offline_aug_base>/<da>/<train set>). Overrides datasets.train.')
     parser.add_argument('--offline_da', type=str, default=None, help='Offline DA method: da1/da2/clahe, or omit. Redirects images, masks and aux to the pre-generated augmented train set. Overrides training.offline_augmentation.')
 
     args = parser.parse_args()
@@ -170,6 +171,9 @@ def main():
 
     if args.online_da is not None:
         opt.training.online_augmentation = args.online_da
+    # train set (run_training.py --train_dataset); offline DA, aux images and priors follow it
+    if args.train_dataset is not None:
+        opt.datasets.train = [args.train_dataset]
 
     if args.offline_da is not None:
         opt.training.offline_augmentation = args.offline_da
