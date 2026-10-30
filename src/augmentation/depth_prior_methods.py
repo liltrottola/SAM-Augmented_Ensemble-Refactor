@@ -370,3 +370,17 @@ def meancurvature_p5p95(depth):
     low, high = np.percentile(h, (5, 95))
     return np.clip((h - low) / (high - low + 1e-12), 0, 1)
 
+
+# ---------------------------------------------------------------- curvature aux methods (called by name from the yaml)
+
+def RG_shapeindex(tI, priors):
+    return save_like_pipeline(RG_B(tI, priors["shapeindex"]))
+
+
+def RG_meancurvature(tI, priors):
+    return save_like_pipeline(RG_B(tI, priors["meancurvature"]))
+
+
+def RG_meancurvature_p5p95(tI, priors):
+    return save_like_pipeline(RG_B(tI, priors["meancurvature_p5p95"]))
+

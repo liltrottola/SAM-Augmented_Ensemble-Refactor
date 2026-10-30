@@ -32,6 +32,10 @@ priors:
   - "frst_prior"    # region prior (vote_v3)
   - "localnorm"     # boundary prior
   - "depth_p1p99"   # reversed depth
+  # curvature priors (configs/depth_prior_maps_curvature.yaml):
+  #- "shapeindex"
+  #- "meancurvature"
+  #- "meancurvature_p5p95"
 
 augmentation:
   # names exactly as defined in src/augmentation/depth_prior_methods.py
@@ -42,3 +46,6 @@ augmentation:
     - "PCA_voteV3"      # PCA 3->2 of RGB, B = frst_prior
     - "RG_localnorm"    # R, G, B = localnorm
     - "LAB_gamut_aplus"  # Lab, a* towards the reddest in-gamut value, proportional to frst_prior
+    #- "RG_shapeindex"          # R, G, B = shapeindex
+    #- "RG_meancurvature"       # R, G, B = meancurvature
+    #- "RG_meancurvature_p5p95" # R, G, B = meancurvature_p5p95

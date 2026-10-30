@@ -1,0 +1,40 @@
+experiment:
+  name: normal_augmentation
+  description: Aux images for the aux models built from the DSINE normal priors (normal_nz, normal_mean7), 30/10
+
+# all paths are relatives to the home directory of the project SAM-Augmented_Ensemble-refactor
+paths:
+  dataset_root: "datasets/"
+  # prior maps (.npy float32, original image resolution) written by run_normal_prior_maps.py: <prior_root>/<prior_source>/<dataset>/<prior>/<name>.npy
+  # = output_root / prior_source of normal_prior_maps.yaml (run that script first)
+  prior_root: "output/priors/"
+  prior_source: "dsine"
+  # aux images: <output_root>/<aux_source>/<method>/<dataset>/images/<name>.png
+  output_root: "output/augmentation/"
+  # folder name under output_root = --aux_source of Train_aux.py / Test_aux.py (key in aux_sources of the sweep yaml)
+  aux_source: "dsine"
+
+datasets:
+  folders:
+    - "ProvaSmall/"
+    - "da1/ProvaSmall/"
+    - "da2/ProvaSmall/"
+    #- "TrainDataset/"
+    #- "TestDatasets/CVC-300/"
+    #- "TestDatasets/CVC-ClinicDB/"
+    #- "TestDatasets/CVC-ColonDB/"
+    #- "TestDatasets/Kvasir/"
+    #- "TestDatasets/ETIS-LaribPolypDB/"
+
+# priors loaded for every image (folder names under <prior_root>/<prior_source>/<dataset>/),
+# passed to the methods as priors[<name>]: every prior used by a method below must be listed here
+priors:
+  - "normal_nz"       # Nz component, (Nz + 1) / 2
+  - "normal_mean7"    # boundary prior: mean angular variation 7x7, p1-p99 per image
+  #- "normal_trimmed7" # boundary prior: trimmed mean angular variation 7x7, p1-p99 per image
+
+augmentation:
+  # names exactly as defined in src/augmentation/normal_prior_methods.py, signature f(tI, priors) -> uint8 image
+  methods:
+    - "RG_normal_nz"     # R, G, B = normal_nz
+    - "RG_normal_mean7"  # R, G, B = normal_mean7

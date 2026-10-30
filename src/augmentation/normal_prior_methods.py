@@ -1,8 +1,11 @@
 import numpy as np
 
+from src.augmentation.depth_prior_methods import RG_B, save_like_pipeline
+
 '''
     Normal priors: 1-channel maps computed from the raw DSINE normals (H, W, 3), float32 in [-1, 1].
     Signature f(normals) -> (H, W) float32 in [0, 1]; the function name is also the output folder name.
+    Aux methods (end of the file): f(tI, priors) -> uint8 image, used by run_normal_augmentation.py.
 '''
 
 def nrm01(a):
@@ -76,3 +79,13 @@ def normal_mean7(normals):
 def normal_trimmed7(normals):
     """Boundary prior: trimmed mean angular variation 7x7, p1-p99 per image."""
     return nrm01(normal_variation_trimmed(_prepare(normals), 7, 1, 95)).astype(np.float32)
+
+
+# ---------------------------------------------------------------- aux methods (called by name from the yaml)
+
+def RG_normal_nz(tI, priors):
+    return save_like_pipeline(RG_B(tI, priors["normal_nz"]))
+
+
+def RG_normal_mean7(tI, priors):
+    return save_like_pipeline(RG_B(tI, priors["normal_mean7"]))
