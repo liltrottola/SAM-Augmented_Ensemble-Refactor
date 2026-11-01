@@ -2,6 +2,7 @@ import os
 import sys
 import yaml
 import argparse
+import skimage
 from skimage import io
 import shutil
 
@@ -37,11 +38,13 @@ def run_processing(config):
 
             tI = io.imread(image_path)
             tM = io.imread(mask_path)
+            if tM.dtype == bool:
+                tM = skimage.img_as_ubyte(tM)    # 1-bit PNG → uint8 0/255, like the other masks
 
             aug_image, aug_mask = clahe_lab(tI, tM)
 
             io.imsave(os.path.join(saving_path_images, filename), aug_image)
-            io.imsave(os.path.join(saving_path_masks,  filename), aug_mask)
+            io.imsave(os.path.join(saving_path_masks,  filename), aug_mask, check_contrast=False)   # binary masks: always "low contrast"
             count += 1
 
         print(f"Saved {count} images for {cur_dir}")

@@ -209,20 +209,15 @@ def speckle_noise(image, mask):
     # Mask unchanged
     return image_noisy, mask
 
-def _fspecial_motion(length: float, angle: float) -> np.ndarray:
-    """Motion-blur PSF, a reimplementation of MATLAB's fspecial('motion', LEN, THETA).
+def _motion_kernel(length: float, angle: float) -> np.ndarray:
+    """Motion-blur PSF of a camera translating uniformly along a straight segment.
 
-    Builds a 2-D point-spread function that approximates the linear motion of a
-    camera by ``length`` pixels at ``angle`` degrees (counter-clockwise from the
-    horizontal). The kernel is a thin, anti-aliased line segment through the
-    centre, with rounded endpoints, normalised to sum 1; convolving an image
-    with it produces a directional motion blur.
-
-    Matches the behaviour of MATLAB's ``fspecial('motion', ...)`` (Image
-    Processing Toolbox, MathWorks), on which the reference paper's DA2 pipeline
-    relies; written to reproduce its output on the length/angle range used by
-    DA2 . Like the original it computes only the half-kernel growing from the origin and then
-    mirrors it to exploit the point symmetry of the PSF.
+    Physical model: during the exposure the camera moves at constant speed along a
+    segment of ``length`` pixels, centred on the origin, at ``angle`` degrees
+    (counter-clockwise from the horizontal). The kernel value of each pixel is the
+    fraction of the trajectory that falls on it. The trajectory is sampled with
+    20000 points (midpoints of equal sub-segments) and each point is splatted
+    bilinearly on its 4 neighbouring pixels; the kernel is then normalised to sum 1.
 
     Parameters
     ----------
@@ -234,69 +229,56 @@ def _fspecial_motion(length: float, angle: float) -> np.ndarray:
     Returns
     -------
     np.ndarray
-        2-D float64 kernel summing to 1. Horizontal/vertical motions collapse to
-        a 1-D kernel: (1, 9) for (9, 0) and (9, 1) for (9, 90); the latter is a
-        uniform 1/9 column (the actual MATLAB behaviour, not zeros at the ends).
+        2-D float64 kernel summing to 1, odd-sized, with the motion segment centred on the central pixel.
     """
-    eps_f = np.finfo(np.float64).eps
-    linewdt = 1.0                        # line thickness, in pixels
+    # Direction of motion; rounded so that cos(90 deg) is exactly 0 (not 6e-17),
+    # otherwise a vertical motion would leave a near-zero extra column
+    cosphi = np.round(np.cos(np.deg2rad(angle)), 12)
+    sinphi = np.round(np.sin(np.deg2rad(angle)), 12)
 
-    # Half-length of the motion segment and its orientation in radians. The
-    # angle is folded into [0, 180): a line at theta and at theta+180 is the same.
-    len_ = max(1.0, float(length))
-    half = (len_ - 1) / 2.0
-    phi = (angle % 180) / 180.0 * np.pi
+    # Number of samples along the trajectory. The sampled kernel differs from the
+    # exact one (continuous trajectory)
+    n_points = 20000
 
-    cosphi = np.cos(phi)
-    sinphi = np.sin(phi)
-    xsign = np.sign(cosphi)              # which way the line leans: +1 right, -1 left
+    # Half trajectory: midpoints of n_points/2 sub-segments of [0, length/2];
+    # the other half is its mirror, so the kernel is exactly point-symmetric
+    n_half = n_points // 2
+    t = (np.arange(n_half) + 0.5) / n_half * (length / 2.0)
+    t = np.concatenate([t, -t])
 
-    # Half-extent of the kernel grid. The "- len*eps" term pushes the value just
-    # below an integer at exactly 0 deg / 90 deg, so the truncation drops it by
-    # one and the kernel collapses to a clean 1-D vector instead of a 3-wide band.
-    sx = int(np.fix(half * cosphi + linewdt * xsign - len_ * eps_f))
-    sy = int(np.fix(half * sinphi + linewdt - len_ * eps_f))
+    # Point coordinates: x to the right, y downwards (image rows) -> minus sign on
+    # sin to have the angle counter-clockwise on screen
+    x = t * cosphi
+    y = -t * sinphi
 
-    # Coordinate grid of the half-kernel, growing from the origin (0, 0) towards
-    # (sx, sy); the sign of the x step orients it to the correct horizontal side.
-    step = int(xsign) if xsign != 0 else 1
-    xv = np.arange(0, sx + step, step)
-    yv = np.arange(0, sy + 1)
-    x, y = np.meshgrid(xv, yv)
-    x = x.astype(np.float64)
-    y = y.astype(np.float64)
+    # Kernel grid (2r+1) x (2r+1) centred on pixel (r, r), large enough for the segment
+    r = int(np.ceil(length / 2.0)) + 1
+    h = np.zeros((2 * r + 1, 2 * r + 1), dtype=np.float64)
 
-    # Signed perpendicular distance from each pixel to the ideal line through the
-    # origin; rad is the pixel's Euclidean distance from the origin.
-    dist2line = y * cosphi - x * sinphi
-    rad = np.sqrt(x ** 2 + y ** 2)
+    # Bilinear splat: each point gives weight to its 4 neighbouring pixels,
+    # proportional to the overlap (1 - distance) along x and along y
+    x0 = np.floor(x)
+    y0 = np.floor(y)
+    fx = x - x0
+    fy = y - y0
+    col = x0.astype(int) + r
+    row = y0.astype(int) + r
+    np.add.at(h, (row,     col),     (1 - fx) * (1 - fy))
+    np.add.at(h, (row,     col + 1), fx * (1 - fy))
+    np.add.at(h, (row + 1, col),     (1 - fx) * fy)
+    np.add.at(h, (row + 1, col + 1), fx * fy)
 
-    # Round the segment's endpoints: pixels that lie beyond the tip but still
-    # within the line width have their distance measured to the endpoint instead
-    # of to the (infinite) line, so the streak ends in a cap rather than running on.
-    lastpix = (rad >= half) & (np.abs(dist2line) <= linewdt)
-    x2lastpix = half - np.abs((x[lastpix] + dist2line[lastpix] * sinphi) / cosphi)
-    dist2line[lastpix] = np.sqrt(dist2line[lastpix] ** 2 + x2lastpix ** 2)
+    # Crop the all-zero rows/columns, symmetrically around the centre so the kernel
+    # stays odd-sized and centred (filter2D anchors it on the central pixel):
+    # a horizontal/vertical motion collapses to a 1-D vector
+    rows = np.nonzero(h.sum(axis=1))[0]
+    cols = np.nonzero(h.sum(axis=0))[0]
+    ry = max(r - rows.min(), rows.max() - r)
+    rx = max(r - cols.min(), cols.max() - r)
+    h = h[r - ry:r + ry + 1, r - rx:r + rx + 1]
 
-    # Turn distance into weight (triangular anti-aliasing) and clip anything
-    # farther than the line width down to zero.
-    dist2line = linewdt + eps_f - np.abs(dist2line)
-    dist2line[dist2line < 0] = 0.0
-
-    # Unfold the half-kernel into the full, point-symmetric kernel: the 180-deg
-    # rotated copy goes top-left, the original goes bottom-right, and the two
-    # overlap on the shared centre pixel.
-    n_r, n_c = dist2line.shape
-    h = np.zeros((2 * n_r - 1, 2 * n_c - 1), dtype=np.float64)
-    h[:n_r, :n_c] = np.rot90(dist2line, 2)
-    h[n_r - 1:, n_c - 1:] = dist2line
-
-    # Normalise to sum 1 (the eps term guards a degenerate, all-zero kernel).
-    h = h / (h.sum() + eps_f * len_ * len_)
-
-    # Final flip to match MATLAB's counter-clockwise-from-horizontal convention.
-    if cosphi > 0:
-        h = np.flipud(h)
+    # Normalise to sum 1
+    h = h / h.sum()
 
     return h
 
@@ -359,7 +341,7 @@ def contrast_blur(image, mask, func=1, direction=1, harsh=1):
     # motion blur
     length = 3 + np.random.rand() * 4
     angle  = np.random.rand() * 360
-    h = _fspecial_motion(length, angle)
+    h = _motion_kernel(length, angle)
 
     out_ch1 = cv2.filter2D(out_ch1, -1, h, borderType=cv2.BORDER_REPLICATE)
     out_ch2 = cv2.filter2D(out_ch2, -1, h, borderType=cv2.BORDER_REPLICATE)

@@ -60,11 +60,13 @@ def run_processing(config):
 
             if tM.ndim == 3:
                 tM = tM.max(axis=-1)    # 3D RGB is triple → 2D (max per pixel) DA2 methods assumes 2D masks
+            if tM.dtype == bool:
+                tM = skimage.img_as_ubyte(tM)    # 1-bit PNG → uint8 0/255, like the other masks
 
             # save original
             if keep_original:
                 io.imsave(os.path.join(saving_path_images, filename), tI)
-                io.imsave(os.path.join(saving_path_masks, filename), tM)
+                io.imsave(os.path.join(saving_path_masks, filename), tM, check_contrast=False)
                 count += 1
 
             for method_name in method_list:
@@ -89,7 +91,7 @@ def run_processing(config):
 
                     aug_filename = f"{os.path.splitext(filename)[0]}_{method_name}{os.path.splitext(filename)[1]}"
                     io.imsave(os.path.join(saving_path_images, aug_filename), augmented_image)
-                    io.imsave(os.path.join(saving_path_masks, aug_filename), augmented_mask)
+                    io.imsave(os.path.join(saving_path_masks, aug_filename), augmented_mask, check_contrast=False)   # binary masks: always "low contrast"
                     count += 1
 
                 except Exception as e:
