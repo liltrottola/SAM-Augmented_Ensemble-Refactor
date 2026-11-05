@@ -18,17 +18,23 @@ paths:
 datasets:
   # List of datasets to use for training and testing
   folders:
-    - "ProvaSmall/"          # pipeline test (original + its offline DA sets)
-    - "da1/ProvaSmall/"
-    - "da2/ProvaSmall/"
-    #- "TrainDataset/"
-    #- "small_ds/"
-    #- "small_ds_2/"
-    #- "TestDatasets/CVC-300/"
-    #- "TestDatasets/CVC-ClinicDB/"
-    #- "TestDatasets/CVC-ColonDB/"
-    #- "TestDatasets/Kvasir/"
-    #- "TestDatasets/ETIS-LaribPolypDB/"
+    - "TrainDataset/"
+    - "da1/TrainDataset/"
+    - "da2/TrainDataset/"
+    - "gpt/TrainDataset/"
+    - "light/TrainDataset/"
+    - "TestDatasets/CVC-300/"
+    - "TestDatasets/CVC-ClinicDB/"
+    - "TestDatasets/CVC-ColonDB/"
+    - "TestDatasets/Kvasir/"
+    - "TestDatasets/ETIS-LaribPolypDB/"
+    - "TestDatasets/PolypGen_C1/"
+    - "TestDatasets/PolypGen_C2/"
+    - "TestDatasets/PolypGen_C3/"
+    - "TestDatasets/PolypGen_C4/"
+    - "TestDatasets/PolypGen_C5/"
+    - "TestDatasets/PolypGen_C6/"
+    - "TestDatasets/FAR-POLYP-SEG_full/"
 
 sam:
   # Choose [1], [2], or [1, 2]

@@ -17,8 +17,8 @@ paths:
   logits_dir: "../../../output/logits/"
 
 training:
-  epochs: 100 #use 50 with lr method, 100 to compare with lr_method lrbase
-  batchsize: 8 #20 with lr method, 8 to compare with lr_method lrbase
+  epochs: 50
+  batchsize: 16
   trainsize: 352 # Original hardcoded image size for training
 
   size_rates: [0.75, 1.0, 1.25] # Multi-scale training (0.75x, 1.0x, 1.25x)
@@ -62,4 +62,4 @@ datasets:
     - "TestDatasets/PolypGen_C4"
     - "TestDatasets/PolypGen_C5"
     - "TestDatasets/PolypGen_C6"
-    - "TestDatasets/FAR-POLYP-SEG_full"
+    #- "TestDatasets/FAR-POLYP-SEG_full"

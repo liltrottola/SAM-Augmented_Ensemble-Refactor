@@ -21,14 +21,14 @@ paths:
 
 # training hyperparameters = sam2unet_vanilla.yaml
 training:
-  epochs: 20        # original SAM2-UNet 20
-  batchsize: 12     # original SAM2-UNet 12
+  epochs: 50
+  batchsize: 16
   trainsize: 352
 
   size_rates: [0.75, 1.0, 1.25] # Multi-scale; [1.0] = original train.py (no multi-scale)
   clip_margin: null             # original SAM2-UNet has no gradient clipping
 
-  num_workers: 8 # original nworker 8 (to be equal to hsnet/polyp use 1)
+  num_workers: 4
 
   offline_augmentation: noda # "da1", "da2", "clahe", "light" or "noda": DA train set + the priors generated on it
   online_augmentation: noda  # "da3" (geometric on all channels, photometric only on the RGB) or "noda"; never both with offline
@@ -60,9 +60,9 @@ n3:
   residual: false
   # kernel of the FIRST conv of the block: 1 = per-pixel, 3 = 3x3 neighbourhood
   kernel_size: 1
-  # LR of the block = optimizer.lr * reduce_lr_mult (SAM2-UNet keeps optimizer.lr); 30 as HSNet, but here the block LR
-  # is 3e-2 (base lr 1e-3, no gradient clipping): check the loss in the debug run, lower it (e.g. 1.5 -> 1.5e-3) if it diverges
-  reduce_lr_mult: 30
+  # LR of the block = optimizer.lr * reduce_lr_mult
+  # warning: the block LR should not reach 1e-2
+  reduce_lr_mult: 20
 
 testing:
   test_checkpoint: "SAM2UNet_N3.pth" # checkpoint tested when Test_N3 is launched without --model_pth (run_inference.py always passes it)
@@ -77,3 +77,10 @@ datasets:
     - "TestDatasets/CVC-ColonDB"
     - "TestDatasets/Kvasir"
     - "TestDatasets/ETIS-LaribPolypDB"
+    - "TestDatasets/PolypGen_C1"
+    - "TestDatasets/PolypGen_C2"
+    - "TestDatasets/PolypGen_C3"
+    - "TestDatasets/PolypGen_C4"
+    - "TestDatasets/PolypGen_C5"
+    - "TestDatasets/PolypGen_C6"
+    #- "TestDatasets/FAR-POLYP-SEG_full"

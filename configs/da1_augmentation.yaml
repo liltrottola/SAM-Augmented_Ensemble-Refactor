@@ -16,7 +16,7 @@ paths:
 datasets:
   # List of datasets (subfolders of dataset_root) to process
   folders:
-    - "TrainDataset/"   # switch when running on the full dataset
+    - "TrainDataset/"
 
 augmentation:
   # List of methods to apply (must exist as functions in da1_methods.py)

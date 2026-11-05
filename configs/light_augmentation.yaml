@@ -22,8 +22,7 @@ paths:
 datasets:
   # List of datasets (subfolders of dataset_root) to process
   folders:
-    - "ProvaSmall/"
-    # - "TrainDataset/"   # switch when running on the full dataset
+    - "TrainDataset/"
 
 augmentation:
   # If true, also copy the original to the output
@@ -32,13 +31,13 @@ augmentation:
   # Relighting: one variant per light direction (lx, ly, lz) -> <name>_rl1 ... <name>_rlN
   light_directions:
     - [-0.6, -0.6, 1.0]
-    - [ 0.0, -0.6, 1.0]
+    #- [ 0.0, -0.6, 1.0]
     - [ 0.6, -0.6, 1.0]
-    - [-0.6,  0.0, 1.0]
-    - [ 0.0,  0.0, 1.0]
-    - [ 0.6,  0.0, 1.0]
+    #- [-0.6,  0.0, 1.0]
+    #- [ 0.0,  0.0, 1.0]
+    #- [ 0.6,  0.0, 1.0]
     - [-0.6,  0.6, 1.0]
-    - [ 0.0,  0.6, 1.0]
+    #- [ 0.0,  0.6, 1.0]
     - [ 0.6,  0.6, 1.0]
 
   # Depth-guided attenuation: one variant per floor -> <name>_att1 ... <name>_attN

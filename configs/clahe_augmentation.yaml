@@ -8,5 +8,4 @@ paths:
 
 datasets:
   folders:
-    - "ProvaSmall/"
-    # - "TrainDataset/"
+    - "TrainDataset/"

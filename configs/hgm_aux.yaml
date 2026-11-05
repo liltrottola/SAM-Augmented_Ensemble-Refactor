@@ -19,14 +19,14 @@ paths:
   logits_dir: "../../../output/logits/"
 
 training:
-  epochs: 100       # original HGM: 100
-  batchsize: 8      # original HGM: 8
+  epochs: 50
+  batchsize: 16
   trainsize: 352
 
   size_rates: [0.75, 1.0, 1.25] 
   clip_margin: 0.5              
 
-  num_workers: 4 # original nworker 4 (to be equal to hsnet/polyp use 1)
+  num_workers: 4
 
 
   offline_augmentation: noda # "da1", "da2", "clahe" or "noda": train on the DA train set, with aux generated on it (<aux_source>/<method>/<da>/<dataset>)
@@ -56,3 +56,10 @@ datasets:
     - "TestDatasets/CVC-ColonDB"
     - "TestDatasets/Kvasir"
     - "TestDatasets/ETIS-LaribPolypDB"
+    - "TestDatasets/PolypGen_C1"
+    - "TestDatasets/PolypGen_C2"
+    - "TestDatasets/PolypGen_C3"
+    - "TestDatasets/PolypGen_C4"
+    - "TestDatasets/PolypGen_C5"
+    - "TestDatasets/PolypGen_C6"
+    #- "TestDatasets/FAR-POLYP-SEG_full"

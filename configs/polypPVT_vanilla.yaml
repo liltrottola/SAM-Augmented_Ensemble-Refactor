@@ -16,8 +16,8 @@ paths:
   logits_dir: "../../../output/logits/"
 
 training:
-  epochs: 100 #use 50 with lr method, 100 to compare with lr_method lrbase
-  batchsize: 16 #20 with lr method, 8 to compare with lr_method lrbase
+  epochs: 50
+  batchsize: 16
   trainsize: 352
 
   size_rates: [0.75, 1.0, 1.25]
@@ -51,3 +51,10 @@ datasets:
     - "TestDatasets/CVC-ColonDB"
     - "TestDatasets/Kvasir"
     - "TestDatasets/ETIS-LaribPolypDB"
+    - "TestDatasets/PolypGen_C1"
+    - "TestDatasets/PolypGen_C2"
+    - "TestDatasets/PolypGen_C3"
+    - "TestDatasets/PolypGen_C4"
+    - "TestDatasets/PolypGen_C5"
+    - "TestDatasets/PolypGen_C6"
+    #- "TestDatasets/FAR-POLYP-SEG_full"

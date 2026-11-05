@@ -20,8 +20,8 @@ paths:
 
 # training hyperparameters = polypPVT_vanilla.yaml
 training:
-  epochs: 100 #use 50 with lr method, 100 to compare with lr_method lrbase
-  batchsize: 16 #20 with lr method, 8 to compare with lr_method lrbase
+  epochs: 50
+  batchsize: 16
   trainsize: 352
 
   size_rates: [0.75, 1.0, 1.25]
@@ -58,8 +58,9 @@ n3:
   residual: false
   # kernel of the FIRST conv of the block: 1 = per-pixel (decided architecture), 3 = 3x3 neighbourhood
   kernel_size: 1
-  # LR of the block = optimizer.lr * reduce_lr_mult (PolypPVT keeps optimizer.lr); 30 as HSNet (block LR 3e-3 here)
-  reduce_lr_mult: 30
+  # LR of the block = optimizer.lr * reduce_lr_mult
+  # warning: the block LR should not reach 1e-2
+  reduce_lr_mult: 20
 
 testing:
   test_checkpoint: "PolypPVT_N3.pth" # checkpoint tested when Test_N3 is launched without --model_pth (run_inference.py always passes it)
@@ -74,3 +75,10 @@ datasets:
     - "TestDatasets/CVC-ColonDB"
     - "TestDatasets/Kvasir"
     - "TestDatasets/ETIS-LaribPolypDB"
+    - "TestDatasets/PolypGen_C1"
+    - "TestDatasets/PolypGen_C2"
+    - "TestDatasets/PolypGen_C3"
+    - "TestDatasets/PolypGen_C4"
+    - "TestDatasets/PolypGen_C5"
+    - "TestDatasets/PolypGen_C6"
+    #- "TestDatasets/FAR-POLYP-SEG_full"

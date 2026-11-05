@@ -9,11 +9,14 @@ models:
   - "polypvt_aux"
   - "polypvt_n3"
   - "hgm"
-  #- "hgm_aux"        # HGM conda env only: launch with --model hgm_aux
-  #- "hgm_n3"         # HGM conda env only: launch with --model hgm_n3
+  - "hgm_aux"        # HGM conda env only: launch with --model hgm_aux
+  - "hgm_n3"         # HGM conda env only: launch with --model hgm_n3
   - "sam2unet"
   - "sam2unet_aux"
   - "sam2unet_n3"
+  - "sam2rfanet"
+  - "sam2rfanet_aux"
+  - "sam2rfanet_n3"
 
 # inference/testing section
 testing:
@@ -22,27 +25,23 @@ testing:
   # Must match the aux_sources used at training time to find the checkpoints
   # source folder must be under output/augmentation/ -> its own method list
   aux_sources:
-    sam1:
+    #sam1:
+    #sam2:
+    sam2_stab085:
       - "SAMAug"
-      - "ourSAMAug"
-      - "RG_segPrior"
-      - "SV_segPrior"
+      #- "ourSAMAug"
+      #- "RG_segPrior"
+      #- "SV_segPrior"
       - "RG_logits"
-      - "PCA_segPrior"
-    sam2:
-      - "SAMAug"
-      - "ourSAMAug"
-      - "RG_segPrior"
-      - "SV_segPrior"
-      - "RG_logits"
-      - "PCA_segPrior"
+      #- "PCA_segPrior"
+    # depth aux images from run_depth_augmentation.py (method names as in src/augmentation/depth_prior_methods.py)
     da3mono-large:
       - "DepthAug"
-      - "RG_voteV3"
+      #- "RG_voteV3"
       - "RG_depth"
-      - "PCA_voteV3"
-      - "RG_localnorm"
-      - "LAB_gamut_aplus"
+      #- "PCA_voteV3"
+      #- "RG_localnorm"
+      #- "LAB_gamut_aplus"
 
   # Must match the prior_sources used at training time to find the checkpoints (N3 models only)
   prior_sources:
@@ -52,6 +51,9 @@ testing:
     depth:
       - "frst_prior"
       - "localnorm"
+    dsine:
+      - "normal_nz"
+      - "normal_mean7"
 
   lr_methods:
     - "lrbase"

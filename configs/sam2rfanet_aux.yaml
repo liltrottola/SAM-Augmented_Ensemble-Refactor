@@ -20,14 +20,14 @@ paths:
   logits_dir: "../../../output/logits/"
 
 training:
-  epochs: 20        # original SAM2-RFANet 20
-  batchsize: 4     # original SAM2-RFANet 12
+  epochs: 50
+  batchsize: 16
   trainsize: 352
 
   size_rates: [0.75, 1.0, 1.25] # Multi-scale; [1.0] = original train.py (no multi-scale)
   clip_margin: null             # original SAM2-RFANet has no gradient clipping
 
-  num_workers: 8 # original nworker 8 (to be equal to hsnet/polyp use 1)
+  num_workers: 4
 
   offline_augmentation: noda # "da1", "da2", "clahe" or "noda": train on the DA train set, with aux generated on it (<aux_source>/<method>/<da>/<dataset>)
   online_augmentation: noda # "da3" or "noda" (no online augmentation)
@@ -55,4 +55,11 @@ datasets:
     - "TestDatasets/CVC-ColonDB"
     - "TestDatasets/Kvasir"
     - "TestDatasets/ETIS-LaribPolypDB"
+    - "TestDatasets/PolypGen_C1"
+    - "TestDatasets/PolypGen_C2"
+    - "TestDatasets/PolypGen_C3"
+    - "TestDatasets/PolypGen_C4"
+    - "TestDatasets/PolypGen_C5"
+    - "TestDatasets/PolypGen_C6"
+    #- "TestDatasets/FAR-POLYP-SEG_full"
 

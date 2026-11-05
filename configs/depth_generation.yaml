@@ -10,15 +10,22 @@ paths:
 
 datasets:
   folders:
-    - "ProvaSmall/"          # pipeline test (original + its offline DA sets)
-    - "da1/ProvaSmall/"
-    - "da2/ProvaSmall/"
-    #- "TrainDataset/"
-    #- "TestDatasets/Kvasir/"
-    #- "TestDatasets/CVC-300/"
-    #- "TestDatasets/CVC-ClinicDB/"
-    #- "TestDatasets/CVC-ColonDB/"
-    #- "TestDatasets/ETIS-LaribPolypDB/"
+    - "TrainDataset/"
+    - "da1/TrainDataset/"
+    - "da2/TrainDataset/"
+    - "gpt/TrainDataset/"
+    - "TestDatasets/CVC-300/"
+    - "TestDatasets/CVC-ClinicDB/"
+    - "TestDatasets/CVC-ColonDB/"
+    - "TestDatasets/Kvasir/"
+    - "TestDatasets/ETIS-LaribPolypDB/"
+    - "TestDatasets/PolypGen_C1/"
+    - "TestDatasets/PolypGen_C2/"
+    - "TestDatasets/PolypGen_C3/"
+    - "TestDatasets/PolypGen_C4/"
+    - "TestDatasets/PolypGen_C5/"
+    - "TestDatasets/PolypGen_C6/"
+    - "TestDatasets/FAR-POLYP-SEG_full/"
 
 depth:
   model_dirs: 

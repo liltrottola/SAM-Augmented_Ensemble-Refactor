@@ -16,15 +16,22 @@ paths:
 
 datasets:
   folders:
-    - "ProvaSmall/"          
-    - "da1/ProvaSmall/"
-    - "da2/ProvaSmall/"
-    #- "TrainDataset/"
-    #- "TestDatasets/CVC-300/"
-    #- "TestDatasets/CVC-ClinicDB/"
-    #- "TestDatasets/CVC-ColonDB/"
-    #- "TestDatasets/Kvasir/"
-    #- "TestDatasets/ETIS-LaribPolypDB/"
+    - "TrainDataset/"
+    - "da1/TrainDataset/"
+    - "da2/TrainDataset/"
+    - "gpt/TrainDataset/"
+    - "TestDatasets/CVC-300/"
+    - "TestDatasets/CVC-ClinicDB/"
+    - "TestDatasets/CVC-ColonDB/"
+    - "TestDatasets/Kvasir/"
+    - "TestDatasets/ETIS-LaribPolypDB/"
+    - "TestDatasets/PolypGen_C1/"
+    - "TestDatasets/PolypGen_C2/"
+    - "TestDatasets/PolypGen_C3/"
+    - "TestDatasets/PolypGen_C4/"
+    - "TestDatasets/PolypGen_C5/"
+    - "TestDatasets/PolypGen_C6/"
+    - "TestDatasets/FAR-POLYP-SEG_full/"
 
 # priors loaded for every image (folder names under <prior_root>/<prior_source>/<dataset>/),
 # passed to the methods as priors[<name>]: every prior used by a method below must be listed here

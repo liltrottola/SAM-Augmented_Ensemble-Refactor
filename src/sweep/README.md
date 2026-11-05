@@ -10,13 +10,14 @@ or the test stage looks for a checkpoint the training stage never wrote:
 
 1. the checkpoint filename        -> `build_model_name`
 2. which (aux_source, method) pairs to sweep for aux models -> `get_aux_sources`
+3. which DA methods to sweep (names checked) -> `get_da_methods`
 
 
 Both live in `naming.py` so the two runners import the same code and cannot drift.
 
 ## Files
 
-- `naming.py` — checkpoint naming + aux axis (single source of truth).
+- `naming.py` — checkpoint naming + aux and DA axes (single source of truth).
 
 ## Config layout
 
@@ -83,6 +84,10 @@ never on the whole sweep (it overwrites checkpoints with no backup).
 - `--aux_source sam2_stab085 da3mono-large` -> those two sources
 - omitted                              -> all the sources in the sweep yaml
 - a name not in `aux_sources`          -> error with the list of the available ones
+
+`--da_method` takes one or more values of `da_methods`, in the same way (e.g. one SLURM array job per DA).
+The names in `da_methods` are checked by `get_da_methods`: only `noda`, `ONLINE_DA_METHODS` and
+`OFFLINE_DA_METHODS` (`src/augmentation/__init__.py`) are valid, so a typo cannot silently train with no DA.
 
 ## TODO / future work
 

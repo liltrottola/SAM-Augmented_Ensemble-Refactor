@@ -103,6 +103,28 @@ models:
     test_script: "Test_N3.py"
     config: "../configs/sam2unet_n3.yaml"
 
+  - name: sam2rfanet
+    has_aux: false
+    folder: "SAM2RFANet"
+    train_script: "Train_vanilla.py"
+    test_script: "Test_vanilla.py"
+    config: "../configs/sam2rfanet_vanilla.yaml"
+
+  - name: sam2rfanet_aux
+    has_aux: true
+    folder: "SAM2RFANet"
+    train_script: "Train_aux.py"
+    test_script: "Test_aux.py"
+    config: "../configs/sam2rfanet_aux.yaml"
+
+  - name: sam2rfanet_n3
+    has_aux: false
+    n3: true
+    folder: "SAM2RFANet"
+    train_script: "Train_N3.py"
+    test_script: "Test_N3.py"
+    config: "../configs/sam2rfanet_n3.yaml"
+
 # aux sources: folder under output/augmentation/ (= --aux_source of Train_aux.py / Test_aux.py)
 # -> all its methods (folders under the source = function names in sam_prior_methods.py / depth_prior_methods.py /
 # normal_prior_methods.py)

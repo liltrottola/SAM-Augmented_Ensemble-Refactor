@@ -15,15 +15,22 @@ paths:
 
 datasets:
   folders:
-    - "ProvaSmall/"          # pipeline test (original + its offline DA sets)
-    - "da1/ProvaSmall/"
-    - "da2/ProvaSmall/"
-    #- "TrainDataset/"
-    #- "TestDatasets/CVC-300/"
-    #- "TestDatasets/CVC-ClinicDB/"
-    #- "TestDatasets/CVC-ColonDB/"
-    #- "TestDatasets/Kvasir/"
-    #- "TestDatasets/ETIS-LaribPolypDB/"
+    - "TrainDataset/"
+    - "da1/TrainDataset/"
+    - "da2/TrainDataset/"
+    - "gpt/TrainDataset/"
+    - "TestDatasets/CVC-300/"
+    - "TestDatasets/CVC-ClinicDB/"
+    - "TestDatasets/CVC-ColonDB/"
+    - "TestDatasets/Kvasir/"
+    - "TestDatasets/ETIS-LaribPolypDB/"
+    - "TestDatasets/PolypGen_C1/"
+    - "TestDatasets/PolypGen_C2/"
+    - "TestDatasets/PolypGen_C3/"
+    - "TestDatasets/PolypGen_C4/"
+    - "TestDatasets/PolypGen_C5/"
+    - "TestDatasets/PolypGen_C6/"
+    - "TestDatasets/FAR-POLYP-SEG_full/"
 
 # names are the same as the functions in src/augmentation/depth_prior_methods.py, signature f(depth) -> (H, W) map;
 # the name is also the output folder name
@@ -31,3 +38,7 @@ priors:
   - "frst_prior"   # region prior (vote_v3): FRST + back-projection, p1-p99 per image
   - "localnorm"    # boundary prior: gradient / local Gaussian mean, p99 per image
   - "depth_p1p99"        # depth prior: reversed depth, p1-p99 per image
+  - "shapeindex"
+  - "meancurvature"
+  - "meancurvature_p5p95"          
+
