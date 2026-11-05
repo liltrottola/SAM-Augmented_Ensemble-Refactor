@@ -17,7 +17,7 @@ cd $SLURM_SUBMIT_DIR
 chmod +x setup.sh
 
 echo "Inizio installazione su nodo: $HOSTNAME"
-echo "Ora parte setup.sh dentro Slurm con 32GB di RAM..."
+echo "Ora parte setup.sh dentro Slurm.."
 ./setup.sh
 
 echo "Installazione completata"
