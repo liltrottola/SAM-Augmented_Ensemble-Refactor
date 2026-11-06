@@ -133,12 +133,13 @@ def main():
             image = image.cuda()
             with torch.no_grad():   # as original SAM2-UNet test.py
                 res, _, _ = model(image)  # only the first output (final head) is used at test
+
+            #we save logits at the network output resolution
+            logits_np = res.data.cpu().numpy().squeeze().astype(np.float16)
+            np.save(os.path.join(logits_dir, name.replace('.png', '.npy')), logits_np)
+
             #original code: res = F.upsample(..) now deprecated, replaced with interpolate
             res = F.interpolate(res, size=gt.shape, mode='bilinear', align_corners=False)
-
-            #we save logits and then apply sigmoid before saving
-            logits_np = res.data.cpu().numpy().squeeze()
-            np.save(os.path.join(logits_dir, name.replace('.png', '.npy')), logits_np)
 
             #apply sigmoid to get probabilities before saving as image
             res = res.sigmoid().data.cpu().numpy().squeeze()

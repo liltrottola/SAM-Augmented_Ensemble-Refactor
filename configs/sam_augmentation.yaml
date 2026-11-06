@@ -42,14 +42,14 @@ datasets:
 priors:
   - "segPrior"        # sum of the stability scores of the overlapping masks
   - "boundaryPrior"   # contours of the masks, {0,1}
-  - "areaPrior"       # relative area of the masks, summed where they overlap
+  #- "areaPrior"       # relative area of the masks, summed where they overlap
   - "logits"          # logits of the predictor on the whole image
 
 augmentation:
   # names exactly as defined in src/augmentation/sam_prior_methods.py
   methods:
     - "SAMAug"          # G += segPrior, B += boundaryPrior
-    - "ourSAMAug"       # R += areaPrior, G += segPrior, B += boundaryPrior
+    #- "ourSAMAug"       # R += areaPrior, G += segPrior, B += boundaryPrior
     - "RG_segPrior"     # R, G, B = segPrior
     - "SV_segPrior"     # G, B, segPrior of the RGB (despite the name, no HSV: see sam_prior_methods.py)
     - "RG_logits"       # R, G, B = logits

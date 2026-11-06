@@ -111,13 +111,15 @@ def main():
             with torch.no_grad():   # as original SAM2-UNet test.py
                 res, _, _ = model(image)  # only the first output (final head) is used at test
                 augres, _, _ = model(aux)  # aux: same prediction on the aux image
+            # logits at the network output resolution
+            res_logits = res.data.cpu().numpy().squeeze().astype(np.float16)
+            augres_logits = augres.data.cpu().numpy().squeeze().astype(np.float16)
+
             #original code: res = F.upsample(..) now deprecated, replaced with interpolate
             res = F.interpolate(res, size=gt.shape, mode='bilinear', align_corners=False)
-            res_logits = res.data.cpu().numpy().squeeze()
             res = res.sigmoid().data.cpu().numpy().squeeze()
 
             augres = F.interpolate(augres, size=gt.shape, mode='bilinear', align_corners=False)
-            augres_logits = augres.data.cpu().numpy().squeeze()
             augres = augres.sigmoid().data.cpu().numpy().squeeze()
 
             # aux: keep the more confident prediction (mean distance from 0.5), as PolypPVT Test_aux

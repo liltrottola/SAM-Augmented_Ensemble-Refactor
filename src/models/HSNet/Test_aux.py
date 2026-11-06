@@ -80,10 +80,10 @@ def test(model, opt, dataset):
         aux=aux.cuda()
 
         res,res1,res2,res3,_,_,_,_ = model(image)
-        res = F.interpolate(res + res1 + res2 + res3, size=gt.shape, mode='bilinear', align_corners=False)
-        
-        res_logits = res.data.cpu().numpy().squeeze()
-        
+        out = res + res1 + res2 + res3          # network output, testsize resolution
+        res_logits = out.data.cpu().numpy().squeeze().astype(np.float16)
+        res = F.interpolate(out, size=gt.shape, mode='bilinear', align_corners=False)
+
         res = res.sigmoid().data.cpu().numpy().squeeze()
         #res = (res - res.min()) / (res.max() - res.min() + 1e-8)    
         #tmp = (res - res.min()) / (res.max() - res.min() + 1e-8)    
@@ -91,9 +91,9 @@ def test(model, opt, dataset):
         indicator1=np.mean(np.abs(res-0.5))
         #TODO:anche qui image + aux
         Ares,Ares1,Ares2,Ares3,_,_,_,_ = model(aux)
-        Ares = F.interpolate(Ares + Ares1 + Ares2 + Ares3, size=gt.shape, mode='bilinear', align_corners=False)
-        
-        ares_logits = Ares.data.cpu().numpy().squeeze()
+        Aout = Ares + Ares1 + Ares2 + Ares3     # network output, testsize resolution
+        ares_logits = Aout.data.cpu().numpy().squeeze().astype(np.float16)
+        Ares = F.interpolate(Aout, size=gt.shape, mode='bilinear', align_corners=False)
 
         Ares = Ares.sigmoid().data.cpu().numpy().squeeze()
         #Ares = (Ares - Ares.min()) / (Ares.max() - Ares.min() + 1e-8)

@@ -1,8 +1,8 @@
 experiment:
   name: "SAM2RFANet_Aux"
   seed: 37
-  aux_source: "sam2"   # folder under aux_root_base with the aux images (sam1, sam2, sam2_stab085, da3mono-large, ...)
-  method: "ourSAMAug"
+  aux_source: "sam2_stab085"   # folder under aux_root_base with the aux images (sam1, sam2, sam2_stab085, da3mono-large, ...)
+  method: "SAMAug"
 
 # All paths are relative to the location of train_rfanet_aux.py
 paths:

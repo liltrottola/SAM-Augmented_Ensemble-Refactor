@@ -130,12 +130,14 @@ def main():
             gt /= (gt.max() + 1e-8)
             image = image.cuda()
             P1,P2,P3,P4 = model(image)
-            #original code: res = F.upsample(..) now deprecated, replaced with interpolate
-            res = F.interpolate(P1+P2+P3+P4, size=gt.shape, mode='bilinear', align_corners=False)
+            out = P1+P2+P3+P4                      # network output, testsize resolution
 
-            #we save logits and then apply sigmoid before saving
-            logits_np = res.data.cpu().numpy().squeeze()
+            #we save logits at the network output resolution
+            logits_np = out.data.cpu().numpy().squeeze().astype(np.float16)
             np.save(os.path.join(logits_dir, name.replace('.png', '.npy')), logits_np)
+
+            #original code: res = F.upsample(..) now deprecated, replaced with interpolate
+            res = F.interpolate(out, size=gt.shape, mode='bilinear', align_corners=False)
 
             #apply sigmoid to get probabilities before saving as image
             # N3: NO min-max normalization of the prediction 

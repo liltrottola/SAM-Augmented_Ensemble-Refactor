@@ -89,25 +89,25 @@ def run_processing(config):
                 if resized_flag:
                     segPrior = transform.resize(segPrior, original_size[:2], anti_aliasing=True)
                     boundaryPrior = transform.resize(boundaryPrior, original_size[:2], anti_aliasing=True)
-                    areaPrior = transform.resize(areaPrior, original_size[:2], anti_aliasing=True)
+                    #areaPrior = transform.resize(areaPrior, original_size[:2], anti_aliasing=True)
                     logits = transform.resize(logits, original_size[:2], anti_aliasing=True)
 
                 segPrior_path = os.path.join(saving_path, "segPrior")
                 os.makedirs(segPrior_path, exist_ok=True)
                 boundaryPrior_path = os.path.join(saving_path, "boundaryPrior")
                 os.makedirs(boundaryPrior_path, exist_ok=True)
-                areaPrior_path = os.path.join(saving_path, "areaPrior")
-                os.makedirs(areaPrior_path, exist_ok=True)
+                #areaPrior_path = os.path.join(saving_path, "areaPrior")
+                #os.makedirs(areaPrior_path, exist_ok=True)
                 logits_path = os.path.join(saving_path, "logits")
                 os.makedirs(logits_path, exist_ok=True)
 
                 # Save the generated maps to the specified folder, named as the image without extension
                 # (149.png -> 149.npy): the N->3 loader and the aux scripts pair image and prior by name
                 base_name = os.path.splitext(filename)[0]
-                np.save(os.path.join(segPrior_path, base_name + ".npy"), segPrior)
-                np.save(os.path.join(boundaryPrior_path, base_name + ".npy"), boundaryPrior)
-                np.save(os.path.join(areaPrior_path, base_name + ".npy"), areaPrior)
-                np.save(os.path.join(logits_path, base_name + ".npy"), logits)
+                np.save(os.path.join(segPrior_path, base_name + ".npy"), segPrior.astype(np.float16))
+                np.save(os.path.join(boundaryPrior_path, base_name + ".npy"), boundaryPrior.astype(np.float16))
+                #np.save(os.path.join(areaPrior_path, base_name + ".npy"), areaPrior.astype(np.float16))
+                np.save(os.path.join(logits_path, base_name + ".npy"), logits.astype(np.float16))
 
                 count = count + 1
                 print("(-) ",cur_dir, ": ", count,"/",len(file_names))

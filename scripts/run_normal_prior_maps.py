@@ -67,7 +67,7 @@ def run_processing(config, limit=None, vis=False):
             t0 = time.time()
             for prior_name in priors:
                 P = getattr(npm, prior_name)(N).astype(np.float32)
-                np.save(os.path.join(out_dirs[prior_name], name + ".npy"), P)
+                np.save(os.path.join(out_dirs[prior_name], name + ".npy"), P.astype(np.float16))
                 if vis:
                     png = (np.clip(P, 0, 1) * 255).round().astype(np.uint8)
                     Image.fromarray(png).save(os.path.join(vis_dirs[prior_name], name + ".png"))

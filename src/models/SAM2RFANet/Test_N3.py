@@ -116,11 +116,12 @@ def main():
             with torch.no_grad():
                 # SAM2-RFANet N3 Wrapper returns 4 outputs
                 res, _, _, _ = model(image)
-                
-            res = F.interpolate(res, size=gt.shape, mode='bilinear', align_corners=False)
 
-            logits_np = res.data.cpu().numpy().squeeze()
+            #we save logits at the network output resolution
+            logits_np = res.data.cpu().numpy().squeeze().astype(np.float16)
             np.save(os.path.join(logits_dir, name.replace('.png', '.npy')), logits_np)
+
+            res = F.interpolate(res, size=gt.shape, mode='bilinear', align_corners=False)
 
             res = res.sigmoid().data.cpu().numpy().squeeze()
             to_pil = transforms.ToPILImage()

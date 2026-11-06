@@ -88,9 +88,11 @@ def main():
 
             image = image.cuda()
             P1,P2 = model(image)
-            res = F.interpolate(P1+P2, size=gt.shape, mode='bilinear', align_corners=False)
-            logits_np = res.data.cpu().numpy().squeeze()
+            out = P1+P2                            # network output, testsize resolution
+            #we save logits at the network output resolution
+            logits_np = out.data.cpu().numpy().squeeze().astype(np.float16)
             np.save(os.path.join(logits_dir, name.replace('.png', '.npy')), logits_np)
+            res = F.interpolate(out, size=gt.shape, mode='bilinear', align_corners=False)
             res = res.sigmoid().data.cpu().numpy().squeeze()
 
             to_pil = transforms.ToPILImage()

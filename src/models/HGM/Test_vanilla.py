@@ -88,12 +88,13 @@ def main():
             gt /= (gt.max() + 1e-8)
             image = image.cuda()
             res = model(image)  # HGM has a single output
+
+            #we save logits at the network output resolution
+            logits_np = res.data.cpu().numpy().squeeze().astype(np.float16)
+            np.save(os.path.join(logits_dir, name.replace('.png', '.npy')), logits_np)
+
             #original code: res = F.upsample(..) now deprecated, replaced with interpolate
             res = F.interpolate(res, size=gt.shape, mode='bilinear', align_corners=False)
-
-            #we save logits and then apply sigmoid before saving
-            logits_np = res.data.cpu().numpy().squeeze()
-            np.save(os.path.join(logits_dir, name.replace('.png', '.npy')), logits_np)
 
             #apply sigmoid to get probabilities before saving as image
             res = res.sigmoid().data.cpu().numpy().squeeze()

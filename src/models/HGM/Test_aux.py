@@ -111,15 +111,15 @@ def main():
             aux = aux.cuda()
 
             res = model(image)  # HGM has a single output
+            res_logits = res.data.cpu().numpy().squeeze().astype(np.float16)   # logits at the network output resolution
             #original code: res = F.upsample(..) now deprecated, replaced with interpolate
             res = F.interpolate(res, size=gt.shape, mode='bilinear', align_corners=False)
-            res_logits = res.data.cpu().numpy().squeeze()
             res = res.sigmoid().data.cpu().numpy().squeeze()
 
             # aux: same prediction on the aux image
             augres = model(aux)
+            augres_logits = augres.data.cpu().numpy().squeeze().astype(np.float16)   # logits at the network output resolution
             augres = F.interpolate(augres, size=gt.shape, mode='bilinear', align_corners=False)
-            augres_logits = augres.data.cpu().numpy().squeeze()
             augres = augres.sigmoid().data.cpu().numpy().squeeze()
 
             # aux: keep the more confident prediction (mean distance from 0.5), as PolypPVT Test_aux

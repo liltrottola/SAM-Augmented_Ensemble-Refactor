@@ -60,14 +60,16 @@ def test(model, opt, dataset):
         aux=aux.cuda()
 
         res, res1  = model(image)
-        res = F.interpolate(res + res1 , size=gt.shape, mode='bilinear', align_corners=False)
-        res_logits = res.data.cpu().numpy().squeeze()
+        out = res + res1                        # network output, testsize resolution
+        res_logits = out.data.cpu().numpy().squeeze().astype(np.float16)
+        res = F.interpolate(out, size=gt.shape, mode='bilinear', align_corners=False)
         res = res.sigmoid().data.cpu().numpy().squeeze()
         #res = (res - res.min()) / (res.max() - res.min() + 1e-8)
 
         augres, augres1  = model(aux)
-        augres = F.interpolate(augres + augres1 , size=gt.shape, mode='bilinear', align_corners=False)
-        augres_logits = augres.data.cpu().numpy().squeeze()
+        augout = augres + augres1               # network output, testsize resolution
+        augres_logits = augout.data.cpu().numpy().squeeze().astype(np.float16)
+        augres = F.interpolate(augout, size=gt.shape, mode='bilinear', align_corners=False)
         augres = augres.sigmoid().data.cpu().numpy().squeeze()
         #res = (res - res.min()) / (res.max() - res.min() + 1e-8)
 

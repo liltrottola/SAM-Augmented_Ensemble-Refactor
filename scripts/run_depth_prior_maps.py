@@ -66,7 +66,7 @@ def run_processing(config, limit=None):
             t0 = time.time()
             for prior_name in priors:
                 P = getattr(dpm, prior_name)(D).astype(np.float32)
-                np.save(os.path.join(out_dirs[prior_name], name + ".npy"), P)
+                np.save(os.path.join(out_dirs[prior_name], name + ".npy"), P.astype(np.float16))
             t1 = time.time()
             t_tot += t1 - t0
 
